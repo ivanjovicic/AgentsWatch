@@ -8,6 +8,8 @@ Last aligned: 2026-06-29
 |---|---|
 | `../README.md` | Project overview and current status. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
+| `DOCS_GOVERNANCE.md` | Source-of-truth, broken-reference, and docs-update rules. |
+| `DOCUMENTATION_AUDIT_2026_06_29.md` | Latest docs audit, findings, fixes, and remaining gaps. |
 | `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow adapted from MathLearning. |
 | `CONTEXT_INDEX.md` | Choose the smallest useful docs before an agent run. |
 | `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
@@ -81,4 +83,4 @@ Last aligned: 2026-06-29
 
 ## Rule
 
-If documents disagree, use current code/tests first, then bootstrap validation docs, then agent workflow docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
