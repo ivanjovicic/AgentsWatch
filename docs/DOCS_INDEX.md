@@ -8,6 +8,8 @@ Last aligned: 2026-06-29
 |---|---|
 | `../README.md` | Project overview and current status. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
+| `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow adapted from MathLearning. |
+| `CONTEXT_INDEX.md` | Choose the smallest useful docs before an agent run. |
 | `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
 | `CLI_SPEC.md` | CLI commands, config shape, adapters, outputs. |
 | `MVP_ROADMAP.md` | MVP phases and priority order. |
@@ -24,6 +26,19 @@ Last aligned: 2026-06-29
 | `BOOTSTRAP_NEXT_STEPS.md` | Required next order before feature work. |
 | `PROJECT_READINESS_CHECKLIST.md` | Checklist before CLI feature expansion. |
 | `ROADMAP_VALIDATION_GATES.md` | Phase gates and stop rules. |
+
+## Agent workflow and prompts
+
+| Document | Use for |
+|---|---|
+| `AGENT_COMMAND_PLAYBOOK.md` | Shell-neutral .NET/git/CLI validation commands. |
+| `AGENT_LONG_TASK_PLAYBOOK.md` | Long-task control loop, environment blockers, evidence rules. |
+| `AGENT_PATCH_PLAYBOOK.md` | Small safe patch strategy and retry limits. |
+| `PROMPT_RULES.md` | Required prompt sections, run modes, bootstrap rules, final format. |
+| `PROMPT_QUALITY_CHECKLIST.md` | Preflight checklist before adding/running prompts. |
+| `PROMPT_EVIDENCE_TEMPLATE.md` | Done/Blocked/evidence row format. |
+| `COMPLETION_ANALYTICS.md` | Completion percentages, missed work, follow-up mapping. |
+| `MATHLEARNING_DOCS_ADAPTATION.md` | What was adapted from MathLearning and what changed. |
 
 ## Architecture
 
@@ -65,4 +80,4 @@ Last aligned: 2026-06-29
 
 ## Rule
 
-If documents disagree, use current code/tests first, then bootstrap validation docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then bootstrap validation docs, then agent workflow docs, then architecture docs, then product/roadmap docs.
