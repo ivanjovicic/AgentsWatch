@@ -56,11 +56,28 @@ Last aligned: 2026-06-29
 
 | Document | Use for |
 |---|---|
+| `COMMAND_CONTRACTS.md` | Detailed behavior contract for each CLI command. |
+| `CLI_UX_OUTPUT_SPEC.md` | Expected CLI output, labels, and test anchors. |
 | `CONFIG_REFERENCE.md` | Draft config schema and parser behavior. |
 | `REPORT_FORMATS.md` | Markdown run report, handoff, review prompt formats. |
 | `DATA_MODEL.md` | Future markdown/JSON/SQLite model. |
 | `ADAPTER_SPEC.md` | Universal, .NET, Flutter, React, Python, Node adapter scope. |
+| `RISK_SCORING_MODEL.md` | Transparent risk scoring inputs, levels, and reasons. |
+| `TOKEN_WASTE_METRICS.md` | Token waste metrics and safe savings claims. |
 | `PROMPT_OPTIMIZATION_PLAYBOOK.md` | Prompt risk, budget, split, handoff, diff-only review. |
+
+## Productization and delivery
+
+| Document | Use for |
+|---|---|
+| `MVP_EPICS_AND_ACCEPTANCE.md` | Implementation epics and acceptance criteria. |
+| `ISSUE_BACKLOG.md` | Issue-ready backlog for GitHub issues/PRs/agent tasks. |
+| `USER_PERSONAS_AND_JOBS.md` | Target users and jobs to be done. |
+| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning, free/pro/team hypotheses, evidence rules. |
+| `RELEASE_AND_PACKAGING_PLAN.md` | Local tool packaging, release stages, version plan. |
+| `EXAMPLES_CATALOG.md` | Planned examples and example quality rules. |
+| `INTEGRATION_STRATEGY.md` | Local-first integration order before GitHub/SaaS/LLM integration. |
+| `DOGFOOD_RUNBOOK.md` | Operational dogfood workflow and evidence template. |
 
 ## Quality and safety
 
@@ -80,6 +97,7 @@ Last aligned: 2026-06-29
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
 | `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
+| `prompt_queues/productization.md` | Productization prompts after Gate 0. |
 
 ## Rule
 
