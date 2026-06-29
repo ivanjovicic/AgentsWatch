@@ -38,6 +38,7 @@ Last aligned: 2026-06-29
 | `PROMPT_QUALITY_CHECKLIST.md` | Preflight checklist before adding/running prompts. |
 | `PROMPT_EVIDENCE_TEMPLATE.md` | Done/Blocked/evidence row format. |
 | `COMPLETION_ANALYTICS.md` | Completion percentages, missed work, follow-up mapping. |
+| `CLAIMS_VS_ACTUAL_REVIEW.md` | Check final claims against actual diff and validation evidence. |
 | `MATHLEARNING_DOCS_ADAPTATION.md` | What was adapted from MathLearning and what changed. |
 
 ## Architecture
