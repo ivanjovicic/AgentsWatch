@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.rsuser
+*.userosscache
+*.sln.docstates
+
+# Build output
+artifacts/
+coverage/
+
+# Local AgentsWatch data
+.agentwatch/
+.ai/runs/
+.ai/generated/
+
+# IDE
+.vs/
+.vscode/*.user
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
