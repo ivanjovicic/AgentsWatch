@@ -44,7 +44,7 @@ For every non-trivial task, read:
 
 For broad, multi-step, validation, review, or handoff work, also read:
 
-- `docs/PROMPT_PLAYBOOK.md`
+- `docs/PROMPT_RULES.md`
 - `docs/PROMPT_QUALITY_CHECKLIST.md`
 - `docs/AGENT_COMMAND_PLAYBOOK.md`
 - `docs/AGENT_LONG_TASK_PLAYBOOK.md`
