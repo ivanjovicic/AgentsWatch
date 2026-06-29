@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\AgentsWatch.Core\AgentsWatch.Core.csproj" />
+  </ItemGroup>
+</Project>
