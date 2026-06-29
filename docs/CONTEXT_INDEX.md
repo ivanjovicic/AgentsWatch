@@ -47,7 +47,7 @@ Use when:
 Read:
 
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
-- `docs/PROMPT_PLAYBOOK.md`
+- `docs/PROMPT_RULES.md`
 - `docs/PROMPT_QUALITY_CHECKLIST.md`
 - `docs/COMPLETION_ANALYTICS.md`
 
