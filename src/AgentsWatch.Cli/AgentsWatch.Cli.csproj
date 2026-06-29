@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>agentswatch</ToolCommandName>
+    <PackageId>AgentsWatch.Cli</PackageId>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AgentsWatch.Core\AgentsWatch.Core.csproj" />
+    <ProjectReference Include="..\AgentsWatch.Git\AgentsWatch.Git.csproj" />
+    <ProjectReference Include="..\AgentsWatch.LanguageAdapters\AgentsWatch.LanguageAdapters.csproj" />
+    <ProjectReference Include="..\AgentsWatch.Reports\AgentsWatch.Reports.csproj" />
+  </ItemGroup>
+</Project>
