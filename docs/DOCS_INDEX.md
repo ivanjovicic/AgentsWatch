@@ -25,6 +25,15 @@ Last aligned: 2026-06-29
 | `PROJECT_READINESS_CHECKLIST.md` | Checklist before CLI feature expansion. |
 | `ROADMAP_VALIDATION_GATES.md` | Phase gates and stop rules. |
 
+## Architecture
+
+| Document | Use for |
+|---|---|
+| `ARCHITECTURE.md` | Current MVP architecture snapshot. |
+| `TARGET_ARCHITECTURE.md` | Future-proof target architecture for CLI, dashboard, team/PR workflow, and SaaS. |
+| `ARCHITECTURE_DECISIONS.md` | Active ADRs and architectural tradeoffs. |
+| `MODULE_BOUNDARIES.md` | Dependency direction, module ownership, extraction order, and stop rules. |
+
 ## Product contracts
 
 | Document | Use for |
@@ -52,7 +61,8 @@ Last aligned: 2026-06-29
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
+| `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
 
 ## Rule
 
-If documents disagree, use current code/tests first, then bootstrap validation docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then bootstrap validation docs, then architecture docs, then product/roadmap docs.
