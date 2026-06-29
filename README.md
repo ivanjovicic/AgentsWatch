@@ -37,6 +37,22 @@ agentswatch validate
 agentswatch status
 ```
 
+## Bootstrap warning
+
+The initial skeleton was created through GitHub file writes, so the next work must be validation-first:
+
+1. run `AW-VAL-001` build validation;
+2. run `AW-VAL-002` CLI smoke validation;
+3. review validation evidence;
+4. only then continue runtime feature work.
+
+See:
+
+- `docs/BUILD_VALIDATION_PLAN.md`
+- `docs/RISK_REGISTER.md`
+- `docs/BOOTSTRAP_NEXT_STEPS.md`
+- `docs/prompt_queues/bootstrap_validation.md`
+
 ## Repository layout
 
 ```text
@@ -70,4 +86,7 @@ Planning and skeleton stage. See:
 - `docs/CLI_SPEC.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
+- `docs/BUILD_VALIDATION_PLAN.md`
+- `docs/BOOTSTRAP_NEXT_STEPS.md`
+- `docs/prompt_queues/bootstrap_validation.md`
 - `docs/prompt_queues/agentwatch_mvp.md`
