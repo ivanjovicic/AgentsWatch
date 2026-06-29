@@ -6,20 +6,35 @@ AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 
 1. Current code and tests.
 2. `README.md`.
-3. `docs/PRODUCT_SPEC.md`.
-4. `docs/CLI_SPEC.md`.
-5. `docs/MVP_ROADMAP.md`.
-6. `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`.
-7. `docs/ARCHITECTURE.md`.
-8. `docs/prompt_queues/agentwatch_mvp.md`.
+3. `docs/DOCS_INDEX.md`.
+4. `docs/AGENT_OPERATING_SYSTEM.md`.
+5. `docs/CONTEXT_INDEX.md`.
+6. Bootstrap validation docs while Gate 0 is incomplete.
+7. Product contracts: `docs/CLI_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
+8. Prompt queues under `docs/prompt_queues/`.
 
 ## Product rules
 
 - Build local CLI first.
-- Do not start with SaaS, billing, cloud sync, or dashboard.
+- Do not start with SaaS, billing, cloud sync, or dashboard before roadmap gates allow it.
 - Universal git/markdown/file-system behavior comes before language adapters.
 - Risk scoring must stay heuristic and explainable.
 - Keep prompts small and split broad work.
+- Markdown report contracts come before SQLite/dashboard work.
+- No hidden telemetry or network calls in MVP.
+
+## Bootstrap rule
+
+Gate 0 is not complete until restore/build/test and CLI smoke evidence exist.
+
+Until then, work must prioritize:
+
+1. `AW-VAL-001` build validation;
+2. `AW-VAL-002` CLI smoke validation;
+3. `AW-VAL-003` validation evidence review;
+4. `AW-VAL-004` init hardening.
+
+Do not add new CLI features before build/test/smoke evidence exists.
 
 ## Required prompt fields
 
@@ -38,20 +53,23 @@ Use investigation-only first when root cause is unknown. Use diff-only review af
 
 ## Working order
 
-1. Select one Ready prompt from `docs/prompt_queues/agentwatch_mvp.md`.
-2. Claim it locally as `In progress`.
-3. Inspect current code and tests.
-4. Make the smallest safe change.
-5. Add targeted tests.
-6. Run narrow validation when possible.
-7. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
-8. Commit and push to `main` unless the user requests another flow.
+1. Read `docs/CONTEXT_INDEX.md` and the owning queue.
+2. If Gate 0 is incomplete, select from `docs/prompt_queues/bootstrap_validation.md`.
+3. Otherwise select one Ready prompt from the owning queue.
+4. Inspect only the relevant docs/files.
+5. Make the smallest safe change.
+6. Add targeted tests when runtime behavior changes.
+7. Run narrow validation when possible.
+8. Record validation honestly.
+9. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
+10. Commit and push to `main` unless the user requests another flow.
 
 ## Validation defaults
 
 ```bash
+dotnet restore AgentsWatch.sln
 dotnet build AgentsWatch.sln
-dotnet test tests/AgentsWatch.Tests/AgentsWatch.Tests.csproj
+dotnet test AgentsWatch.sln
 ```
 
 Do not claim validation passed unless it was actually run or CI evidence is available.
