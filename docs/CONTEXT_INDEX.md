@@ -7,13 +7,28 @@ Use this file to choose the smallest useful context before running an agent.
 ## Always read
 
 - `AGENTS.md`
+- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
 - `docs/AGENT_OPERATING_SYSTEM.md`
 - owning prompt queue
+
+## Need the next prompt fast
+
+Read:
+
+- `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`
+
+Use when:
+
+- user asks “what next?”;
+- user wants a copy-ready prompt;
+- Gate 0 status is unclear.
 
 ## Bootstrap validation
 
 Read:
 
+- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+- `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`
 - `docs/BUILD_VALIDATION_PLAN.md`
 - `docs/RISK_REGISTER.md`
 - `docs/BOOTSTRAP_NEXT_STEPS.md`
@@ -31,6 +46,8 @@ Use when:
 Read:
 
 - `docs/CLI_SPEC.md`
+- `docs/COMMAND_CONTRACTS.md`
+- `docs/CLI_UX_OUTPUT_SPEC.md`
 - `docs/CONFIG_REFERENCE.md`
 - `docs/REPORT_FORMATS.md`
 - `docs/TEST_MATRIX.md`
@@ -50,6 +67,7 @@ Read:
 - `docs/PROMPT_RULES.md`
 - `docs/PROMPT_QUALITY_CHECKLIST.md`
 - `docs/COMPLETION_ANALYTICS.md`
+- `docs/TOKEN_WASTE_METRICS.md`
 
 Use when:
 
@@ -64,6 +82,7 @@ Read:
 - `docs/DATA_MODEL.md`
 - `docs/REPORT_FORMATS.md`
 - `docs/ADAPTER_SPEC.md`
+- `docs/RISK_SCORING_MODEL.md`
 - `docs/PROMPT_EVIDENCE_TEMPLATE.md`
 
 Use when:
@@ -96,6 +115,7 @@ Read:
 - `docs/90_DAY_EXECUTION_PLAN.md`
 - `docs/ROADMAP_VALIDATION_GATES.md`
 - `docs/DOGFOOD_PLAN.md`
+- `docs/ISSUE_BACKLOG.md`
 
 Use when:
 
