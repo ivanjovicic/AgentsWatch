@@ -1,21 +1,56 @@
 # AgentsWatch Prompt Token Economy Rulebook
 
-Last aligned: 2026-06-29  
-Status: hard rules for prompt writing and execution
+Last aligned: 2026-06-30  
+Status: full anti-waste rules; use quick rules by default
 
 ## Purpose
 
-This is the strict rulebook for writing and executing prompts without wasting AI-agent tokens.
+This is the full rulebook for writing and executing agent prompts without wasting tokens.
 
-AgentsWatch exists to reduce waste. Its own prompts must be more disciplined than ordinary coding-agent prompts.
+Default behavior:
 
-## Non-negotiable rule
+```text
+Use docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md for normal runs.
+Use this full rulebook only when writing, changing, or auditing prompt-system rules.
+```
 
-A prompt that cannot name its scope, stop rules, validation, and expected evidence is not ready to run.
+## Non-negotiable rules
+
+A prompt is not ready unless it has:
+
+- one task;
+- one primary run mode;
+- a token budget;
+- scope or discovery limit;
+- stop rules;
+- validation or an explicit blocked reason;
+- expected evidence.
 
 Do not “let the agent figure it out” unless the run mode is explicitly `investigation-only`.
 
----
+## Context budget
+
+```text
+Low budget: read up to 3 docs before first action
+Medium budget: read up to 5 docs before first action
+High budget: read up to 8 docs before first action
+```
+
+If more docs are needed, stop and explain why before reading more.
+
+Do not read docs because they are interesting. Read only because they are required.
+
+## Default read set
+
+Most prompts should start with:
+
+```text
+1. owning prompt or queue section
+2. one relevant contract doc
+3. one implementation file or focused design doc
+```
+
+Add optional docs only when the task proves they are needed.
 
 ## Severity levels
 
@@ -29,7 +64,7 @@ Requirements:
 - one task;
 - one run mode;
 - named files/folders or a strict discovery budget;
-- validation named;
+- validation named or blocked reason named;
 - stop rules present;
 - final evidence format present.
 
@@ -55,13 +90,11 @@ Signs:
 - “fix everything”;
 - “make production-ready” without gates;
 - combines investigation, implementation, tests, docs, review, and release;
-- no validation;
+- no validation or blocked reason;
 - no stop rules;
 - asks to continue huge chat history;
 - asks for dashboard/SaaS before gates allow it;
 - asks for runtime features before Gate 0 validation.
-
----
 
 ## Token budgets
 
@@ -80,11 +113,12 @@ Use for:
 Limits:
 
 ```text
+Max docs before first action: 3
 Max files to inspect: 8
 Max files to edit: 3
 Max broad searches: 2
 Max validation commands: 3
-Max commits: 1-3 small commits
+Max commits: 1-2 small commits
 ```
 
 ### Medium budget
@@ -99,6 +133,7 @@ Use for:
 Limits:
 
 ```text
+Max docs before first action: 5
 Max files to inspect: 15
 Max files to edit: 6
 Max broad searches: 4
@@ -119,73 +154,31 @@ Use only for:
 Limits:
 
 ```text
+Max docs before first action: 8
 Implementation edits: forbidden unless explicitly scoped
 Summarize every 10 files inspected
 Stop if a smaller prompt can continue the work
 ```
 
----
+## Run modes
 
-## Discovery rules
-
-When exact files are unknown, use staged discovery.
-
-### Stage 1 — Find candidates
-
-Allowed:
-
-- search filenames;
-- search exact command names;
-- search exact class/function names;
-- inspect queue/router/context docs.
-
-Stop after:
+Use exactly one primary run mode:
 
 ```text
-2 searches for low budget
-4 searches for medium budget
+validation-only
+investigation-only
+implementation
+tests
+docs/evidence
+review-only
+diff-only review
 ```
 
-### Stage 2 — Confirm ownership
-
-Before editing, answer:
-
-```text
-Why this file?
-What contract doc controls it?
-What tests prove it?
-What file must not be touched?
-```
-
-### Stage 3 — Edit only owned paths
-
-If the necessary file is outside owned paths, stop and hand off.
-
----
-
-## Read limits
-
-Do not read docs because they are interesting. Read only because they are required.
-
-Default read set:
-
-```text
-AGENTS.md
-PROMPT_QUEUE_ROUTER.md
-CONTEXT_INDEX.md
-owning prompt file or queue
-one relevant contract doc
-```
-
-Add more only if the current prompt names them or the first read proves they are needed.
-
----
+Split the prompt if it needs more than one mode.
 
 ## Edit limits
 
-### Allowed edit shapes
-
-Good:
+Good edit shapes:
 
 - one command handler;
 - one parser;
@@ -194,145 +187,17 @@ Good:
 - one queue status update;
 - one evidence file.
 
-Bad:
+Bad edit shapes:
 
-- rewrite Program.cs and all services together;
 - change CLI, reports, config, adapters, and docs in one run;
+- rewrite Program.cs and all services together;
 - change roadmap while implementing runtime behavior;
 - update many docs to hide missing validation;
 - create feature code before Gate 0.
 
----
-
-## Run mode enforcement
-
-### validation-only
-
-Allowed:
-
-- run validation;
-- inspect failures;
-- fix build/test/smoke failures only;
-- record evidence.
-
-Forbidden:
-
-- new features;
-- refactors;
-- dashboard/SaaS;
-- unrelated docs expansion.
-
-### investigation-only
-
-Allowed:
-
-- search;
-- read targeted files;
-- inspect tests;
-- produce root cause and plan.
-
-Forbidden:
-
-- edit files;
-- commit;
-- mark Done.
-
-### implementation
-
-Allowed:
-
-- edit owned runtime files;
-- add tests;
-- update docs only if behavior changed.
-
-Forbidden:
-
-- broad research;
-- unrelated cleanup;
-- multiple feature areas.
-
-### tests
-
-Allowed:
-
-- add or fix tests for existing behavior;
-- make small extraction for testability only if justified.
-
-Forbidden:
-
-- new product behavior;
-- broad refactor.
-
-### docs/evidence
-
-Allowed:
-
-- update docs, prompts, evidence, risk status.
-
-Forbidden:
-
-- runtime code changes.
-
-### diff-only review
-
-Allowed:
-
-- review changed files only;
-- compare claims to diff;
-- identify missed tests and risks.
-
-Forbidden:
-
-- whole-repo review;
-- new implementation.
-
----
-
-## Prompt split rules
-
-Split immediately if a prompt contains more than one of these:
-
-- find root cause;
-- implement fix;
-- add tests;
-- update docs;
-- review diff;
-- package/release;
-- dogfood/report.
-
-Default split:
-
-```text
-001-investigate-only
-002-implement-minimal-fix
-003-add-targeted-tests
-004-diff-only-review
-005-record-evidence
-```
-
----
-
-## Stop rules
-
-Stop and report if:
-
-- file inspection budget is exceeded;
-- edit budget is exceeded;
-- root cause is unknown after discovery;
-- required validation cannot run;
-- the task enters a blocked gate;
-- another subsystem becomes necessary;
-- the same validation failure repeats twice;
-- the prompt asks for hidden or unsupported claims;
-- the agent needs long chat history instead of a handoff.
-
-Stopping is success when it prevents waste.
-
----
-
 ## Required prompt header
 
-Every serious prompt must start with:
+For medium/high-budget prompts:
 
 ```text
 Repository:
@@ -347,9 +212,7 @@ Validation:
 Stop rules:
 ```
 
-If this header is missing, rewrite the prompt before running it.
-
----
+For low-budget prompts, the header may be compact as long as the same information is present somewhere in the prompt.
 
 ## Forbidden prompt phrases
 
@@ -367,11 +230,21 @@ Reject or rewrite prompts that contain:
 - “continue from chat history”;
 - “mark done if it looks okay”.
 
----
-
 ## Final answer requirements
 
-Every run must end with:
+Low-budget runs may use compact final output:
+
+```text
+Prompt ID:
+Files changed:
+Validation:
+Result:
+Missed:
+Next:
+Risk:
+```
+
+Medium/high-budget runs should use full output:
 
 ```text
 Prompt ID:
@@ -389,29 +262,11 @@ Residual risk:
 Token waste avoided:
 ```
 
-If any field is unknown, write `unknown` and explain why.
-
----
-
-## Completion scoring
-
-Do not score above:
-
-```text
-35% if evidence-only and validation is missing
-59% if implementation is partial
-79% if validation is missing for runtime changes
-89% if tests are missing but follow-up exists
-94% if CI/local validation is not both clear enough for the task
-```
-
-Use 95-100% only when implementation, tests/evidence, docs, and residual risk are all handled.
-
----
+If any field is unknown, write `unknown` and explain briefly.
 
 ## Token waste report
 
-Every non-trivial run must report:
+Use this only for non-trivial medium/high-budget runs:
 
 ```text
 Files inspected:
@@ -421,11 +276,20 @@ Broad searches used:
 Prompt split used: yes/no
 Handoff used: yes/no
 Whole-repo review avoided: yes/no
+Large logs avoided: yes/no
 Largest waste avoided:
 Next token-saving improvement:
 ```
 
----
+Low-budget runs may summarize token waste in one line.
+
+## Command-output rule
+
+```text
+Command profile summary beats command log paste.
+```
+
+Record duration, exit code, byte counts, and compact error signatures. Do not include full stdout/stderr unless a later explicit debug/export workflow requires it.
 
 ## AgentsWatch-specific override
 
