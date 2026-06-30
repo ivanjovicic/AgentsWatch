@@ -94,6 +94,8 @@ Last aligned: 2026-06-29
 
 | Document | Use for |
 |---|---|
+| `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for choosing the next prompt. |
+| `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready safest next prompt. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
@@ -102,4 +104,4 @@ Last aligned: 2026-06-29
 
 ## Rule
 
-If documents disagree, use current code/tests first, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then prompt queue router, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
