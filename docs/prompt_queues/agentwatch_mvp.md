@@ -15,18 +15,18 @@ Current next prompt:
 AW-VAL-001 — Build validation
 ```
 
-## Read first
+## Read rule
 
-- `../../AGENTS.md`
-- `PROMPT_QUEUE_ROUTER.md`
-- `NEXT_PROMPT_FAST_PATH.md`
-- `../PRODUCT_SPEC.md`
-- `../COMMAND_CONTRACTS.md`
-- `../CLI_UX_OUTPUT_SPEC.md`
-- `../MVP_EPICS_AND_ACCEPTANCE.md`
-- `../PROMPT_OPTIMIZATION_PLAYBOOK.md`
-- `../COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
-- `../ARCHITECTURE.md`
+Do not read this whole queue plus every linked product document by default.
+
+Minimum read:
+
+- this prompt queue section for the selected prompt;
+- `PROMPT_QUEUE_ROUTER.md` if gate status is unclear;
+- one relevant contract doc from `docs/CONTEXT_INDEX.md`.
+
+Use `docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md` for default anti-waste rules.
+Use the full rulebook only when changing prompt-system rules.
 
 ## Rules
 
@@ -57,7 +57,11 @@ AW-VAL-001 — Build validation
 | AW-008 | Blocked until AW-VAL-001/002 evidence exists | Implement validation command runner with language adapters. |
 | AW-009 | Blocked until AW-VAL-001/002 evidence exists | Implement claimed-vs-actual diff heuristic. |
 | AW-010 | Blocked until CLI MVP evidence exists | Create local dashboard plan after CLI MVP evidence exists. |
-| AW-011 | Blocked until AW-003/AW-008 groundwork exists | Implement Command Profiler / Fast Validation Advisor to avoid slow repeated commands and large terminal logs. |
+| AW-011A | Blocked until AW-003/AW-008 groundwork exists | Investigate Command Profiler / Fast Validation Advisor contracts. |
+| AW-011B | Blocked until AW-011A evidence exists | Implement command history data model. |
+| AW-011C | Blocked until AW-011B evidence exists | Implement `agentswatch run -- <command>` wrapper. |
+| AW-011D | Blocked until AW-011C evidence exists | Implement `agentswatch validate --suggest` fast advisor. |
+| AW-011E | Blocked until AW-011D evidence exists | Add command profile report/handoff integration. |
 
 ## AW-002 — Init command hardening
 
@@ -141,46 +145,45 @@ Required generated prompts:
 
 Each prompt must include run mode, token budget, scope limiter, owned paths, avoid paths, stop rules, validation, and final response shape.
 
-## AW-011 — Command Profiler / Fast Validation Advisor
+## AW-011A — Command Profiler / Fast Validation Advisor contracts
 
-Run mode: investigation-first, then implementation in smaller follow-up prompts  
-Token budget: medium  
+Run mode: investigation-only  
+Token budget: low  
 Gate: after AW-003 run report groundwork and AW-008 validation-command groundwork
 
-Task: add a local command profiler and fast validation advisor that helps agents choose cheaper validation commands and avoid sending large terminal logs into model context.
+Task: investigate the smallest safe contract for command profiling and fast validation advice.
 
-Read first:
+Minimum read:
 
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
-- `docs/prompts/AW-011-command-profiler-fast-validation-advisor.md`
 - `docs/COMMAND_CONTRACTS.md`
-- `docs/CLI_UX_OUTPUT_SPEC.md`
-- `docs/ADAPTER_SPEC.md`
-- `docs/REPORT_FORMATS.md`
-- `docs/DATA_MODEL.md`
-- `docs/SECURITY_AND_PRIVACY.md`
+- `docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md`
 
-Required behavior later:
+Optional only if needed:
 
-- add `agentswatch run -- <command>` as a local profiler wrapper;
-- add `agentswatch validate --suggest` fast validation recommendations;
-- record command duration, exit code, byte counts, and compact error signatures;
-- keep full stdout/stderr out of markdown reports by default;
-- recommend faster language-specific alternatives for .NET, Flutter, React/TypeScript, Python, and Node;
-- include compact command profile summaries in run reports and handoffs.
+- `docs/REPORT_FORMATS.md` for report/handoff impact;
+- `docs/DATA_MODEL.md` for command history shape;
+- `docs/SECURITY_AND_PRIVACY.md` for command output redaction/storage.
 
-Validation:
+Return:
 
-```bash
-dotnet build AgentsWatch.sln
-dotnet test --filter Command
-dotnet test --filter Validation
+1. minimal CLI contract;
+2. minimum data record;
+3. report/handoff impact;
+4. security risks;
+5. next prompt.
+
+## AW-011B-E — Follow-up implementation slices
+
+Do not run these until AW-011A produces accepted design evidence.
+
+Suggested split:
+
+```text
+AW-011B — command history model
+AW-011C — agentswatch run wrapper
+AW-011D — validate --suggest fast advisor
+AW-011E — report/handoff integration
 ```
 
-Stop rules:
-
-- stop if Gate 0 evidence is missing;
-- stop if command execution needs broad shell abstraction;
-- stop if command output may expose secrets without redaction;
-- stop if more than one runtime feature slice is required;
-- stop if validation failures repeat twice.
+Each follow-up must use one run mode, one implementation slice, and targeted validation only.
