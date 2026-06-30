@@ -8,6 +8,8 @@ Use this file to choose the smallest useful context before running an agent.
 
 - `AGENTS.md`
 - `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
+- `docs/PROMPT_LINT_CHECKLIST.md`
 - `docs/AGENT_OPERATING_SYSTEM.md`
 - owning prompt queue
 
@@ -63,6 +65,8 @@ Use when:
 
 Read:
 
+- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
+- `docs/PROMPT_LINT_CHECKLIST.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/PROMPT_RULES.md`
 - `docs/PROMPT_QUALITY_CHECKLIST.md`
