@@ -11,11 +11,14 @@ AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 5. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
 6. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`.
 7. `docs/PROMPT_LINT_CHECKLIST.md`.
-8. `docs/AGENT_OPERATING_SYSTEM.md`.
-9. `docs/CONTEXT_INDEX.md`.
-10. Bootstrap validation docs while Gate 0 is incomplete.
-11. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
-12. Prompt queues under `docs/prompt_queues/`.
+8. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
+9. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
+10. `docs/WASTE_LEARNING_LOOP.md`.
+11. `docs/AGENT_OPERATING_SYSTEM.md`.
+12. `docs/CONTEXT_INDEX.md`.
+13. Bootstrap validation docs while Gate 0 is incomplete.
+14. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
+15. Prompt queues under `docs/prompt_queues/`.
 
 ## Product rules
 
@@ -42,6 +45,33 @@ Use `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` as the hard authority for:
 - final evidence requirements.
 
 Reject or rewrite prompts that fail lint.
+
+## Run evidence and learning rule
+
+Every non-trivial run must leave realistic evidence before it is considered complete.
+
+The agent must record:
+
+- what was done;
+- what was missed;
+- files inspected;
+- files changed;
+- validation run or why it did not run;
+- where time/tokens were wasted;
+- why waste happened;
+- docs/rules updated to prevent repeat;
+- optimized prompt added or reason none was needed;
+- follow-up prompt;
+- residual risk;
+- commit SHA.
+
+For every meaningful issue, waste item, blocker, stale reference, unclear rule, or repeated failure, the agent must do at least one of:
+
+1. update an existing docs rule;
+2. add a new rule to the relevant playbook;
+3. update the prompt queue;
+4. add a new optimized prompt;
+5. record why no rule or prompt update was needed.
 
 ## Bootstrap rule
 
@@ -76,17 +106,20 @@ Use investigation-only first when root cause is unknown. Use diff-only review af
 1. Read `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
 2. Lint the prompt with `docs/PROMPT_LINT_CHECKLIST.md`.
 3. Apply `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` limits.
-4. If the user asks for the next prompt, use `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`.
-5. Read `docs/CONTEXT_INDEX.md` and the owning queue.
-6. If Gate 0 is incomplete, select from `docs/prompt_queues/bootstrap_validation.md`.
-7. Otherwise select one Ready prompt from the owning queue.
-8. Inspect only the relevant docs/files.
-9. Make the smallest safe change.
-10. Add targeted tests when runtime behavior changes.
-11. Run narrow validation when possible.
-12. Record validation honestly.
-13. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
-14. Commit and push to `main` unless the user requests another flow.
+4. Follow `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md` during execution.
+5. If the user asks for the next prompt, use `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`.
+6. Read `docs/CONTEXT_INDEX.md` and the owning queue.
+7. If Gate 0 is incomplete, select from `docs/prompt_queues/bootstrap_validation.md`.
+8. Otherwise select one Ready prompt from the owning queue.
+9. Inspect only the relevant docs/files.
+10. Make the smallest safe change.
+11. Add targeted tests when runtime behavior changes.
+12. Run narrow validation when possible.
+13. Record validation honestly.
+14. Record run evidence using `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
+15. Apply `docs/WASTE_LEARNING_LOOP.md`: update docs/rules/queue or add an optimized prompt for discovered waste.
+16. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
+17. Commit and push to `main` unless the user requests another flow.
 
 ## Validation defaults
 
