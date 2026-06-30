@@ -86,6 +86,20 @@ Mismatches:
 
 - <missed item or none>
 
+## Learning
+
+Mistakes:
+- <category or none>
+
+Token waste:
+- <over-read/over-test/repeated failure/none>
+
+Learning note:
+- Next time, avoid <waste/mistake> by <specific rule>.
+
+Do not repeat:
+- <specific repeatable mistake or none>
+
 ## Follow-up
 
 - <next prompt or none>
@@ -99,6 +113,42 @@ Broad commands avoided: <n or unknown>
 Large logs avoided: <n or unknown>
 Largest waste source: <text>
 Next token-saving improvement: <text>
+```
+
+---
+
+## Post-prompt learning section rules
+
+The learning section is controlled by `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`.
+
+Rules:
+
+- every run should produce one compact learning note;
+- learning notes must be specific and repeatable;
+- do not add vague rules such as `be better` or `read everything`;
+- do not include full chat history;
+- do not include full terminal logs;
+- do not include secrets;
+- add `Do not repeat` only for mistakes likely to happen again;
+- prefer token-saving rules that reduce future reads, tests, logs, or prompt size.
+
+Example:
+
+```markdown
+## Learning
+
+Mistakes:
+- OverRead
+- FlutterStateRisk
+
+Token waste:
+- Read unrelated navigation docs for a provider-only change.
+
+Learning note:
+- Next time, for provider-only Flutter changes, inspect changed provider files and Flutter adapter only before reading navigation docs.
+
+Do not repeat:
+- Do not run full Flutter integration validation for a provider-only change unless persistence/navigation files changed.
 ```
 
 ---
@@ -160,6 +210,8 @@ Root cause:
 Validation run:
 Validation blocked:
 Command profile:
+Learning note:
+Do not repeat next:
 Do not inspect next:
 Next minimal prompt:
 Residual risk:
@@ -171,6 +223,12 @@ Command profile in handoff should be one or two lines only, for example:
 
 ```text
 Command profile: targeted `dotnet test --filter Git` passed in 3.8s; avoid full solution test unless project refs changed.
+```
+
+Learning note in handoff should be one line only, for example:
+
+```text
+Learning note: next Flutter prompt should stay provider-only; do not inspect navigation unless changed files require it.
 ```
 
 ---
@@ -197,6 +255,7 @@ Review only:
 - changed files in this commit/range
 - validation evidence from the run report
 - compact command profile evidence from the run report
+- learning note and do-not-repeat items from the run report
 
 Do not inspect the whole repo unless a changed file references a missing symbol or contract.
 Do not request full command logs unless the compact error signature is insufficient.
@@ -206,7 +265,8 @@ Return:
 2. missed tests
 3. risky scope creep
 4. claimed-vs-actual mismatch
-5. follow-up prompt if needed
+5. repeated mistake or token waste pattern
+6. follow-up prompt if needed
 ```
 
 ---
@@ -225,6 +285,7 @@ Should include:
 - latest commit;
 - latest validation status;
 - latest command profile summary if available;
+- latest learning note;
 - open risks;
 - next prompt.
 
@@ -251,6 +312,9 @@ Validation:
 
 Command profile:
 - <slowest command or targeted validation evidence, if available>
+
+Learning:
+- <one useful learning note>
 
 Risk:
 - <low|medium|high>
