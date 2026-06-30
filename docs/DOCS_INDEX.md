@@ -96,6 +96,7 @@ Last aligned: 2026-06-29
 |---|---|
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for choosing the next prompt. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready safest next prompt. |
+| `prompt_queues/PROMPT_SYSTEM_AUDIT_2026_06_29.md` | Prompt-system reorganization evidence. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
