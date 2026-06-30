@@ -2,7 +2,7 @@
 
 AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 
-It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, profiling expensive commands, and generating compact handoff summaries.
+It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, profiling expensive commands, logging post-prompt lessons, and generating compact handoff summaries.
 
 ## Core promise
 
@@ -13,7 +13,7 @@ Spend fewer tokens. Merge safer AI code.
 Practical target:
 
 ```text
-Reduce AI coding-agent token waste by 30-50% on typical multi-file tasks by splitting prompts, limiting scope, tracking diffs, and using compact handoff summaries.
+Reduce AI coding-agent token waste by 30-50% on typical multi-file tasks by splitting prompts, limiting scope, tracking diffs, learning from run logs, and using compact handoff summaries.
 ```
 
 Use higher savings claims only for oversized repo-analysis prompts.
@@ -50,6 +50,17 @@ AW-011 rule:
 ```text
 Profile commands locally. Show agents only compact command evidence.
 ```
+
+## Post-prompt logging rule
+
+Every agent run should leave compact evidence and one learning note.
+
+See:
+
+- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
+- `docs/prompts/LOG-001-post-prompt-run-log.md`
+- `docs/prompts/LOG-002-mistake-pattern-review.md`
+- `docs/prompts/LOG-003-flutter-agent-run-review.md`
 
 ## Supervised autopilot rule
 
@@ -114,6 +125,7 @@ docs/
 - Diff-only review after implementation commits.
 - Compact handoff summaries instead of long chat history.
 - Compact command summaries instead of full terminal logs.
+- One learning note after every agent run.
 - Risky actions require explicit approval gates.
 - Supervised prompt sequencing before continuous autopilot.
 
@@ -126,6 +138,7 @@ Planning and skeleton stage. See:
 - `docs/MVP_ROADMAP.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
 - `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
 - `docs/AGENT_RISK_BOUNDARIES.md`
 - `docs/AGENT_PERMISSION_MODEL.md`
