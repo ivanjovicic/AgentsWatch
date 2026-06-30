@@ -10,6 +10,15 @@ Gate 0 is incomplete.
 
 That means validation-first prompts have priority over feature prompts.
 
+## Mandatory pre-run lint
+
+Before running any prompt, apply:
+
+- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
+- `docs/PROMPT_LINT_CHECKLIST.md`
+
+If the prompt fails lint, rewrite or split it before execution.
+
 ## Fast decision tree
 
 ```text
