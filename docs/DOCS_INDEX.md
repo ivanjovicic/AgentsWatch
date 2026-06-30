@@ -39,6 +39,7 @@ Last aligned: 2026-06-29
 | `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Mandatory execution protocol for minimal context, discovery, patching, validation, and waste checkpoints. |
 | `AGENT_RUN_EVIDENCE_STANDARD.md` | Mandatory real run-evidence fields, waste categories, docs updates, and optimized prompt rules. |
 | `WASTE_LEARNING_LOOP.md` | Convert wasted steps into docs/rule/queue updates and new optimized prompts. |
+| `PROMPT_BATCH_REVIEW_POLICY.md` | Batch review after 3-5 important prompt/rule/queue/evidence commits. |
 | `AGENT_COMMAND_PLAYBOOK.md` | Shell-neutral .NET/git/CLI validation commands. |
 | `AGENT_LONG_TASK_PLAYBOOK.md` | Long-task control loop, environment blockers, evidence rules. |
 | `AGENT_PATCH_PLAYBOOK.md` | Small safe patch strategy and retry limits. |
@@ -110,4 +111,4 @@ Last aligned: 2026-06-29
 
 ## Rule
 
-If documents disagree, use current code/tests first, then prompt queue router, then prompt token economy rulebook, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy for prompt-system batches, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
