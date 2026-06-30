@@ -51,6 +51,16 @@ AW-011 rule:
 Profile commands locally. Show agents only compact command evidence.
 ```
 
+## Agent safety rule
+
+Agents may suggest risky actions, but must not execute them without an explicit approval gate.
+
+See:
+
+- `docs/AGENT_RISK_BOUNDARIES.md`
+- `docs/AGENT_PERMISSION_MODEL.md`
+- `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
+
 ## Bootstrap warning
 
 The initial skeleton was created through GitHub file writes, so the next work must be validation-first:
@@ -92,6 +102,7 @@ docs/
 - Diff-only review after implementation commits.
 - Compact handoff summaries instead of long chat history.
 - Compact command summaries instead of full terminal logs.
+- Risky actions require explicit approval gates.
 
 ## Current status
 
@@ -102,6 +113,8 @@ Planning and skeleton stage. See:
 - `docs/MVP_ROADMAP.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/AGENT_RISK_BOUNDARIES.md`
+- `docs/AGENT_PERMISSION_MODEL.md`
 - `docs/BUILD_VALIDATION_PLAN.md`
 - `docs/BOOTSTRAP_NEXT_STEPS.md`
 - `docs/prompt_queues/bootstrap_validation.md`
