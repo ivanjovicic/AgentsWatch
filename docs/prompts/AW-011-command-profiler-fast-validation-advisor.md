@@ -1,117 +1,111 @@
-# AW-011 — Command Profiler / Fast Validation Advisor
+# AW-011A — Command Profiler / Fast Validation Advisor contracts
 
-Run mode: investigation-first, then implementation in smaller follow-up prompts  
-Token budget: medium  
-Gate: after `AW-VAL-001`, `AW-VAL-002`, `AW-003`, and validation-runner groundwork
+Repository: `ivanjovicic/AgentsWatch`  
+Prompt ID: `AW-011A`  
+Queue: `docs/prompt_queues/agentwatch_mvp.md`  
+Run mode: investigation-only  
+Token budget: low  
+Gate: after `AW-003` run report groundwork and `AW-008` validation-command groundwork
 
-## Read first
+## Purpose
 
-- `AGENTS.md`
-- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
-- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
+Investigate the smallest safe contract for command profiling and fast validation advice.
+
+Do not implement code in this prompt.
+
+## Minimum read
+
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 - `docs/COMMAND_CONTRACTS.md`
-- `docs/CLI_UX_OUTPUT_SPEC.md`
-- `docs/ADAPTER_SPEC.md`
-- `docs/REPORT_FORMATS.md`
-- `docs/DATA_MODEL.md`
-- `docs/SECURITY_AND_PRIVACY.md`
+- `docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md`
+
+## Optional read only if needed
+
+- `docs/REPORT_FORMATS.md` if report/handoff shape is unclear;
+- `docs/DATA_MODEL.md` if command history shape is unclear;
+- `docs/SECURITY_AND_PRIVACY.md` if output redaction/storage is unclear;
+- `docs/ADAPTER_SPEC.md` if language-specific validation rules are unclear.
 
 ## Task
 
-Design and later implement a local command profiler and fast validation advisor that helps agents avoid slow repeated validation commands and avoid sending large logs into model context.
+Produce a minimal implementation plan for AW-011 without adding runtime behavior.
 
-Start with investigation/design unless a previous prompt has already produced accepted design evidence.
+Answer only:
 
-## Required behavior later
+1. minimal CLI contract for `agentswatch run -- <command>`;
+2. minimal CLI contract for `agentswatch validate --suggest`;
+3. minimum command history record;
+4. token-safe report/handoff section;
+5. security/redaction risks;
+6. exact next prompt.
 
-- add `agentswatch run -- <command>` as a local command wrapper;
-- record command duration, exit code, output sizes, and compact error signature;
-- add `agentswatch validate --suggest` recommendations;
-- keep full stdout/stderr out of markdown reports by default;
-- recommend language-specific fast validation commands;
-- include compact command profile summaries in run reports and handoffs.
+## Scope limiter
 
-## Owned paths
+Inspect only:
 
 ```text
 docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md
 docs/COMMAND_CONTRACTS.md
-docs/CLI_UX_OUTPUT_SPEC.md
-docs/ADAPTER_SPEC.md
+docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md
+```
+
+Do not inspect unless required:
+
+```text
 docs/REPORT_FORMATS.md
 docs/DATA_MODEL.md
-src/AgentsWatch.Cli/
-src/AgentsWatch.Core/
-src/AgentsWatch.LanguageAdapters/
-src/AgentsWatch.Reports/
-tests/AgentsWatch.Tests/
+docs/SECURITY_AND_PRIVACY.md
+docs/ADAPTER_SPEC.md
 ```
 
-## Avoid paths
+Do not edit:
 
 ```text
-.github/workflows/
-SaaS/dashboard code
-cloud sync/auth/billing
-unrelated prompt optimizer rewrites
-unrelated git parser refactors
-```
-
-## Token and log rules
-
-- Do not paste full terminal logs into the prompt or final answer.
-- Do not write full stdout/stderr into markdown reports by default.
-- Record command metrics and compact summaries only.
-- Redact secret-looking values before writing summaries.
-- Use targeted validation before broad validation when changed files allow it.
-
-## Suggested split
-
-```text
-001-investigate-command-profiler-contracts.md
-002-implement-command-history-model.md
-003-implement-agentswatch-run-wrapper.md
-004-implement-validate-suggest-fast-advisor.md
-005-add-command-profile-report-section.md
-006-add-security-redaction-tests.md
-007-diff-only-review-command-profiler.md
+src/
+tests/
+.github/
 ```
 
 ## Validation
 
-Use targeted validation first:
+No runtime validation required. This is investigation-only.
 
-```bash
-dotnet build AgentsWatch.sln
-dotnet test --filter Command
-dotnet test --filter Validation
-```
+If docs are changed later, record:
 
-Run broader validation only if runtime project references or shared contracts changed:
-
-```bash
-dotnet test AgentsWatch.sln
+```text
+Validation: docs-only, not run
 ```
 
 ## Stop rules
 
 Stop and report if:
 
-- Gate 0 evidence is still missing;
-- implementing the wrapper requires broad shell abstraction work;
-- command output capture risks storing secrets without redaction;
-- adapter detection cannot identify the project type;
-- more than one runtime feature slice is needed;
-- validation failures repeat twice.
+- Gate evidence is missing;
+- implementation work is needed;
+- more than five docs are needed;
+- shell/process execution design requires broad architecture work;
+- command output privacy cannot be summarized safely.
 
-## Return
+## Follow-up split
 
-1. files inspected;
-2. files changed;
-3. command contracts added or changed;
-4. storage/report format decisions;
-5. validation run or blocked reason;
-6. command-log token waste avoided;
-7. residual risk;
-8. next minimal prompt.
+Use one follow-up prompt per implementation slice:
+
+```text
+AW-011B — command history model
+AW-011C — agentswatch run wrapper
+AW-011D — validate --suggest fast advisor
+AW-011E — report/handoff integration
+```
+
+## Compact final response
+
+```text
+Prompt ID:
+Files inspected:
+Decision:
+Next CLI contract:
+Storage shape:
+Report shape:
+Risks:
+Next prompt:
+```
