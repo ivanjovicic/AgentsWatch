@@ -1,6 +1,6 @@
 # AgentsWatch Product Spec
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Status: planning/specification
 
 ## Description
@@ -29,6 +29,8 @@ AI coding agents often waste tokens and create risk because they:
 
 - inspect too many files;
 - repeat searches;
+- repeat slow validation commands after small changes;
+- paste large terminal logs back into model context;
 - mix investigation, implementation, tests, docs, and review in one run;
 - continue after the prompt should stop;
 - edit unrelated files;
@@ -77,7 +79,20 @@ MVP 2:
 - validation runner;
 - handoff summary generator;
 - token waste report;
-- diff-only review prompt generator.
+- diff-only review prompt generator;
+- command profiler / fast validation advisor.
+
+## Command profiler principle
+
+The Command Profiler / Fast Validation Advisor is a planned docs-first epic. It should help agents pick faster language-specific validation commands and avoid large terminal logs.
+
+Rule:
+
+```text
+Profile commands locally. Show agents only compact command evidence.
+```
+
+See `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`.
 
 ## Non-goals for v1
 
@@ -89,4 +104,5 @@ Do not start with:
 - deep IDE integration;
 - automatic code editing;
 - perfect token counting;
-- perfect AI acceptance-criteria inference.
+- perfect AI acceptance-criteria inference;
+- uploading command logs or run history by default.

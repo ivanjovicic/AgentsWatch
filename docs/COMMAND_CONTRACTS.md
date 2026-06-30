@@ -1,6 +1,6 @@
 # AgentsWatch CLI Command Contracts
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Status: product contract, not yet fully implemented
 
 ## Purpose
@@ -22,7 +22,9 @@ All commands should:
 - print concise output by default;
 - return non-zero exit code on real failure;
 - write markdown artifacts only when the command promises to write them;
-- keep sensitive file contents out of reports.
+- keep sensitive file contents out of reports;
+- keep full stdout/stderr out of markdown reports by default;
+- summarize command output with duration, exit code, byte counts, and compact error signatures.
 
 Exit codes draft:
 
@@ -176,6 +178,7 @@ Captures:
 - end timestamp;
 - changed files;
 - validation entered by user or read from run notes;
+- profiled command summaries if present;
 - missed work;
 - follow-up;
 - residual risk.
@@ -187,6 +190,12 @@ Writes:
 .ai/runs/<run-id>-handoff.md
 ```
 
+Rules:
+
+- should include compact validation evidence only;
+- should not include full command logs by default;
+- should never claim validation passed unless command evidence or user-entered evidence exists.
+
 ---
 
 ## `agentswatch report`
@@ -197,7 +206,9 @@ Rules:
 
 - default to latest run;
 - support `--task <id>` later;
-- never claim validation passed unless evidence exists.
+- never claim validation passed unless evidence exists;
+- include command profile summaries when available;
+- omit raw stdout/stderr unless a future explicit debug/export flag is used.
 
 ---
 
@@ -209,7 +220,9 @@ Rules:
 
 - target 10-20 lines;
 - include relevant files, validation, missed work, next prompt, residual risk;
-- no long chat history.
+- include only compact command evidence;
+- no long chat history;
+- no full terminal logs.
 
 ---
 
@@ -233,7 +246,81 @@ Purpose: run or suggest configured validation commands.
 MVP behavior:
 
 - suggest commands by default;
+- support `--suggest` as explicit no-run behavior;
 - running commands should be explicit with `--run` later;
-- record pass/fail/not-run honestly.
+- record pass/fail/not-run honestly;
+- recommend targeted validation before broad validation when changed files allow it.
+
+Suggested later options:
+
+```text
+agentswatch validate --suggest
+agentswatch validate --profile
+agentswatch validate --run fast
+agentswatch validate --run default
+```
+
+`--suggest` output should include:
+
+```text
+Detected types:
+Changed files:
+Recommended fast validation:
+Recommended full validation:
+Avoid by default:
+Why:
+```
 
 Do not implement broad automatic validation before the command safety design is validated.
+
+---
+
+## `agentswatch run -- <command>`
+
+Purpose: execute a local command through the Command Profiler and record compact evidence.
+
+Planned examples:
+
+```bash
+agentswatch run -- dotnet test --filter Git
+agentswatch run -- flutter analyze
+agentswatch run -- npm run build
+agentswatch run -- pytest tests/foo -q
+```
+
+Records:
+
+- command text;
+- working directory;
+- detected project types;
+- start/end timestamps;
+- duration in milliseconds;
+- exit code;
+- stdout/stderr byte counts;
+- first useful error line;
+- compact output summary;
+- whether the command was suggested by AgentsWatch.
+
+Writes later:
+
+```text
+.agentwatch/command-history.jsonl
+```
+
+Optional raw logs later:
+
+```text
+.agentwatch/logs/<command-id>.stdout.txt
+.agentwatch/logs/<command-id>.stderr.txt
+```
+
+Rules:
+
+- command execution must be explicit;
+- never upload command output;
+- never paste full stdout/stderr into markdown reports by default;
+- redact secret-looking values before writing summaries;
+- keep output concise enough to paste into an agent handoff;
+- if output is huge, record byte counts and a short summary only.
+
+See `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md` for the full AW-011 contract.

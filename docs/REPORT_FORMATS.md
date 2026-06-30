@@ -1,6 +1,6 @@
 # AgentsWatch Report Formats
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Status: draft contract
 
 ## Purpose
@@ -56,6 +56,21 @@ Changed files:
 
 - `<command>`: pass/fail/not run
 
+## Command profile
+
+Slowest commands:
+- `<command>`: <duration>, <status>, <compact error signature or none>
+
+Recommended next validation:
+- `<command>`
+
+Avoid by default:
+- `<command or rule>`
+
+Command-output policy:
+- full stdout/stderr omitted from report
+- first useful error line recorded only if present
+
 ## Claims vs actual
 
 Claimed:
@@ -81,8 +96,45 @@ Files inspected: <n or unknown>
 Files changed: <n>
 Repeated searches: <n or unknown>
 Broad commands avoided: <n or unknown>
+Large logs avoided: <n or unknown>
 Largest waste source: <text>
 Next token-saving improvement: <text>
+```
+
+---
+
+## Command profile section rules
+
+The command profile section is controlled by `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`.
+
+Rules:
+
+- include duration, status, and compact error signature;
+- include stdout/stderr byte counts only when helpful;
+- do not include full stdout/stderr by default;
+- do not include secret-looking values;
+- recommend the next smallest useful validation command;
+- mark command evidence as `not available` if no command was profiled.
+
+Example:
+
+```markdown
+## Command profile
+
+Slowest commands:
+- `dotnet test AgentsWatch.sln`: 42.3s, fail, `CS0246`
+- `dotnet test --filter Git`: 3.8s, pass, none
+
+Recommended next validation:
+- `dotnet build --no-restore`
+- `dotnet test --filter Git`
+
+Avoid by default:
+- full solution test unless project references or shared contracts changed
+
+Command-output policy:
+- full stdout/stderr omitted from report
+- first useful error line recorded only if present
 ```
 
 ---
@@ -107,12 +159,19 @@ Files changed:
 Root cause:
 Validation run:
 Validation blocked:
+Command profile:
 Do not inspect next:
 Next minimal prompt:
 Residual risk:
 ```
 
 Keep handoff summaries short. Target 10-20 lines.
+
+Command profile in handoff should be one or two lines only, for example:
+
+```text
+Command profile: targeted `dotnet test --filter Git` passed in 3.8s; avoid full solution test unless project refs changed.
+```
 
 ---
 
@@ -137,8 +196,10 @@ Token budget: low
 Review only:
 - changed files in this commit/range
 - validation evidence from the run report
+- compact command profile evidence from the run report
 
 Do not inspect the whole repo unless a changed file references a missing symbol or contract.
+Do not request full command logs unless the compact error signature is insufficient.
 
 Return:
 1. blocking issues
@@ -163,6 +224,7 @@ Should include:
 - latest run id;
 - latest commit;
 - latest validation status;
+- latest command profile summary if available;
 - open risks;
 - next prompt.
 
@@ -186,6 +248,9 @@ Changed:
 
 Validation:
 - <command/result>
+
+Command profile:
+- <slowest command or targeted validation evidence, if available>
 
 Risk:
 - <low|medium|high>

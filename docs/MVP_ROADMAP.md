@@ -1,6 +1,6 @@
 # AgentsWatch MVP Roadmap
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Status: planning/specification
 
 ## Strategy
@@ -63,6 +63,24 @@ Add:
 5. Token waste report.
 6. Diff-only review prompt generator.
 7. Language adapters for Flutter, .NET, React/TypeScript, Python, Node.
+8. Command Profiler / Fast Validation Advisor.
+
+## AW-011 timing
+
+`AW-011 Command Profiler / Fast Validation Advisor` belongs after the first validation and report foundations exist.
+
+It should not block Phase 1. It should be implemented only after:
+
+- build/test/smoke validation evidence exists;
+- git run reports exist;
+- validation command suggestion behavior is designed or implemented;
+- command-output privacy rules are accepted.
+
+Value target:
+
+```text
+Reduce command-loop waste by recommending targeted validation and avoiding large terminal logs in agent context.
+```
 
 ## Phase 3: Local dashboard, 8-12 weeks total
 
@@ -82,6 +100,7 @@ Dashboard pages:
 - Risk report;
 - Token waste;
 - Validation results;
+- Command profile;
 - Changelog;
 - Settings.
 
@@ -122,5 +141,6 @@ Add:
 8. Changelog generator.
 9. Validation runner.
 10. Claimed-vs-actual diff.
+11. Command Profiler / Fast Validation Advisor.
 
-Reason: git/diff/report creates immediate value even before prompt optimization is smart.
+Reason: git/diff/report creates immediate value even before prompt optimization is smart. Command profiling comes after validation basics because it depends on trustworthy command evidence.

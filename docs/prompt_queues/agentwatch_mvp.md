@@ -1,6 +1,6 @@
 # AgentsWatch MVP Prompt Queue
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Target repo: `ivanjovicic/AgentsWatch`
 
 Purpose: build AgentsWatch as a local CLI that supervises AI coding-agent runs and reduces token waste.
@@ -15,17 +15,18 @@ Current next prompt:
 AW-VAL-001 — Build validation
 ```
 
-## Read first
+## Read rule
 
-- `../../AGENTS.md`
-- `PROMPT_QUEUE_ROUTER.md`
-- `NEXT_PROMPT_FAST_PATH.md`
-- `../PRODUCT_SPEC.md`
-- `../COMMAND_CONTRACTS.md`
-- `../CLI_UX_OUTPUT_SPEC.md`
-- `../MVP_EPICS_AND_ACCEPTANCE.md`
-- `../PROMPT_OPTIMIZATION_PLAYBOOK.md`
-- `../ARCHITECTURE.md`
+Do not read this whole queue plus every linked product document by default.
+
+Minimum read:
+
+- this prompt queue section for the selected prompt;
+- `PROMPT_QUEUE_ROUTER.md` if gate status is unclear;
+- one relevant contract doc from `docs/CONTEXT_INDEX.md`.
+
+Use `docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md` for default anti-waste rules.
+Use the full rulebook only when changing prompt-system rules.
 
 ## Rules
 
@@ -35,6 +36,8 @@ AW-VAL-001 — Build validation
 - Each implementation prompt must have a token budget, scope limiter, stop rules, validation, and handoff summary.
 - Do not build dashboard before CLI MVP proves useful.
 - Do not run AW-002+ until AW-VAL-001 and AW-VAL-002 evidence exists.
+- Do not implement AW-011 runtime behavior until validation runner groundwork exists.
+- Do not paste full command logs into prompts or markdown reports; use compact command evidence.
 
 ## Active prompts
 
@@ -54,6 +57,11 @@ AW-VAL-001 — Build validation
 | AW-008 | Blocked until AW-VAL-001/002 evidence exists | Implement validation command runner with language adapters. |
 | AW-009 | Blocked until AW-VAL-001/002 evidence exists | Implement claimed-vs-actual diff heuristic. |
 | AW-010 | Blocked until CLI MVP evidence exists | Create local dashboard plan after CLI MVP evidence exists. |
+| AW-011A | Blocked until AW-003/AW-008 groundwork exists | Investigate Command Profiler / Fast Validation Advisor contracts. |
+| AW-011B | Blocked until AW-011A evidence exists | Implement command history data model. |
+| AW-011C | Blocked until AW-011B evidence exists | Implement `agentswatch run -- <command>` wrapper. |
+| AW-011D | Blocked until AW-011C evidence exists | Implement `agentswatch validate --suggest` fast advisor. |
+| AW-011E | Blocked until AW-011D evidence exists | Add command profile report/handoff integration. |
 
 ## AW-002 — Init command hardening
 
@@ -136,3 +144,46 @@ Required generated prompts:
 ```
 
 Each prompt must include run mode, token budget, scope limiter, owned paths, avoid paths, stop rules, validation, and final response shape.
+
+## AW-011A — Command Profiler / Fast Validation Advisor contracts
+
+Run mode: investigation-only  
+Token budget: low  
+Gate: after AW-003 run report groundwork and AW-008 validation-command groundwork
+
+Task: investigate the smallest safe contract for command profiling and fast validation advice.
+
+Minimum read:
+
+- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/COMMAND_CONTRACTS.md`
+- `docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md`
+
+Optional only if needed:
+
+- `docs/REPORT_FORMATS.md` for report/handoff impact;
+- `docs/DATA_MODEL.md` for command history shape;
+- `docs/SECURITY_AND_PRIVACY.md` for command output redaction/storage.
+
+Return:
+
+1. minimal CLI contract;
+2. minimum data record;
+3. report/handoff impact;
+4. security risks;
+5. next prompt.
+
+## AW-011B-E — Follow-up implementation slices
+
+Do not run these until AW-011A produces accepted design evidence.
+
+Suggested split:
+
+```text
+AW-011B — command history model
+AW-011C — agentswatch run wrapper
+AW-011D — validate --suggest fast advisor
+AW-011E — report/handoff integration
+```
+
+Each follow-up must use one run mode, one implementation slice, and targeted validation only.

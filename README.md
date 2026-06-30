@@ -2,7 +2,7 @@
 
 AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 
-It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, and generating compact handoff summaries.
+It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, profiling expensive commands, and generating compact handoff summaries.
 
 ## Core promise
 
@@ -35,6 +35,20 @@ agentswatch handoff
 agentswatch review-diff <commit-or-range>
 agentswatch validate
 agentswatch status
+```
+
+Planned AW-011 commands:
+
+```bash
+agentswatch run -- <command>
+agentswatch validate --suggest
+agentswatch validate --profile
+```
+
+AW-011 rule:
+
+```text
+Profile commands locally. Show agents only compact command evidence.
 ```
 
 ## Bootstrap warning
@@ -77,6 +91,7 @@ docs/
 - Investigation-only first for uncertain bugs.
 - Diff-only review after implementation commits.
 - Compact handoff summaries instead of long chat history.
+- Compact command summaries instead of full terminal logs.
 
 ## Current status
 
@@ -86,6 +101,7 @@ Planning and skeleton stage. See:
 - `docs/CLI_SPEC.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
+- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 - `docs/BUILD_VALIDATION_PLAN.md`
 - `docs/BOOTSTRAP_NEXT_STEPS.md`
 - `docs/prompt_queues/bootstrap_validation.md`

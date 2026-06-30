@@ -1,11 +1,11 @@
 # AgentsWatch Security and Privacy Guide
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Status: draft guardrails
 
 ## Principle
 
-AgentsWatch is local-first. The MVP must not upload source code, prompts, diffs, reports, secrets, or run history to a cloud service.
+AgentsWatch is local-first. The MVP must not upload source code, prompts, diffs, reports, secrets, command logs, or run history to a cloud service.
 
 ## MVP privacy rules
 
@@ -14,6 +14,7 @@ AgentsWatch is local-first. The MVP must not upload source code, prompts, diffs,
 - No telemetry by default.
 - No LLM provider keys required.
 - No automatic source upload.
+- No automatic command-output upload.
 - No automatic PR comments.
 - No hidden network calls.
 
@@ -44,6 +45,31 @@ Behavior:
 Markdown reports should avoid full secret values, tokens, cookies, private keys, or connection strings.
 
 If a command output contains sensitive-looking values, future versions should redact them before writing reports.
+
+## Command output safety
+
+AW-011 command profiling must follow these rules:
+
+- do not write full stdout/stderr into markdown reports by default;
+- do not paste full command logs into generated prompts by default;
+- store duration, exit code, byte counts, and compact summaries instead;
+- store only the first useful error line when needed;
+- redact secret-looking values before writing `OutputSummary` or `FirstErrorLine`;
+- optional raw logs must be local-only and explicitly requested;
+- raw logs must be size-limited and easy to delete;
+- command profiles must not perform hidden network calls.
+
+Sensitive-looking output examples to redact:
+
+```text
+password=...
+Authorization: Bearer ...
+connection strings
+API keys
+private keys
+cookies
+JWT tokens
+```
 
 ## Network access
 

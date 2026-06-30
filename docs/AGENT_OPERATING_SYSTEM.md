@@ -1,13 +1,13 @@
 # AgentsWatch Agent Operating System
 
-Last aligned: 2026-06-29  
-Status: canonical agent workflow
+Last aligned: 2026-06-30  
+Status: canonical agent workflow, not default context
 
 ## Purpose
 
-This document adapts the strongest AI-agent workflow rules from `Mathlearning-Mobile-App` to AgentsWatch.
+This document defines the agent workflow for AgentsWatch.
 
-AgentsWatch is itself a product for supervising agents, so its repo must be stricter than a normal app repo.
+Do not read this file for every small task. Read it when agent behavior, workflow, long-task control, or evidence rules are unclear.
 
 ## Source ideas adapted
 
@@ -31,24 +31,29 @@ AgentsWatch-specific additions:
 
 ---
 
-## Required read order
+## Read order
 
-For every non-trivial task, read:
+Default small task:
 
-1. `AGENTS.md`
-2. `docs/CONTEXT_INDEX.md`
-3. `docs/BOOTSTRAP_NEXT_STEPS.md` if Gate 0 is incomplete
-4. the owning prompt queue
-5. the relevant product contract doc
-6. this file if agent behavior is unclear
+```text
+1. owning prompt or queue section
+2. one relevant contract doc
+3. one implementation file or focused design doc
+```
 
-For broad, multi-step, validation, review, or handoff work, also read:
+If gate status is unclear, add:
 
-- `docs/PROMPT_RULES.md`
-- `docs/PROMPT_QUALITY_CHECKLIST.md`
-- `docs/AGENT_COMMAND_PLAYBOOK.md`
-- `docs/AGENT_LONG_TASK_PLAYBOOK.md`
-- `docs/PROMPT_EVIDENCE_TEMPLATE.md`
+```text
+docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
+```
+
+If anti-waste rules are needed, add:
+
+```text
+docs/PROMPT_TOKEN_ECONOMY_QUICK_RULES.md
+```
+
+Read this operating-system file only if the run needs workflow clarification.
 
 ---
 
@@ -74,14 +79,14 @@ If a task needs more than one mode, split it.
 
 ```text
 1. Select one prompt.
-2. Confirm bootstrap/roadmap gate status.
+2. Confirm gate status only if relevant.
 3. State run mode, token budget, scope, stop rules.
 4. Inspect only the smallest useful docs/files.
 5. Make the smallest safe change, or stop with evidence.
 6. Run narrow validation when available.
 7. Record validation honestly.
 8. Commit only owned files.
-9. Final response includes commit SHA, completion %, missed, follow-up, residual risk.
+9. Final response includes evidence, missed work, follow-up, residual risk.
 ```
 
 ---
@@ -100,6 +105,8 @@ Required order:
 
 Do not implement new CLI features before build/test/smoke evidence exists.
 
+Docs-only planning is allowed if it does not claim runtime completion.
+
 ---
 
 ## Done means evidence exists
@@ -112,4 +119,20 @@ A prompt is Done only when the repo has:
 - validation evidence or explicit blocked reason;
 - risk note;
 - follow-up prompt if incomplete;
-- pushed commit on `main` or documented reason push was not possible.
+- pushed commit or documented reason push was not possible.
+
+---
+
+## Anti-waste override
+
+If following a rule would require reading many extra docs for a small task, use the quick rules and stop at the smallest safe context.
+
+Prefer:
+
+```text
+compact evidence > long reports
+one contract doc > many background docs
+targeted validation > full validation
+handoff summary > chat history
+command profile summary > command log paste
+```
