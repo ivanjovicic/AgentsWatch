@@ -21,6 +21,9 @@ Use:
 .ai/tasks/
 .ai/runs/
 .ai/generated/
+.ai/learning/LESSONS.md
+.ai/learning/MISTAKE_PATTERNS.md
+.ai/learning/DO_NOT_REPEAT.md
 .ai/STATUS.md
 .ai/CHANGELOG_AI.md
 ```
@@ -32,6 +35,8 @@ Optional machine-readable run files:
 ```text
 .agentwatch/runs/<run-id>.json
 .agentwatch/command-history.jsonl
+.agentwatch/learning-events.jsonl
+.agentwatch/mistake-patterns.json
 ```
 
 ### Phase 3 — SQLite
@@ -118,7 +123,10 @@ CommandId
 RunId
 WorkingDirectory
 DetectedProjectTypes
-Command
+CommandDisplay
+CommandHash
+CommandRedactionApplied
+CommandRefusedReason
 StartedAt
 FinishedAt
 DurationMs
@@ -139,7 +147,8 @@ Rules:
 - markdown reports should include compact summaries only;
 - full stdout/stderr is not part of the default data model;
 - optional raw log files, if added later, must be local-only and referenced by path only when explicitly requested;
-- secret-looking values must be redacted before `OutputSummary` is stored.
+- secret-looking values must be redacted before `OutputSummary` is stored;
+- raw secret-looking command strings must not be persisted or displayed.
 
 Phase 2 JSONL shape:
 
@@ -150,7 +159,10 @@ Phase 2 JSONL shape:
   "runId": "optional-run-id",
   "workingDirectory": ".",
   "detectedProjectTypes": ["dotnet"],
-  "command": "dotnet test --filter Git",
+  "commandDisplay": "dotnet test --filter Git",
+  "commandHash": "sha256:<hash>",
+  "commandRedactionApplied": false,
+  "commandRefusedReason": null,
   "startedAtUtc": "2026-06-30T12:00:00Z",
   "finishedAtUtc": "2026-06-30T12:00:04Z",
   "durationMs": 4012,
@@ -165,6 +177,100 @@ Phase 2 JSONL shape:
   "changedFilesAfter": 2
 }
 ```
+
+### AgentRunLog
+
+```text
+RunId
+PromptId
+QueueItemId
+Tool
+Model
+PermissionMode
+RunMode
+TokenBudget
+Status
+FilesInspectedCount
+FilesChangedCount
+ValidationStatus
+CommandProfileSummary
+MistakeCategories
+MissedWork
+ScopeCreep
+TokenWasteSummary
+LearningNote
+NextPrompt
+DoNotRepeat
+```
+
+Rules:
+
+- one compact log per agent run;
+- one learning note per completed or blocked run;
+- do not store full chat history;
+- do not store full terminal output;
+- do not store secrets.
+
+### LearningEvent
+
+```text
+LearningEventId
+RunId
+Category
+Message
+RuleCandidate
+AppliesToProjectTypes
+CreatedAt
+Accepted
+```
+
+Use for project-local learning such as:
+
+```text
+Next time, run flutter analyze before full flutter test for small UI-only changes.
+```
+
+### MistakePattern
+
+```text
+PatternId
+Category
+Description
+SeenCount
+LastSeenRunId
+RecommendedPromptRule
+RecommendedValidationRule
+RecommendedContextRule
+Status
+```
+
+Status values:
+
+```text
+Candidate
+Accepted
+Ignored
+Deprecated
+```
+
+### FlutterRunSignals
+
+Optional per-run shape for Flutter projects:
+
+```text
+RunId
+TouchedWidgets
+TouchedProvidersOrState
+TouchedNavigationOrRouter
+TouchedPersistenceOrOfflineStorage
+TouchedPlatformFiles
+WidgetTestsAffected
+ValidationSuggested
+ValidationRun
+RiskNote
+```
+
+Use only when Flutter project files are detected.
 
 ### RiskFinding
 
@@ -184,6 +290,8 @@ RunId
 SummaryPath
 NextPrompt
 ResidualRisk
+LearningNote
+DoNotRepeat
 ```
 
 ---
@@ -199,6 +307,7 @@ Done
 Blocked
 NeedsEvidence
 NeedsHandoff
+NeedsLearningLog
 ```
 
 Validation status:
@@ -222,12 +331,43 @@ Killed
 Unknown
 ```
 
+Run status:
+
+```text
+Done
+NeedsEvidence
+NeedsReview
+NeedsApproval
+Blocked
+Failed
+```
+
 Risk levels:
 
 ```text
 Low
 Medium
 High
+```
+
+Mistake categories:
+
+```text
+ScopeCreep
+OverRead
+OverTest
+UnderTest
+ValidationSkipped
+WrongModel
+WrongTool
+SensitivePathTouched
+LargeLogPasted
+RepeatedFailure
+MissingHandoff
+ClaimedButNotDone
+FlutterStateRisk
+FlutterNavigationRisk
+FlutterPersistenceRisk
 ```
 
 ---
@@ -244,5 +384,7 @@ Every markdown report should be convertible to the future JSON/SQLite model with
 - command profile summary if available;
 - risk findings;
 - missed work;
+- learning note;
+- do-not-repeat rule if present;
 - follow-up prompt;
 - handoff summary.
