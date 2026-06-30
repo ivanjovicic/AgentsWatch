@@ -1,6 +1,6 @@
 # AgentsWatch MVP Prompt Queue
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-06-30  
 Target repo: `ivanjovicic/AgentsWatch`
 
 Purpose: build AgentsWatch as a local CLI that supervises AI coding-agent runs and reduces token waste.
@@ -25,6 +25,7 @@ AW-VAL-001 — Build validation
 - `../CLI_UX_OUTPUT_SPEC.md`
 - `../MVP_EPICS_AND_ACCEPTANCE.md`
 - `../PROMPT_OPTIMIZATION_PLAYBOOK.md`
+- `../COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 - `../ARCHITECTURE.md`
 
 ## Rules
@@ -35,6 +36,8 @@ AW-VAL-001 — Build validation
 - Each implementation prompt must have a token budget, scope limiter, stop rules, validation, and handoff summary.
 - Do not build dashboard before CLI MVP proves useful.
 - Do not run AW-002+ until AW-VAL-001 and AW-VAL-002 evidence exists.
+- Do not implement AW-011 runtime behavior until validation runner groundwork exists.
+- Do not paste full command logs into prompts or markdown reports; use compact command evidence.
 
 ## Active prompts
 
@@ -54,6 +57,7 @@ AW-VAL-001 — Build validation
 | AW-008 | Blocked until AW-VAL-001/002 evidence exists | Implement validation command runner with language adapters. |
 | AW-009 | Blocked until AW-VAL-001/002 evidence exists | Implement claimed-vs-actual diff heuristic. |
 | AW-010 | Blocked until CLI MVP evidence exists | Create local dashboard plan after CLI MVP evidence exists. |
+| AW-011 | Blocked until AW-003/AW-008 groundwork exists | Implement Command Profiler / Fast Validation Advisor to avoid slow repeated commands and large terminal logs. |
 
 ## AW-002 — Init command hardening
 
@@ -136,3 +140,47 @@ Required generated prompts:
 ```
 
 Each prompt must include run mode, token budget, scope limiter, owned paths, avoid paths, stop rules, validation, and final response shape.
+
+## AW-011 — Command Profiler / Fast Validation Advisor
+
+Run mode: investigation-first, then implementation in smaller follow-up prompts  
+Token budget: medium  
+Gate: after AW-003 run report groundwork and AW-008 validation-command groundwork
+
+Task: add a local command profiler and fast validation advisor that helps agents choose cheaper validation commands and avoid sending large terminal logs into model context.
+
+Read first:
+
+- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/prompts/AW-011-command-profiler-fast-validation-advisor.md`
+- `docs/COMMAND_CONTRACTS.md`
+- `docs/CLI_UX_OUTPUT_SPEC.md`
+- `docs/ADAPTER_SPEC.md`
+- `docs/REPORT_FORMATS.md`
+- `docs/DATA_MODEL.md`
+- `docs/SECURITY_AND_PRIVACY.md`
+
+Required behavior later:
+
+- add `agentswatch run -- <command>` as a local profiler wrapper;
+- add `agentswatch validate --suggest` fast validation recommendations;
+- record command duration, exit code, byte counts, and compact error signatures;
+- keep full stdout/stderr out of markdown reports by default;
+- recommend faster language-specific alternatives for .NET, Flutter, React/TypeScript, Python, and Node;
+- include compact command profile summaries in run reports and handoffs.
+
+Validation:
+
+```bash
+dotnet build AgentsWatch.sln
+dotnet test --filter Command
+dotnet test --filter Validation
+```
+
+Stop rules:
+
+- stop if Gate 0 evidence is missing;
+- stop if command execution needs broad shell abstraction;
+- stop if command output may expose secrets without redaction;
+- stop if more than one runtime feature slice is required;
+- stop if validation failures repeat twice.
