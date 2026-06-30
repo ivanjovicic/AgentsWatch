@@ -7,6 +7,28 @@ Status: draft guardrails
 
 AgentsWatch is local-first. The MVP must not upload source code, prompts, diffs, reports, secrets, command logs, or run history to a cloud service.
 
+## Agent risk boundaries
+
+Agents may suggest risky actions, but must not execute them without an explicit approval gate.
+
+Authoritative policy docs:
+
+- `docs/AGENT_RISK_BOUNDARIES.md`
+- `docs/AGENT_PERMISSION_MODEL.md`
+- `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
+
+Default posture:
+
+- read-only first;
+- local-first;
+- minimal scope;
+- no hidden network calls;
+- no destructive operations;
+- no secret exposure;
+- no production changes;
+- no autonomous merge/deploy/release;
+- evidence before completion.
+
 ## MVP privacy rules
 
 - No cloud sync.
@@ -55,6 +77,7 @@ AW-011 command profiling must follow these rules:
 - store duration, exit code, byte counts, and compact summaries instead;
 - store only the first useful error line when needed;
 - redact secret-looking values before writing `OutputSummary` or `FirstErrorLine`;
+- do not persist or display raw secret-looking command strings;
 - optional raw logs must be local-only and explicitly requested;
 - raw logs must be size-limited and easy to delete;
 - command profiles must not perform hidden network calls.
