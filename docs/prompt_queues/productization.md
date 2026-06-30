@@ -8,6 +8,8 @@ Purpose: turn productization docs into small, safe implementation and evidence t
 ## Read first
 
 - `../../AGENTS.md`
+- `PROMPT_QUEUE_ROUTER.md`
+- `NEXT_PROMPT_FAST_PATH.md`
 - `../DOCS_INDEX.md`
 - `../COMMAND_CONTRACTS.md`
 - `../CLI_UX_OUTPUT_SPEC.md`
@@ -22,21 +24,22 @@ Purpose: turn productization docs into small, safe implementation and evidence t
 - Each prompt must map to one command, one report format, or one evidence artifact.
 - Prefer tests before broad refactor.
 - Keep dashboard/SaaS blocked until dogfood evidence exists.
+- If unsure which prompt to run, use `PROMPT_QUEUE_ROUTER.md`.
 
 ---
 
 ## Active prompts
 
-| ID | Status | Purpose |
-|---|---|---|
-| PROD-001 | Ready after Gate 0 | Align `--help` output with `CLI_UX_OUTPUT_SPEC.md`. |
-| PROD-002 | Ready after Gate 0 | Add temp-directory tests for `agentswatch init`. |
-| PROD-003 | Ready after Gate 0 | Make `status` handle non-git directories gracefully. |
-| PROD-004 | Ready after Gate 0 | Expand prompt optimizer tests from `MVP_EPICS_AND_ACCEPTANCE.md`. |
-| PROD-005 | Ready after Gate 0 | Implement token waste report fields in run report model. |
-| PROD-006 | Ready after Gate 0 | Add claims-vs-actual mismatch tests. |
-| PROD-007 | Ready after Gate 0 | Add first dogfood evidence example. |
-| PROD-008 | Ready after Gate 0 | Add release packaging evidence after `dotnet pack`. |
+| ID | Status | Prompt file | Purpose |
+|---|---|---|---|
+| PROD-001 | Ready after Gate 0 | `../prompts/PROD-001-help-output.md` | Align `--help` output with `CLI_UX_OUTPUT_SPEC.md`. |
+| PROD-002 | Ready after Gate 0 | Use queue details | Add temp-directory tests for `agentswatch init`. |
+| PROD-003 | Ready after Gate 0 | `../prompts/PROD-003-status-non-git.md` | Make `status` handle non-git directories gracefully. |
+| PROD-004 | Ready after Gate 0 | Use queue details | Expand prompt optimizer tests from `MVP_EPICS_AND_ACCEPTANCE.md`. |
+| PROD-005 | Ready after Gate 0 | Use queue details | Implement token waste report fields in run report model. |
+| PROD-006 | Ready after Gate 0 | Use queue details | Add review mismatch tests. |
+| PROD-007 | Ready after Gate 0 | Use queue details | Add first dogfood evidence example. |
+| PROD-008 | Ready after Gate 0 | Use queue details | Add release packaging evidence after `dotnet pack`. |
 
 ---
 
@@ -112,12 +115,12 @@ Task: add token waste report fields to report contracts/model, following `docs/T
 
 ---
 
-## PROD-006 — Claims-vs-actual tests
+## PROD-006 — Review mismatch tests
 
 Run mode: tests  
 Token budget: medium
 
-Task: add tests for claims mismatch detection.
+Task: add tests for final-response-vs-diff mismatch detection.
 
 Cases:
 
