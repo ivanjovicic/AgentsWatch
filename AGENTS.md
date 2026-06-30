@@ -14,11 +14,12 @@ AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 8. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
 9. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
 10. `docs/WASTE_LEARNING_LOOP.md`.
-11. `docs/AGENT_OPERATING_SYSTEM.md`.
-12. `docs/CONTEXT_INDEX.md`.
-13. Bootstrap validation docs while Gate 0 is incomplete.
-14. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
-15. Prompt queues under `docs/prompt_queues/`.
+11. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
+12. `docs/AGENT_OPERATING_SYSTEM.md`.
+13. `docs/CONTEXT_INDEX.md`.
+14. Bootstrap validation docs while Gate 0 is incomplete.
+15. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
+16. Prompt queues under `docs/prompt_queues/`.
 
 ## Product rules
 
@@ -73,6 +74,21 @@ For every meaningful issue, waste item, blocker, stale reference, unclear rule, 
 4. add a new optimized prompt;
 5. record why no rule or prompt update was needed.
 
+## Prompt batch review rule
+
+After 3-5 important prompt, queue, rule, evidence, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md` before continuing to add more prompt-system changes.
+
+Batch review must check:
+
+- broken references;
+- stale queue statuses;
+- prompts marked Ready despite blocked gates;
+- missing validation evidence;
+- contradiction between `AGENTS.md`, `DOCS_INDEX.md`, router, queues, and prompt files;
+- missing follow-up prompts for discovered issues.
+
+If review finds more than three unrelated issues, add follow-up prompts instead of fixing everything in one run.
+
 ## Bootstrap rule
 
 Gate 0 is not complete until restore/build/test and CLI smoke evidence exist.
@@ -118,8 +134,9 @@ Use investigation-only first when root cause is unknown. Use diff-only review af
 13. Record validation honestly.
 14. Record run evidence using `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
 15. Apply `docs/WASTE_LEARNING_LOOP.md`: update docs/rules/queue or add an optimized prompt for discovered waste.
-16. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
-17. Commit and push to `main` unless the user requests another flow.
+16. If the run belongs to the 3-5 important prompt-system commit batch, apply `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
+17. Mark prompt `Done`, `Blocked`, or `Needs evidence sync`.
+18. Commit and push to `main` unless the user requests another flow.
 
 ## Validation defaults
 
