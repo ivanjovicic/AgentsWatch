@@ -51,6 +51,18 @@ AW-011 rule:
 Profile commands locally. Show agents only compact command evidence.
 ```
 
+## Supervised autopilot rule
+
+AgentsWatch may sequence prompts, but should not run uncontrolled continuous autopilot in MVP.
+
+See:
+
+- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
+- `docs/prompts/AUTO-001-design-supervised-autopilot-queue.md`
+- `docs/prompts/AUTO-002-generate-tool-prompt-envelope.md`
+- `docs/prompts/AUTO-003-review-queued-agent-run.md`
+- `docs/prompts/AUTO-004-manual-assisted-queue-runbook.md`
+
 ## Agent safety rule
 
 Agents may suggest risky actions, but must not execute them without an explicit approval gate.
@@ -103,6 +115,7 @@ docs/
 - Compact handoff summaries instead of long chat history.
 - Compact command summaries instead of full terminal logs.
 - Risky actions require explicit approval gates.
+- Supervised prompt sequencing before continuous autopilot.
 
 ## Current status
 
@@ -113,6 +126,7 @@ Planning and skeleton stage. See:
 - `docs/MVP_ROADMAP.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
 - `docs/AGENT_RISK_BOUNDARIES.md`
 - `docs/AGENT_PERMISSION_MODEL.md`
 - `docs/BUILD_VALIDATION_PLAN.md`
