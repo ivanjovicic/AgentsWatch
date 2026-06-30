@@ -1,6 +1,6 @@
 # AgentsWatch Context Index
 
-Last aligned: 2026-06-29
+Last aligned: 2026-06-30
 
 Use this file to choose the smallest useful context before running an agent.
 
@@ -60,6 +60,33 @@ Use when:
 - adding or changing CLI commands;
 - changing file-system writes;
 - changing validation command behavior.
+
+## Command profiling and fast validation
+
+Read:
+
+- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/prompts/AW-011-command-profiler-fast-validation-advisor.md`
+- `docs/COMMAND_CONTRACTS.md`
+- `docs/CLI_UX_OUTPUT_SPEC.md`
+- `docs/ADAPTER_SPEC.md`
+- `docs/REPORT_FORMATS.md`
+- `docs/DATA_MODEL.md`
+- `docs/SECURITY_AND_PRIVACY.md`
+
+Use when:
+
+- adding `agentswatch run -- <command>`;
+- changing `agentswatch validate --suggest` behavior;
+- storing command duration, exit code, or output summaries;
+- recommending faster language-specific validation;
+- deciding what terminal output is safe to include in reports.
+
+Hard rule:
+
+```text
+Do not give the agent full terminal logs by default. Use compact command evidence.
+```
 
 ## Prompt optimizer work
 
@@ -133,9 +160,11 @@ Read:
 
 - `SECURITY.md`
 - `docs/SECURITY_AND_PRIVACY.md`
+- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 
 Use when:
 
 - reports may include command output;
 - config/risk rules mention secrets;
-- future integrations send data outside the local machine.
+- future integrations send data outside the local machine;
+- command profiling stores stdout/stderr summaries or raw logs.
