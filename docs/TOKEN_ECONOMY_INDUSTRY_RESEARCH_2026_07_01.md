@@ -21,6 +21,7 @@ Large context windows are useful, but they are not a license to load everything.
 - Google Gemini context caching docs.
 - Aider repository-map documentation.
 - Recent research on prompt caching for long-horizon agents, codebase indexes, AGENTS.md effectiveness, configuration smells, and context rot.
+- Prior MathLearning / AgentsWatch planning conversations about skill packs, state ownership, feature profiles, prompt queues, and zero-waste review loops.
 
 ## Industry findings translated into AgentsWatch decisions
 
@@ -61,13 +62,14 @@ AgentsWatch decision:
 
 ### 4. Path-scoped rules and skills
 
-Industry finding: Claude Code recommends concise rules, target under 200 lines per CLAUDE.md, and path-scoped rules for large projects. Always-loaded context consumes tokens and can reduce adherence.
+Industry finding: concise, path-scoped rules reduce always-loaded context and improve task fit. Prior planning also defined repo-specific skill docs for common task types.
 
 AgentsWatch decision:
 
 - Split agent rules into always-loaded core and path/task-scoped packs.
 - Create path-scoped rule bundles for backend auth, Flutter UI tests, evidence repair, and cross-repo docs.
 - Add a rule-bloat linter to catch repeated, conflicting, or global-only instructions.
+- Use `docs/CONTEXT_PACKS.md` as the registry for skill-like context packs.
 
 ### 5. AGENTS.md minimalism
 
@@ -113,8 +115,9 @@ Create packs such as:
 - `pack.docs.index-sync`
 - `pack.performance.hot-path`
 - `pack.security.boundary-check`
+- `pack.feature-profile.gating`
 
-Each pack defines read-first files, avoid files, max files before expansion, validation defaults, and stale-context rules.
+Each pack defines read-first files, avoid files, max files before expansion, validation defaults, stale-context rules, state ownership requirements, and output mode.
 
 ### 8. Progressive disclosure CLI
 
@@ -125,6 +128,10 @@ AgentsWatch decision:
 Future CLI commands:
 
 ```text
+agentswatch next
+agentswatch run
+agentswatch finish
+agentswatch report
 agentswatch context plan <prompt-id>
 agentswatch context pack <pack-name>
 agentswatch context map --budget 1000
@@ -320,6 +327,84 @@ This prompt will probably inspect 20+ files and break cache because dynamic logs
 Suggested split: evidence repair first, runtime tests second.
 ```
 
+### 21. State ownership as token filter
+
+Prior MathLearning planning showed that state authority determines which layer should be read first.
+
+AgentsWatch decision:
+
+Before broad discovery, classify the touched state owner:
+
+```text
+backend / local-cache / display-only / config / filesystem / git / external-service
+```
+
+Examples:
+
+- backend-owned coins/XP/reward settlement -> backend owner path first;
+- display-only reward animation -> Flutter/UI owner path first;
+- feature flags -> config/command contract first;
+- evidence status -> queue row and `.ai/runs` first.
+
+### 22. Feature-profile gating
+
+Prior AgentsWatch feature-selection planning introduced feature packages such as `core`, `reports`, `handoff`, `review`, `risk`, `validation`, `adapters`, `learning`, `lint`, `metrics`, `dogfood`, `dashboard`, `team`, and `cloud`.
+
+AgentsWatch decision:
+
+Do not load disabled/future feature package docs by default. A local/core MVP task should not read dashboard/team/cloud docs unless the prompt explicitly selects that profile.
+
+### 23. Queue lifecycle as token discipline
+
+Prior planning included `agentwatch next/run/finish/report`.
+
+AgentsWatch decision:
+
+Treat lifecycle steps as token controls:
+
+- `next`: choose smallest safe prompt and context pack;
+- `run`: execute within pack/budget;
+- `finish`: write evidence, token report, negative cache;
+- `report`: summarize cost, validation, waste, and next prompt.
+
+### 24. Prompt anatomy plus token fields
+
+Prior prompt quality work required goal, scope, files to inspect, non-goals, invariants, acceptance criteria, test plan, and output format.
+
+AgentsWatch decision:
+
+Add token-specific fields:
+
+```text
+Token budget
+Context pack
+Max files before expansion
+Expected output mode
+Cache profile
+State owner
+Feature profile
+```
+
+### 25. Batch review as compaction point
+
+Prior batch-review policy after 3-5 important commits should also be used as a token compaction point.
+
+AgentsWatch decision:
+
+After a batch, create a compact rollup and mark older logs as summarized by the rollup. Future agents read rollup first and open originals only for exact proof.
+
+### 26. Zero-waste domain playbook pattern
+
+Prior Access/ERP cutoff planning used a reusable low-waste rule:
+
+```text
+clone/report layer first -> validate counts -> preserve base semantics -> change defaults only after proof
+```
+
+AgentsWatch decision:
+
+For risky domains, create narrow playbooks that localize changes first. Do not inspect or rewrite base layers until counts/tests prove the need.
+
 ## Prioritized implementation roadmap
 
 ### Phase 1 — docs/spec, safe now
@@ -329,6 +414,8 @@ Suggested split: evidence repair first, runtime tests second.
 3. Stale-context guard.
 4. Queue row token-budget fields.
 5. AGENTS/DOCS smell checklist.
+6. State-ownership token filter.
+7. Feature-profile gating rule.
 
 ### Phase 2 — CLI after Gate 0
 
@@ -337,6 +424,8 @@ Suggested split: evidence repair first, runtime tests second.
 3. Token report command.
 4. Stale-context checker.
 5. Rules linter.
+6. Feature-profile-aware context planner.
+7. Negative-cache warning.
 
 ### Phase 3 — dogfood and measurement
 
@@ -358,12 +447,13 @@ Do not reduce token use by:
 - using tiny prompts that cause uncontrolled tool exploration;
 - collapsing all rules into one huge always-loaded file;
 - claiming savings from cache without usage data;
+- loading entire previous conversations into every prompt;
 - using long context windows as a substitute for retrieval quality.
 
 ## Best next practical changes
 
-1. Create `docs/CONTEXT_PACKS.md`.
-2. Create `docs/CACHE_AWARE_PROMPT_SKELETON.md`.
+1. Finish `docs/CONTEXT_PACKS.md` dogfood.
+2. Create `docs/ai/prompts/CACHE_AWARE_PROMPT_SKELETON.md`.
 3. Create `docs/STALE_CONTEXT_GUARD.md`.
 4. Add token-budget fields to prompt queue templates.
 5. Add `docs/AGENT_CONFIG_SMELL_CHECKLIST.md`.
