@@ -39,10 +39,11 @@ Do we have restore/build/test evidence?
 
 1. `bootstrap_validation.md`
 2. `agent_evidence_validation_followups_2026_07_01.md`
-3. `agentwatch_mvp.md`
-4. `productization.md`
-5. `roadmap_execution.md`
-6. `architecture_evolution.md`
+3. `token_economy_hardening_2026_07_01.md`
+4. `agentwatch_mvp.md`
+5. `productization.md`
+6. `roadmap_execution.md`
+7. `architecture_evolution.md`
 
 ## Current next prompt
 
@@ -68,18 +69,21 @@ Until AW-VAL-001 and AW-VAL-002 are complete, do not run:
 
 Evidence validator prompts may run after AW-VAL-001/AW-VAL-002 because they validate the agent process and do not add product features.
 
+Token economy hardening prompts may run as docs-only planning after the evidence validator queue is clean. They must not implement runtime CLI behavior until Gate 0 is complete.
+
 ## After Gate 0
 
 Recommended order:
 
 1. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002 — evidence validator and workflow proof
-2. AW-VAL-004 / AW-002 — init hardening
-3. PROD-002 — init temp-directory tests
-4. PROD-001 — help output UX alignment
-5. PROD-003 — status non-git behavior
-6. AW-003 — git status/diff tracker and run reports
-7. AW-005 — prompt optimizer and task split
-8. AW-006/AW-007 — handoff and diff-only review
+2. AW-TOKEN-ECON-001 / AW-TOKEN-ECON-002 / AW-TOKEN-ECON-003 — context packs, repo-map contract, cache-aware skeleton
+3. AW-VAL-004 / AW-002 — init hardening
+4. PROD-002 — init temp-directory tests
+5. PROD-001 — help output UX alignment
+6. PROD-003 — status non-git behavior
+7. AW-003 — git status/diff tracker and run reports
+8. AW-005 — prompt optimizer and task split
+9. AW-006/AW-007 — handoff and diff-only review
 
 ## Rule
 
