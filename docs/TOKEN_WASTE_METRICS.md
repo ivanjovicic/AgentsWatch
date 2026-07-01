@@ -7,7 +7,7 @@ Status: draft measurement contract
 
 Define how AgentsWatch talks about token waste without making unsupported claims.
 
-AgentsWatch does not make models cheaper per token. It reduces waste by making agent runs smaller, scoped, fresh, and evidence-driven.
+AgentsWatch does not make models cheaper per token. It reduces waste by making agent runs smaller, scoped, fresh, state-aware, and evidence-driven.
 
 ---
 
@@ -22,11 +22,13 @@ Track these first:
 - broad commands avoided;
 - prompt split count;
 - handoff summaries reused;
+- long chat history avoided;
 - whole-repo reviews avoided;
 - validation commands run;
 - validation commands skipped;
 - scope expansion events;
-- stopped runs due to budget.
+- stopped runs due to budget;
+- negative-cache entries created.
 
 ---
 
@@ -80,6 +82,53 @@ Expansion reason: <reason or none>
 ```
 
 Value: compare which packs reliably lead to fewer reads without worse validation.
+
+---
+
+## Skill-pack and state-ownership metrics
+
+From earlier planning, skill docs and state ownership should prevent wrong-layer reads.
+
+```text
+Skill/context pack used: yes/no
+State owner identified before broad read: yes/no/not-applicable
+State owner: backend / local-cache / display-only / config / filesystem / git / external-service / unknown
+Wrong-layer files opened: <n or unknown>
+Owner-path read first: yes/no/not-applicable
+```
+
+Value: detects when agents waste tokens by reading UI for backend-owned bugs, backend for display-only work, or broad docs before the owning path.
+
+---
+
+## Feature-profile metrics
+
+Feature-profile gating prevents future/disabled feature docs from entering context.
+
+```text
+Feature profile: core/reports/handoff/review/risk/validation/adapters/learning/lint/metrics/dogfood/dashboard/team/cloud/custom/unknown
+Disabled/future feature docs opened: <n>
+Feature docs avoided: <n or unknown>
+Profile mismatch: yes/no
+```
+
+Value: prevents core/local MVP prompts from loading dashboard/team/cloud context by default.
+
+---
+
+## Queue lifecycle metrics
+
+Until `agentwatch next/run/finish/report` exists, run logs should simulate the lifecycle.
+
+```text
+Lifecycle step simulated: next/run/finish/report/unknown
+Next prompt chosen by router: yes/no
+Run stayed within selected pack: yes/no
+Finish wrote evidence: yes/no
+Report included token waste summary: yes/no
+```
+
+Value: makes token savings part of normal agent flow instead of a separate afterthought.
 
 ---
 
@@ -149,6 +198,22 @@ stale context items / total context items
 
 High rate means the agent is spending tokens on old state and increasing correctness risk.
 
+### Wrong-layer read rate
+
+```text
+wrong-layer files opened / files inspected
+```
+
+High rate means state ownership was not identified early enough.
+
+### Negative-cache reuse
+
+```text
+negative-cache entries reused / negative-cache entries available
+```
+
+High reuse means agents avoid repeated irrelevant reads.
+
 ---
 
 ## Reporting shape
@@ -161,13 +226,18 @@ Inspect/change ratio: <value or unknown>
 Repeated searches: <n or unknown>
 Broad commands avoided: <n or unknown>
 Handoff reused: yes/no
+Long chat history avoided: yes/no/unknown
 Review scope: diff-only/changed-files/whole-repo
 Context pack: <pack or unknown>
+State owner: <owner or unknown>
+Wrong-layer files opened: <n or unknown>
+Feature profile: <profile or unknown>
 Repo map used: yes/no
 Stale context items: <n or unknown>
 Static prefix reused: yes/no/unknown-not-exposed
 Cached input tokens: <n or unknown-not-exposed>
 Output tokens: <n or unknown-not-exposed>
+Negative-cache entries: <n>
 Largest waste source: <text>
 Next token-saving improvement: <text>
 ```
@@ -179,13 +249,13 @@ Next token-saving improvement: <text>
 Safe claim:
 
 ```text
-AgentsWatch reduces AI coding-agent token waste by splitting prompts, limiting scope, tracking diffs, avoiding stale context, using compact repo maps, and generating handoffs.
+AgentsWatch reduces AI coding-agent token waste by splitting prompts, limiting scope, tracking diffs, avoiding stale context, using compact repo maps, applying state-ownership filters, and generating handoffs.
 ```
 
 Conditional claim:
 
 ```text
-30-50% less token waste on typical multi-file tasks, when scope limiting, cache-aware prompt shape, repo-map selection, and handoff reuse are applied.
+30-50% less token waste on typical multi-file tasks, when scope limiting, cache-aware prompt shape, repo-map selection, state-ownership filtering, context packs, and handoff reuse are applied.
 ```
 
 Use conditional claims only with dogfood evidence.
@@ -204,8 +274,12 @@ Before publishing savings claims, collect:
 - handoff reuse evidence;
 - review scope narrowing;
 - context-pack names;
+- state-owner labels;
+- wrong-layer read counts;
+- feature profile used;
 - cache-aware metrics where exposed;
 - stale-context count;
+- negative-cache entries created/reused;
 - user notes about repeated context avoided;
 - validation pass/fail status for each run.
 
@@ -222,4 +296,5 @@ Do not reduce tokens by:
 - trusting stale summaries;
 - marking docs-only work as runtime proof;
 - removing safety/privacy/security checks;
+- loading all previous conversations into every run;
 - producing shorter prompts that cause broader tool exploration later.
