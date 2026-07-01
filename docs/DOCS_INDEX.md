@@ -18,6 +18,7 @@ Last aligned: 2026-07-01
 | `PRODUCTIZATION_EXPANSION_2026_06_29.md` | Productization expansion evidence and remaining gaps. |
 | `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow adapted from MathLearning. |
 | `CONTEXT_INDEX.md` | Choose the smallest useful docs before an agent run. |
+| `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Token/context economy blueprint: context packs, repo maps, cache-aware prompts, stale-context guard, dogfood metrics. |
 | `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
 | `CLI_SPEC.md` | CLI commands, config shape, adapters, outputs. |
 | `MVP_ROADMAP.md` | MVP phases and priority order. |
@@ -48,6 +49,7 @@ Last aligned: 2026-07-01
 | `ai/prompts/RUN_LOG_EVIDENCE_LINT_PROMPT.md` | Lint queue rows and run logs for missing evidence, score-cap, and mistake-learning gaps. |
 | `ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` | Roll up recent run logs and update ledger/rules/prompts. |
 | `ai/prompts/CROSS_REPO_AGENT_STANDARD_SYNC_PROMPT.md` | Keep AgentsWatch, MathLearning backend, and Flutter rules aligned. |
+| `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Best-practice blueprint for reducing token/context waste without harming correctness. |
 | `PROMPT_TOKEN_ECONOMY_RULEBOOK.md` | Hard anti-waste rules, budgets, limits, stop rules, forbidden prompt phrases. |
 | `PROMPT_LINT_CHECKLIST.md` | Pre-run pass/fail checklist for prompt quality and token discipline. |
 | `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Mandatory execution protocol for minimal context, discovery, patching, validation, and waste checkpoints. |
@@ -82,7 +84,7 @@ Last aligned: 2026-07-01
 | `DATA_MODEL.md` | Future markdown/JSON/SQLite model. |
 | `ADAPTER_SPEC.md` | Universal, .NET, Flutter, React, Python, Node adapter scope. |
 | `RISK_SCORING_MODEL.md` | Transparent risk scoring inputs, levels, and reasons. |
-| `TOKEN_WASTE_METRICS.md` | Token waste metrics and safe savings claims. |
+| `TOKEN_WASTE_METRICS.md` | Token waste metrics, cache/context metrics, stale-context tracking, and safe savings claims. |
 | `PROMPT_OPTIMIZATION_PLAYBOOK.md` | Prompt risk, budget, split, handoff, diff-only review. |
 
 ## Productization and delivery
@@ -117,6 +119,7 @@ Last aligned: 2026-07-01
 | `prompt_queues/PROMPT_SYSTEM_AUDIT_2026_06_29.md` | Prompt-system reorganization evidence. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
 | `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator/workflow dogfood prompts before feature work resumes. |
+| `prompt_queues/token_economy_hardening_2026_07_01.md` | Token/context economy prompts: packs, repo maps, cache-aware skeletons, stale-context guard, dogfood measurement, CLI command contracts. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
 | `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
