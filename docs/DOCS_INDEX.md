@@ -18,8 +18,10 @@ Last aligned: 2026-07-01
 | `PRODUCTIZATION_EXPANSION_2026_06_29.md` | Productization expansion evidence and remaining gaps. |
 | `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow adapted from MathLearning. |
 | `CONTEXT_INDEX.md` | Choose the smallest useful docs before an agent run. |
+| `CONTEXT_PACKS.md` | Active context-pack registry for token-saving scoped reads. |
 | `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Token/context economy blueprint: context packs, repo maps, cache-aware prompts, stale-context guard, dogfood metrics. |
-| `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Industry research synthesis: prompt caching, repo maps, path-scoped rules, AGENTS minimalism, stale context, context budgets, and cost-per-solved-task. |
+| `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Industry research synthesis plus prior-conversation backfill: prompt caching, repo maps, path-scoped rules, state ownership, feature profiles, stale context, context budgets, and cost-per-solved-task. |
+| `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Backfilled token-saving patterns from earlier conversations: skill docs, state ownership, queue lifecycle, feature-profile gating, batch compaction, and zero-waste playbooks. |
 | `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
 | `CLI_SPEC.md` | CLI commands, config shape, adapters, outputs. |
 | `MVP_ROADMAP.md` | MVP phases and priority order. |
@@ -50,8 +52,10 @@ Last aligned: 2026-07-01
 | `ai/prompts/RUN_LOG_EVIDENCE_LINT_PROMPT.md` | Lint queue rows and run logs for missing evidence, score-cap, and mistake-learning gaps. |
 | `ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` | Roll up recent run logs and update ledger/rules/prompts. |
 | `ai/prompts/CROSS_REPO_AGENT_STANDARD_SYNC_PROMPT.md` | Keep AgentsWatch, MathLearning backend, and Flutter rules aligned. |
+| `CONTEXT_PACKS.md` | Pack-based read scopes, state-owner filters, output modes, and scope-expansion rules. |
 | `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Best-practice blueprint for reducing token/context waste without harming correctness. |
 | `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Research-backed strategy for token/context economy, including industry findings and prioritized implementation roadmap. |
+| `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Prior-conversation token-saving patterns now preserved outside always-loaded agent rules. |
 | `PROMPT_TOKEN_ECONOMY_RULEBOOK.md` | Hard anti-waste rules, budgets, limits, stop rules, forbidden prompt phrases. |
 | `PROMPT_LINT_CHECKLIST.md` | Pre-run pass/fail checklist for prompt quality and token discipline. |
 | `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Mandatory execution protocol for minimal context, discovery, patching, validation, and waste checkpoints. |
@@ -86,7 +90,7 @@ Last aligned: 2026-07-01
 | `DATA_MODEL.md` | Future markdown/JSON/SQLite model. |
 | `ADAPTER_SPEC.md` | Universal, .NET, Flutter, React, Python, Node adapter scope. |
 | `RISK_SCORING_MODEL.md` | Transparent risk scoring inputs, levels, and reasons. |
-| `TOKEN_WASTE_METRICS.md` | Token waste metrics, cache/context metrics, stale-context tracking, and safe savings claims. |
+| `TOKEN_WASTE_METRICS.md` | Token waste metrics, cache/context metrics, state-owner metrics, feature-profile metrics, stale-context tracking, and safe savings claims. |
 | `PROMPT_OPTIMIZATION_PLAYBOOK.md` | Prompt risk, budget, split, handoff, diff-only review. |
 
 ## Productization and delivery
@@ -122,7 +126,7 @@ Last aligned: 2026-07-01
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
 | `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator/workflow dogfood prompts before feature work resumes. |
 | `prompt_queues/token_economy_hardening_2026_07_01.md` | Token/context economy prompts: packs, repo maps, cache-aware skeletons, stale-context guard, dogfood measurement, CLI command contracts. |
-| `prompt_queues/token_economy_industry_followups_2026_07_01.md` | Advanced industry-backed token economy prompts: config smell checks, queue token budgets, cost-per-solved-task, provider cache profiles, evidence compaction. |
+| `prompt_queues/token_economy_industry_followups_2026_07_01.md` | Advanced industry-backed and prior-conversation token economy prompts: context packs, config smell checks, queue token budgets, state-owner filters, feature-profile gating, cost-per-solved-task, provider cache profiles, evidence compaction. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
 | `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
@@ -130,4 +134,4 @@ Last aligned: 2026-07-01
 
 ## Rule
 
-If documents disagree, use current code/tests first, then `AGENTS.md`, then `AGENT_SHARED_OPERATING_STANDARD.md`, then `.ai/RUN_LOG_TEMPLATE.md` / `.ai/runs/README.md`, then `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` for token-economy strategy, then `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md`, then `ai/learning/MISTAKE_LEDGER.md`, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then `AGENTS.md`, then `AGENT_SHARED_OPERATING_STANDARD.md`, then `.ai/RUN_LOG_TEMPLATE.md` / `.ai/runs/README.md`, then `CONTEXT_PACKS.md` for context selection, then `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` for token-economy strategy, then `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` for backfilled prior patterns, then `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md`, then `ai/learning/MISTAKE_LEDGER.md`, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
