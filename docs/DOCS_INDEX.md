@@ -1,6 +1,6 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-06-29
+Last aligned: 2026-07-01
 
 ## Start here
 
@@ -8,6 +8,11 @@ Last aligned: 2026-06-29
 |---|---|
 | `../README.md` | Project overview and current status. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
+| `AGENT_SHARED_OPERATING_STANDARD.md` | Shared cross-repo rules for prompt shape, token budget, evidence, score caps, mistake learning, validation honesty, and docs-only truth. |
+| `AGENT_RUN_LOG_ENFORCEMENT.md` | Hard gate: no complete run log / classified mistakes means no high-confidence Done. |
+| `../.ai/RUN_LOG_TEMPLATE.md` | Copyable compact run-log template. |
+| `../.ai/runs/README.md` | Run-log naming, required evidence, and learning rules. |
+| `ai/learning/MISTAKE_LEDGER.md` | Active memory of repeated AgentsWatch agent mistakes. |
 | `DOCS_GOVERNANCE.md` | Source-of-truth, broken-reference, and docs-update rules. |
 | `DOCUMENTATION_AUDIT_2026_06_29.md` | Latest docs audit, findings, fixes, and remaining gaps. |
 | `PRODUCTIZATION_EXPANSION_2026_06_29.md` | Productization expansion evidence and remaining gaps. |
@@ -30,15 +35,22 @@ Last aligned: 2026-06-29
 | `PROJECT_READINESS_CHECKLIST.md` | Checklist before CLI feature expansion. |
 | `ROADMAP_VALIDATION_GATES.md` | Phase gates and stop rules. |
 
-## Agent workflow and prompts
+## Agent workflow, evidence, and learning
 
 | Document | Use for |
 |---|---|
+| `AGENT_SHARED_OPERATING_STANDARD.md` | Shared cross-repo minimum behavior for all agents. |
+| `AGENT_RUN_LOG_ENFORCEMENT.md` | Score caps, Done-row blocker, mistake classification, final response requirements. |
+| `AGENT_RUN_EVIDENCE_STANDARD.md` | Mandatory `.ai/runs` evidence fields, waste categories, mistake-learning hooks, optimized prompt rules. |
+| `WASTE_LEARNING_LOOP.md` | Convert wasted steps into docs/rule/queue updates and new optimized prompts. |
+| `ai/learning/MISTAKE_LEDGER.md` | Known AW-MISTAKE-* patterns and prevention rules. |
+| `ai/learning/MISTAKE_CARD_TEMPLATE.md` | Template for new mistake cards. |
+| `ai/prompts/RUN_LOG_EVIDENCE_LINT_PROMPT.md` | Lint queue rows and run logs for missing evidence, score-cap, and mistake-learning gaps. |
+| `ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` | Roll up recent run logs and update ledger/rules/prompts. |
+| `ai/prompts/CROSS_REPO_AGENT_STANDARD_SYNC_PROMPT.md` | Keep AgentsWatch, MathLearning backend, and Flutter rules aligned. |
 | `PROMPT_TOKEN_ECONOMY_RULEBOOK.md` | Hard anti-waste rules, budgets, limits, stop rules, forbidden prompt phrases. |
 | `PROMPT_LINT_CHECKLIST.md` | Pre-run pass/fail checklist for prompt quality and token discipline. |
 | `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Mandatory execution protocol for minimal context, discovery, patching, validation, and waste checkpoints. |
-| `AGENT_RUN_EVIDENCE_STANDARD.md` | Mandatory real run-evidence fields, waste categories, docs updates, and optimized prompt rules. |
-| `WASTE_LEARNING_LOOP.md` | Convert wasted steps into docs/rule/queue updates and new optimized prompts. |
 | `PROMPT_BATCH_REVIEW_POLICY.md` | Batch review after 3-5 important prompt/rule/queue/evidence commits. |
 | `AGENT_COMMAND_PLAYBOOK.md` | Shell-neutral .NET/git/CLI validation commands. |
 | `AGENT_LONG_TASK_PLAYBOOK.md` | Long-task control loop, environment blockers, evidence rules. |
@@ -111,4 +123,4 @@ Last aligned: 2026-06-29
 
 ## Rule
 
-If documents disagree, use current code/tests first, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy for prompt-system batches, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
+If documents disagree, use current code/tests first, then `AGENTS.md`, then `AGENT_SHARED_OPERATING_STANDARD.md`, then `AGENT_RUN_LOG_ENFORCEMENT.md`, then `.ai/RUN_LOG_TEMPLATE.md` / `.ai/runs/README.md`, then `ai/learning/MISTAKE_LEDGER.md`, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
