@@ -37,7 +37,7 @@ agentswatch validate
 agentswatch status
 ```
 
-Planned AW-011 commands:
+Planned command profiler commands:
 
 ```bash
 agentswatch run -- <command>
@@ -45,10 +45,14 @@ agentswatch validate --suggest
 agentswatch validate --profile
 ```
 
-AW-011 rule:
+Mistake-learning commands planned after the core run/report spine:
 
-```text
-Profile commands locally. Show agents only compact command evidence.
+```bash
+agentswatch mistakes list
+agentswatch mistakes check <run-log>
+agentswatch rollup mistakes --last 5
+agentswatch lint evidence
+agentswatch lint learning
 ```
 
 ## Post-prompt logging rule
@@ -58,6 +62,8 @@ Every agent run should leave compact evidence and one learning note.
 See:
 
 - `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
+- `docs/MISTAKE_LEARNING_SPEC.md`
+- `docs/CLI_LEARNING_ADDENDUM.md`
 - `docs/prompts/LOG-001-post-prompt-run-log.md`
 - `docs/prompts/LOG-002-mistake-pattern-review.md`
 - `docs/prompts/LOG-003-flutter-agent-run-review.md`
@@ -135,7 +141,14 @@ Planning and skeleton stage. See:
 
 - `docs/PRODUCT_SPEC.md`
 - `docs/CLI_SPEC.md`
+- `docs/CLI_LEARNING_ADDENDUM.md`
 - `docs/MVP_ROADMAP.md`
+- `docs/FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
+- `docs/FEATURE_SELECTION_SPEC.md`
+- `docs/MISTAKE_LEARNING_SPEC.md`
+- `docs/MISTAKE_LEARNING_ROADMAP_ADDENDUM.md`
+- `docs/TEST_STRATEGY.md`
+- `docs/ARCHITECTURE.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 - `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
@@ -146,3 +159,8 @@ Planning and skeleton stage. See:
 - `docs/BOOTSTRAP_NEXT_STEPS.md`
 - `docs/prompt_queues/bootstrap_validation.md`
 - `docs/prompt_queues/agentwatch_mvp.md`
+- `docs/prompt_queues/agentwatch_foundation_followups.md`
+- `docs/prompt_queues/agentwatch_feature_selection.md`
+- `docs/prompt_queues/agentwatch_learning_followups.md`
+- `docs/prompt_queues/agentwatch_testing.md`
+- `docs/samples/README.md`
