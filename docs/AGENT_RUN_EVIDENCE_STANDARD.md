@@ -1,6 +1,6 @@
 # AgentsWatch Agent Run Evidence Standard
 
-Last aligned: 2026-06-29
+Last aligned: 2026-07-01
 
 ## Purpose
 
@@ -12,12 +12,14 @@ AgentsWatch should not only track code changes. It should track:
 - what was missed;
 - where time/tokens were wasted;
 - why waste happened;
+- which prior mistakes were considered;
+- what mistake was observed or avoided;
 - what rule should prevent repetition;
 - what optimized prompt should be used next.
 
 ## Mandatory rule
 
-Every non-trivial prompt must produce a run evidence entry before it is considered complete.
+Every non-trivial prompt must produce a compact run evidence file before it is considered complete.
 
 This applies to:
 
@@ -27,23 +29,28 @@ This applies to:
 - tests prompts;
 - review prompts;
 - dogfood prompts;
-- blocked prompts.
+- blocked prompts;
+- evidence backfills.
+
+Also follow:
+
+- `docs/AGENT_SHARED_OPERATING_STANDARD.md`
+- `docs/AGENT_RUN_LOG_ENFORCEMENT.md`
+- `.ai/RUN_LOG_TEMPLATE.md`
+- `.ai/runs/README.md`
+- `docs/ai/learning/MISTAKE_LEDGER.md`
 
 ## Evidence location
 
-Preferred future path:
+Canonical path:
 
 ```text
 .ai/runs/<yyyy-mm-dd>-<prompt-id>-evidence.md
 ```
 
-Until the CLI writes that automatically, docs/evidence can be recorded in:
+Use `.ai/RUN_LOG_TEMPLATE.md`.
 
-```text
-docs/VALIDATION_EVIDENCE_<date>.md
-docs/*_AUDIT_<date>.md
-docs/*_EXPANSION_<date>.md
-```
+Older broad docs such as `docs/VALIDATION_EVIDENCE_<date>.md`, `docs/*_AUDIT_<date>.md`, and `docs/*_EXPANSION_<date>.md` may remain as historical evidence, but new non-trivial runs should use `.ai/runs/` and link any broad evidence from the compact run log.
 
 ## Required fields
 
@@ -52,15 +59,26 @@ Each evidence entry must include:
 ```text
 Prompt ID:
 Queue:
+Agent/tool:
+Model provider:
+Model name/id:
+Model mode/settings:
+Client/IDE:
 Run mode:
 Token budget:
 Started from:
+Relevant prior mistakes read:
+How this run avoids prior mistakes:
+Elapsed time:
+Phase time breakdown:
 Files inspected:
 Files changed:
 What was done:
 What was missed:
 Validation run:
 Validation not run:
+Waste categories:
+Mistakes observed:
 Where time/tokens were wasted:
 Why waste happened:
 Rules/docs updated to prevent repeat:
@@ -70,6 +88,17 @@ Completion %:
 Residual risk:
 Commit SHA:
 ```
+
+Use required placeholders:
+
+```text
+unknown-not-exposed
+unknown-not-recorded
+not run - <reason>
+none
+```
+
+Do not guess model names, timings, validation status, or CI status.
 
 ## Waste categories
 
@@ -88,24 +117,39 @@ Use one or more:
 - environment blocker;
 - over-large file write blocked;
 - unsupported CI evidence;
-- runtime validation unavailable.
+- runtime validation unavailable;
+- docs-only work overclaimed;
+- missing run-log path;
+- unclassified mistake.
 
-## Prevention rule
+## Mistake-learning rule
 
-For every meaningful waste category, the agent must do at least one of:
+A run is not learning-complete until every observed mistake is classified as:
 
-1. update an existing docs rule;
-2. add a new rule to the relevant playbook;
-3. update the prompt queue;
-4. add a new optimized prompt;
-5. record why no rule update was needed.
+```text
+new mistake with a mistake card
+repeated mistake with a rule/prompt/test/queue/lint update
+false alarm with explanation
+```
+
+Before starting, read `docs/ai/learning/MISTAKE_LEDGER.md` and choose only relevant IDs.
+
+Before marking Done, update one of:
+
+1. existing docs rule;
+2. relevant playbook;
+3. prompt queue;
+4. optimized prompt;
+5. test or lint prompt;
+6. mistake ledger card;
+7. documented no-op reason.
 
 ## Optimized prompt rule
 
 If the run discovers a better next step, write a copy-ready optimized prompt in one of:
 
 ```text
-docs/prompts/
+docs/ai/prompts/
 docs/prompt_queues/
 docs/*_AUDIT_<date>.md
 ```
@@ -133,13 +177,19 @@ A prompt cannot be scored above 79% if it did not record:
 - missed work;
 - time/token waste;
 - follow-up prompt;
-- residual risk.
+- residual risk;
+- relevant prior mistakes read;
+- mistakes observed or `none`.
+
+Use stricter caps from `docs/AGENT_RUN_LOG_ENFORCEMENT.md` when evidence is weaker.
 
 ## Final response rule
 
 Every final response should include:
 
 ```text
+Run log:
+Mistake IDs:
 Evidence recorded:
 Waste found:
 Rule/docs updated:
@@ -148,4 +198,5 @@ Validation:
 Commit SHA:
 Completion %:
 Residual risk:
+Next prompt:
 ```
