@@ -116,6 +116,7 @@ Last aligned: 2026-07-01
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready safest next prompt. |
 | `prompt_queues/PROMPT_SYSTEM_AUDIT_2026_06_29.md` | Prompt-system reorganization evidence. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
+| `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator/workflow dogfood prompts before feature work resumes. |
 | `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
 | `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
