@@ -16,8 +16,9 @@ Before running any prompt, apply:
 
 - `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
 - `docs/PROMPT_LINT_CHECKLIST.md`
+- `docs/CONTEXT_PACKS.md`
 
-If the prompt fails lint, rewrite or split it before execution.
+If the prompt fails lint or has no suitable pack, rewrite or split it before execution.
 
 ## Fast decision tree
 
@@ -74,20 +75,23 @@ Token economy hardening prompts may run as docs-only planning after the evidence
 
 Industry token economy follow-ups may run as docs/spec/checklist work after the first token economy queue. Runtime commands from that queue require Gate 0.
 
+Prior-conversation backfill docs are safe to read when choosing packs, state owners, feature profiles, and queue lifecycle fields. Do not load entire old conversations; read `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` instead.
+
 ## After Gate 0
 
 Recommended order:
 
 1. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002 — evidence validator and workflow proof
-2. AW-TOKEN-ECON-001 / AW-TOKEN-ECON-002 / AW-TOKEN-ECON-003 — context packs, repo-map contract, cache-aware skeleton
+2. AW-TOKEN-IND-002 — cache-aware prompt skeleton
 3. AW-TOKEN-IND-003 / AW-TOKEN-IND-004 / AW-TOKEN-IND-005 — config smell checklist, stale-context guard, queue token-budget fields
-4. AW-VAL-004 / AW-002 — init hardening
-5. PROD-002 — init temp-directory tests
-6. PROD-001 — help output UX alignment
-7. PROD-003 — status non-git behavior
-8. AW-003 — git status/diff tracker and run reports
-9. AW-005 — prompt optimizer and task split
-10. AW-006/AW-007 — handoff and diff-only review
+4. AW-TOKEN-IND-011 / AW-TOKEN-IND-012 / AW-TOKEN-IND-013 — state-owner filter, feature-profile gating, queue lifecycle token report
+5. AW-VAL-004 / AW-002 — init hardening
+6. PROD-002 — init temp-directory tests
+7. PROD-001 — help output UX alignment
+8. PROD-003 — status non-git behavior
+9. AW-003 — git status/diff tracker and run reports
+10. AW-005 — prompt optimizer and task split
+11. AW-006/AW-007 — handoff and diff-only review
 
 ## Rule
 
