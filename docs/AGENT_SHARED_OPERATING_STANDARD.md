@@ -128,6 +128,28 @@ A docs-only audit is not runtime proof.
 
 Gate 0 validation comes before feature work. Until restore/build/test/CLI smoke evidence is current, feature prompts remain blocked unless docs-only and explicitly not runtime-complete.
 
+## Mechanical evidence validation
+
+For any prompt that touches prompt queues, `.ai/runs`, `AGENTS.md`, `docs/DOCS_INDEX.md`, run-log enforcement, run-log templates, mistake ledgers, evidence docs, or cross-repo standard docs, run:
+
+```text
+python scripts/validate_agent_evidence.py
+```
+
+For a focused repair/backfill pass, the agent may use:
+
+```text
+python scripts/validate_agent_evidence.py --referenced-run-logs-only
+```
+
+Record the command and result in the run log. If the agent cannot run local commands because it is using only a connector or remote file API, write:
+
+```text
+Validation not run: not run - connector-only docs update, no local checkout
+```
+
+Do not replace this mechanical check with manual reading unless the skip reason is explicit.
+
 ## Final response minimum
 
 ```text
