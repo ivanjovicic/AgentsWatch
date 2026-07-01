@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Compile validator
+        run: python -m py_compile scripts/validate_agent_evidence.py
+
       - name: Validate referenced run logs
         if: ${{ inputs.mode == 'referenced' }}
         run: python scripts/validate_agent_evidence.py --referenced-run-logs-only
