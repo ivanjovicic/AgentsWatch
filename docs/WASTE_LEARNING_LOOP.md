@@ -1,24 +1,34 @@
 # AgentsWatch Waste Learning Loop
 
-Last aligned: 2026-06-29
+Last aligned: 2026-07-01
 
 ## Purpose
 
-Turn every wasted step into a better rule, better prompt, or better queue decision.
+Turn every wasted step into a better rule, better prompt, better queue decision, or mistake-ledger prevention card.
 
-If the same mistake happens twice, the documentation or prompt system is failing.
+If the same mistake happens twice, the documentation, prompt, queue, test, or lint system is failing.
+
+Use this with:
+
+- `docs/AGENT_SHARED_OPERATING_STANDARD.md`
+- `docs/AGENT_RUN_LOG_ENFORCEMENT.md`
+- `.ai/RUN_LOG_TEMPLATE.md`
+- `docs/ai/learning/MISTAKE_LEDGER.md`
+- `docs/ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md`
+- `docs/ai/prompts/RUN_LOG_EVIDENCE_LINT_PROMPT.md`
 
 ## Loop
 
 ```text
 1. Run prompt.
-2. Record evidence.
+2. Record `.ai/runs` evidence.
 3. Identify waste.
-4. Find root cause.
-5. Update rule/doc/queue.
-6. Add optimized prompt.
-7. Mark follow-up.
-8. Reuse learning in next run.
+4. Classify observed mistakes.
+5. Find root cause.
+6. Update rule/doc/queue/test/lint or mistake ledger.
+7. Add optimized prompt when useful.
+8. Mark follow-up.
+9. Reuse learning in next run.
 ```
 
 ## What counts as waste
@@ -34,7 +44,9 @@ Common examples:
 - running a command after an earlier required command failed;
 - claiming validation without evidence;
 - editing docs but not updating `DOCS_INDEX.md`;
-- adding a plan without a runnable next prompt.
+- adding a plan without a runnable next prompt;
+- marking Done without `.ai/runs` evidence;
+- recording a repeated mistake without updating prevention.
 
 ## Root cause categories
 
@@ -49,7 +61,9 @@ Use one:
 - tool limitation not recognized;
 - output too large;
 - no evidence template used;
-- no router consulted.
+- no router consulted;
+- no mistake ledger consulted;
+- docs-only work overclaimed.
 
 ## Required remediation
 
@@ -63,7 +77,24 @@ For every major waste item, choose one:
 | missing validation | update prompt with validation command |
 | broad scope | add scope limiter or split prompt |
 | missed follow-up | add optimized follow-up prompt |
-| missing evidence | add evidence entry and template reference |
+| missing evidence | add `.ai/runs` evidence entry and template reference |
+| unclassified mistake | update `docs/ai/learning/MISTAKE_LEDGER.md` or mark false alarm with reason |
+| repeated mistake | update rule/prompt/test/queue/lint or document no-op reason |
+| docs-only overclaim | downgrade status and add evidence lint follow-up |
+
+## Mistake ledger handoff
+
+If a waste item is also a repeated agent mistake, use an `AW-MISTAKE-*` card from `docs/ai/learning/MISTAKE_LEDGER.md`.
+
+If no matching card exists, add one using `docs/ai/learning/MISTAKE_CARD_TEMPLATE.md`.
+
+Every affected run log should say:
+
+```text
+Relevant prior mistakes read:
+Mistakes observed:
+Prevention added:
+```
 
 ## Optimized prompt generation
 
@@ -77,17 +108,21 @@ It must name:
 - what not to inspect;
 - what not to edit;
 - validation command;
-- evidence output.
+- evidence output;
+- relevant prior mistake IDs.
 
 ## Review cadence
 
 After every 5 completed runs, review evidence entries and ask:
 
 1. Which waste category repeats?
-2. Which prompt caused the most wasted work?
-3. Which docs were missing or stale?
-4. Which command failed most often?
-5. Which rule should become mandatory?
+2. Which mistake ID repeats?
+3. Which prompt caused the most wasted work?
+4. Which docs were missing or stale?
+5. Which command failed most often?
+6. Which rule should become mandatory?
+
+Use `docs/ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` when the same mistake or waste category repeats.
 
 ## Product implication
 
@@ -99,4 +134,7 @@ Future CLI commands should support it directly:
 agentswatch finish --retrospective
 agentswatch waste report
 agentswatch prompt improve
+agentswatch mistakes list
+agentswatch mistakes check
+agentswatch lint evidence
 ```
