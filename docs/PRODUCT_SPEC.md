@@ -1,6 +1,6 @@
 # AgentsWatch Product Spec
 
-Last aligned: 2026-06-30  
+Last aligned: 2026-07-02  
 Status: planning/specification
 
 ## Description
@@ -94,12 +94,44 @@ Profile commands locally. Show agents only compact command evidence.
 
 See `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`.
 
+## Commercial trial and licensing — post-MVP
+
+AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
+
+Commercial protection must follow these truths:
+
+- local files and generated output shown to the user cannot be made impossible to copy;
+- premium implementation details should not be shipped as editable plaintext files when avoidable;
+- commercial enforcement should use server-signed feature entitlements and a short-lived offline-capable lease;
+- user source code, prompts, diffs, validation output, reports, and run history must remain local by default;
+- license activation/refresh calls must be visible and must not upload repository content;
+- expiration must never encrypt, delete, corrupt, or hold user-owned repository/report data hostage;
+- licensing runtime work starts only after CLI MVP validation and dogfood evidence.
+
+Recommended direction:
+
+```text
+small permanent free tier
++ 14-day or usage-limited Pro trial
++ server-signed lease
++ OS-protected local license storage
++ central feature entitlement gates
++ compiled/embedded premium local logic
++ optional remote premium algorithms only where stronger IP protection justifies the privacy/online tradeoff
+```
+
+See:
+
+- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
+- `docs/prompt_queues/agentwatch_trial_licensing.md`
+
 ## Non-goals for v1
 
 Do not start with:
 
 - SaaS;
 - billing;
+- runtime license enforcement or DRM before CLI value is proven;
 - cloud sync;
 - deep IDE integration;
 - automatic code editing;
