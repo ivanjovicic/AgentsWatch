@@ -1,6 +1,6 @@
 # AgentsWatch Security and Privacy Guide
 
-Last aligned: 2026-06-30  
+Last aligned: 2026-07-02  
 Status: draft guardrails
 
 ## Principle
@@ -100,15 +100,65 @@ MVP commands should work offline except commands that explicitly interact with g
 
 Any future network feature must be opt-in and visible.
 
+## Commercial licensing network exception — post-MVP
+
+A future paid trial or Pro edition may use visible licensing network calls for:
+
+- activation;
+- short-lived lease refresh;
+- device deactivation/recovery;
+- revocation checks;
+- signing-key rotation metadata;
+- product edition and feature entitlement verification.
+
+Licensing calls may send only the minimum commercial metadata needed, such as:
+
+- license/trial/account identifier;
+- product edition;
+- client version;
+- random installation identifier or derived device-binding hash;
+- activation/lease nonce;
+- usage allowance checkpoint where explicitly documented.
+
+Licensing calls must not send:
+
+- repository source code;
+- file contents;
+- raw prompts;
+- git diffs;
+- validation output;
+- command logs;
+- reports;
+- run history;
+- secrets;
+- raw machine hardware inventory.
+
+Rules:
+
+- no hidden activation, refresh, or telemetry call;
+- first activation and periodic lease behavior must be documented;
+- licensing failure must not delete or encrypt user data;
+- expired users retain read/export access to their own existing artifacts;
+- client stores only public verification keys, never licensing private signing keys;
+- protected local storage and signed entitlements are required; a plaintext local `trialEndsAt` is not authoritative;
+- anti-copy protections are deterrence, not guaranteed secrecy.
+
+See:
+
+- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
+- `docs/prompt_queues/agentwatch_trial_licensing.md`
+
 ## Future integrations
 
-Before adding GitHub, LLM, or cloud integrations, document:
+Before adding GitHub, LLM, licensing, or cloud integrations, document:
 
 - what data is sent;
 - why it is needed;
-- how users disable it;
+- how users disable or avoid it where feasible;
 - where credentials are stored;
-- how reports are redacted.
+- how reports are redacted;
+- what continues to work offline;
+- what happens when the service is unavailable.
 
 ## Security issue handling
 
