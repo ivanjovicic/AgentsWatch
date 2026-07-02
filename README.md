@@ -20,7 +20,7 @@ Use higher savings claims only for oversized repo-analysis prompts.
 
 ## MVP scope
 
-Start with a local CLI. Do not start with SaaS, billing, cloud sync, deep IDE integration, or automatic code editing.
+Start with a local CLI. Do not start with SaaS, billing, cloud sync, deep IDE integration, automatic code editing, or runtime DRM/license enforcement.
 
 Initial commands:
 
@@ -90,6 +90,19 @@ See:
 - `docs/AGENT_PERMISSION_MODEL.md`
 - `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
 
+## Commercial trial rule — post-MVP
+
+AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
+
+The product must not pretend that files or generated outputs used locally can be made impossible to copy. Commercial protection should use compiled/signed packages, server-signed feature entitlements, OS-protected local license state, visible periodic lease refresh, and optional server-side execution only for the highest-value premium logic.
+
+License checks must not upload repository source code, prompts, diffs, validation output, reports, command logs, or run history.
+
+See:
+
+- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
+- `docs/prompt_queues/agentwatch_trial_licensing.md`
+
 ## Bootstrap warning
 
 The initial skeleton was created through GitHub file writes, so the next work must be validation-first:
@@ -134,6 +147,7 @@ docs/
 - One learning note after every agent run.
 - Risky actions require explicit approval gates.
 - Supervised prompt sequencing before continuous autopilot.
+- Licensing design may be documented early, but runtime enforcement starts only after CLI MVP and dogfood evidence.
 
 ## Current status
 
@@ -149,6 +163,8 @@ Planning and skeleton stage. See:
 - `docs/MISTAKE_LEARNING_ROADMAP_ADDENDUM.md`
 - `docs/TEST_STRATEGY.md`
 - `docs/ARCHITECTURE.md`
+- `docs/SECURITY_AND_PRIVACY.md`
+- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
 - `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
 - `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
 - `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
@@ -163,4 +179,5 @@ Planning and skeleton stage. See:
 - `docs/prompt_queues/agentwatch_feature_selection.md`
 - `docs/prompt_queues/agentwatch_learning_followups.md`
 - `docs/prompt_queues/agentwatch_testing.md`
+- `docs/prompt_queues/agentwatch_trial_licensing.md`
 - `docs/samples/README.md`
