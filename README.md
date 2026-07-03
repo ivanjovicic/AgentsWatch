@@ -40,7 +40,7 @@ Authoritative status:
 
 A roadmap or documentation page proves intent, not runtime support.
 
-## Current implemented skeleton
+## Current verified skeleton
 
 Current source contains:
 
@@ -52,7 +52,16 @@ agentswatch --help
 agentswatch --version
 ```
 
-Prompt risk analysis, basic git-status parsing, and basic project-type/validation suggestions also have some unit-test source. The current commit still needs executed CI/acceptance evidence before these capabilities can be described as verified.
+Proof run `28650547744` established the following on the PR branch/merge commit:
+
+- .NET 8 restore/build passed on Linux and Windows;
+- 8 tests executed and all 8 passed on each OS;
+- help, version, optimize, clean-repository status, and expected unknown-command behavior passed on each OS;
+- `AgentsWatch.Cli.0.1.0.nupkg` was created;
+- SHA-256 checksum verified;
+- isolated local-tool installation, installed help, and installed version passed.
+
+This is L4 evidence for the specific capabilities listed in the registry. It is not proof that every planned command or full product workflow exists.
 
 ## Planned CLI
 
@@ -98,7 +107,7 @@ See:
 - `docs/INDEPENDENT_VERIFICATION_RUNBOOK.md`
 - `docs/prompt_queues/agentwatch_proof_and_verification.md`
 
-CI is configured to produce Linux/Windows build-test-smoke artifacts and a package/checksum/isolated-install proof bundle. Actual maturity changes only after the workflow succeeds for the relevant commit.
+CI produces Linux/Windows build-test-smoke artifacts and a package/checksum/isolated-install proof bundle. Maturity changes only after artifact review for the matching commit.
 
 ## Discovery and self-improvement
 
@@ -158,19 +167,14 @@ See:
 
 ## Bootstrap gate
 
-The skeleton was initially created through GitHub file writes. Runtime feature work remains validation-first:
+PR #4 has passed restore, build, tests, CLI smoke, package, checksum, and isolated-install proof for its tested branch/merge commit.
 
-1. restore;
-2. build;
-3. tests;
-4. CLI smoke;
-5. proof artifact review;
-6. only then continue gated runtime features.
+Main remains unchanged until the PR is merged. Main-branch CI must pass after merge before repository-wide Gate 0 is considered complete.
 
 See:
 
 - `docs/BUILD_VALIDATION_PLAN.md`
-- `docs/VALIDATION_EVIDENCE_2026_06_29.md`
+- `docs/VALIDATION_EVIDENCE_2026_07_03.md`
 - `docs/prompt_queues/bootstrap_validation.md`
 - `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
 
