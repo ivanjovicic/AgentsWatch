@@ -50,6 +50,27 @@ Phase time breakdown:
 
 -
 
+## Out-of-scope discoveries observed
+
+- Discovery candidate:
+- Category:
+- Evidence summary:
+- Why outside current task:
+
+Use `none found` when there were no meaningful findings.
+
+## Discovery reconciliation
+
+- Reconciliation status: reconciled | blocked - <reason> | not run - <reason>
+- Discoveries created: none
+- Discoveries updated: none
+- Duplicates linked: none
+- Primary owners assigned: none
+- Canonical docs updated: none
+- Follow-up prompts generated: none
+- Queue rows created or updated: none
+- Unresolved discoveries: none
+
 ## Validation run
 
 -
@@ -118,7 +139,10 @@ Required placeholder values when unknown:
 unknown-not-exposed      # model/client value not visible
 unknown-not-recorded     # timing/phase value not captured
 none                     # truly none
-not run - <reason>       # validation skipped or blocked
+none found               # no meaningful out-of-scope discovery
+reconciled               # every discovery has a disposition
+blocked - <reason>       # reconciliation could not finish
+not run - <reason>       # validation or reconciliation skipped
 ```
 
 Mistake-learning placeholders:
@@ -129,7 +153,24 @@ How this run avoids prior mistakes: none
 Mistakes observed: none
 ```
 
+Discovery placeholders:
+
+```text
+Out-of-scope discoveries observed: none found
+Reconciliation status: reconciled
+Discoveries created: none
+Discoveries updated: none
+Duplicates linked: none
+Primary owners assigned: none
+Follow-up prompts generated: none
+Unresolved discoveries: none
+```
+
 If a mistake is observed, use an existing `AW-MISTAKE-*` ID from `docs/ai/learning/MISTAKE_LEDGER.md` or add a new card using `docs/ai/learning/MISTAKE_CARD_TEMPLATE.md`.
+
+If a meaningful out-of-scope finding is observed, use `.ai/DISCOVERY_RECORD_TEMPLATE.md` and `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`. Do not hide unrelated implementation inside the current task.
+
+A run may be task-complete but is not learning-complete while discovery reconciliation is missing.
 
 AgentsWatch validation examples:
 
@@ -139,5 +180,6 @@ dotnet build AgentsWatch.sln
 dotnet test AgentsWatch.sln
 git diff --check
 docs-only: verified linked paths exist
+docs-only: discovery records, prompts, and queue links reconciled
 CI: No GitHub Actions evidence found via connector
 ```

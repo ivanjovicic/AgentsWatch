@@ -1,7 +1,7 @@
 # AgentsWatch Agent Mistake Ledger
 
 Status: active agent-learning memory  
-Last aligned: 2026-07-01  
+Last aligned: 2026-07-03  
 Scope: `ivanjovicic/AgentsWatch`
 
 ## Purpose
@@ -18,6 +18,8 @@ repeated mistake with a rule/prompt/test/queue/lint update
 false alarm with explanation
 ```
 
+Concrete work, risk, or knowledge found outside the active task belongs in `.ai/discoveries/`. A repeated failure to capture or route such findings belongs in this ledger as an agent-process mistake.
+
 ## How agents must use this file
 
 Before starting a non-trivial prompt:
@@ -32,14 +34,15 @@ Before marking a prompt Done:
 1. Add a new mistake card if a new mistake was found.
 2. Update an existing card if a known mistake repeated.
 3. Add or update a rule, prompt, test, queue row, or validation/lint prompt for repeated mistakes.
-4. If no update is needed, write the reason in the run log.
+4. Reconcile meaningful out-of-scope findings using `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`.
+5. If no update is needed, write the reason in the run log.
 
 ## Severity
 
 | Severity | Meaning | Required action |
 |---|---|---|
 | P0 | Broken validation gate, false runtime/release claim, privacy/local-first violation, or unsafe product direction | rule + test/lint/prompt update required immediately |
-| P1 | Wrong Done status, missing evidence, misleading audit, wasted context, stale router | rule/prompt/queue update required |
+| P1 | Wrong Done status, missing evidence, misleading audit, wasted context, stale router, or lost actionable discovery | rule/prompt/queue update required |
 | P2 | Local inefficiency, stale doc reference, minor template gap | prompt/template update or documented no-op |
 
 ## Status values
@@ -152,6 +155,33 @@ Run logs should record docs inspected and the inspection/change ratio.
 
 ---
 
+### AW-MISTAKE-DISCOVERY-001 — Out-of-scope finding is mentioned but not durably routed
+
+Severity: P1  
+Status: Mitigated  
+First seen: review of AgentsWatch run-log, learning, queue, and prompt contracts on 2026-07-03
+
+Problem:
+A run can mention missed work, residual risk, stale documentation, a test gap, or another useful issue without creating a durable record, assigning an owner, updating canonical documentation, or generating a focused follow-up prompt.
+
+Impact:
+The finding remains buried in one run log, later agents rediscover it, queues drift, documentation stays stale, and token/context waste repeats.
+
+Root cause:
+Existing learning fields captured narrative evidence but did not define a first-class discovery inbox, deterministic reconciliation step, ownership model, or completion gate.
+
+Prevention:
+- `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md` defines capture, deduplication, classification, routing, prompt generation, and closure.
+- `.ai/discoveries/` and `.ai/DISCOVERY_RECORD_TEMPLATE.md` provide durable local records.
+- `.ai/RUN_LOG_TEMPLATE.md` requires discovery reconciliation fields.
+- `docs/prompt_queues/agentwatch_discovery_and_self_improvement.md` provides manual workflows and gated runtime prompts.
+- DISC-001 through DISC-006 cover capture, reconciliation, documentation promotion, prompt generation, untracked-finding review, and stale closure.
+
+Next check:
+Dogfood the new lifecycle on real runs and implement discovery CLI/lint commands only after Gate 0 evidence permits runtime work.
+
+---
+
 ## Add new mistake card
 
 Use `docs/ai/learning/MISTAKE_CARD_TEMPLATE.md` and IDs:
@@ -160,4 +190,4 @@ Use `docs/ai/learning/MISTAKE_CARD_TEMPLATE.md` and IDs:
 AW-MISTAKE-<AREA>-<NNN>
 ```
 
-Areas: `EVIDENCE`, `GATE`, `AUDIT`, `VALIDATION`, `CONTEXT`, `QUEUE`, `SCOPE`, `CLAIM`, `PRODUCT`, `PRIVACY`.
+Areas: `EVIDENCE`, `GATE`, `AUDIT`, `VALIDATION`, `CONTEXT`, `QUEUE`, `SCOPE`, `CLAIM`, `PRODUCT`, `PRIVACY`, `DISCOVERY`.

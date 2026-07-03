@@ -42,4 +42,25 @@ A  docs/PRODUCT_SPEC.md
                 Assert.Equal("A", third.Status);
             });
     }
+
+    [Fact]
+    public void Parse_PreservesLeadingStatusColumn_WithCrLfInput()
+    {
+        const string status = " M README.md\r\nM  src/AgentsWatch.Cli/Program.cs\r\n";
+
+        var result = GitStatusParser.Parse(status);
+
+        Assert.Collection(
+            result,
+            first =>
+            {
+                Assert.Equal("README.md", first.Path);
+                Assert.Equal("M", first.Status);
+            },
+            second =>
+            {
+                Assert.Equal("src/AgentsWatch.Cli/Program.cs", second.Path);
+                Assert.Equal("M", second.Status);
+            });
+    }
 }

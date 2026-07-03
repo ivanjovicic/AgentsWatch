@@ -1,66 +1,107 @@
 # AgentsWatch Claims vs Actual Review
 
-Last aligned: 2026-06-29
+Last aligned: 2026-07-03
 
 ## Purpose
 
-Check whether an agent's final claims match the actual repository diff and validation evidence.
+Check whether agent, documentation, release, and product claims match the actual repository diff and commit-bound proof.
 
-This is a core AgentsWatch feature and should also be used manually during development.
+Never use final chat text as proof by itself.
 
 ## Inputs
 
-- final agent response;
-- changed files;
-- git diff stat;
-- validation output;
-- prompt evidence row;
-- run report if available.
+- claim text;
+- capability ID;
+- required maturity;
+- changed files/diff stat;
+- implementation path;
+- targeted test results;
+- black-box scenario results;
+- CI/proof bundle;
+- dogfood evidence for usefulness claims;
+- release/package evidence when applicable.
 
 ## Review checklist
 
 | Claim | Evidence to check |
 |---|---|
-| tests added | files under `test/` or `tests/` changed |
-| docs updated | files under `docs/` changed |
-| CLI command changed | `src/AgentsWatch.Cli/` changed |
-| git parsing changed | `src/AgentsWatch.Git/` changed |
-| report format changed | `src/AgentsWatch.Reports/` or `docs/REPORT_FORMATS.md` changed |
-| adapter behavior changed | `src/AgentsWatch.LanguageAdapters/` or `docs/ADAPTER_SPEC.md` changed |
-| validation passed | command output or CI status exists |
-| no runtime change | only docs/templates changed |
-| risk reduced | risk register or evidence file changed |
+| tests added | test files changed and IDs map to acceptance criteria |
+| tests pass | TRX/CI result for same commit |
+| docs updated | owning docs changed and links valid |
+| CLI command changed | CLI/core implementation path changed |
+| command works | black-box process scenario passes |
+| git parsing changed | Git implementation + parser/integration tests |
+| report format changed | report code/docs + golden result |
+| validation passed | exact command/CI evidence exists |
+| no runtime change | only docs/templates/evidence changed |
+| risk reduced | regression/safety proof or explicit evidence exists |
+| capability supported | registry/matrix maturity meets required level |
+| cross-platform | required scenario passes on every named OS |
+| package works | pack + checksum + isolated install smoke |
+| token/time saved | measured paired dogfood benchmark with quality guardrail |
+| privacy/local-first | dedicated negative tests/audit, not architecture statement alone |
 
-## Mismatch examples
+## Maturity review
 
 ```text
-Claim: tests added
-Actual: no test files changed
-Finding: missing-test claim mismatch
+L0 Idea
+L1 Specified
+L2 Implemented
+L3 Test-backed
+L4 CI-verified
+L5 Dogfood-verified
+L6 Release-verified
+```
+
+A claim must not use stronger wording than the current capability level.
+
+Examples:
+
+```text
+Claim: init is implemented
+Actual: CLI code path exists
+Result: L2 match, not verified
 ```
 
 ```text
-Claim: build validated
-Actual: no build output and no CI status
-Finding: validation evidence missing
+Claim: init is safe and idempotent
+Actual: no temp-directory/no-overwrite execution evidence
+Result: mismatch; requires integration and black-box proof
 ```
 
 ```text
-Claim: init hardened
-Actual: docs changed only, no CLI/tests changed
-Finding: implementation not present
+Claim: tests pass
+Actual: test source exists, no result for current commit
+Result: mismatch
+```
+
+```text
+Claim: reduces tokens by 40%
+Actual: one anecdotal dogfood run and estimated values
+Result: unsupported; use directional wording only
 ```
 
 ## Output format
 
 ```text
-Claim reviewed:
+Claim:
+Capability ID:
+Required maturity:
+Available maturity:
 Actual evidence:
-Match: yes/no/partial
+Commit match: yes/no
+Result: Match | Partial | Mismatch
 Risk:
-Required follow-up:
+Allowed replacement wording:
+Required follow-up/discovery:
 ```
 
-## Rule
+## Rules
 
-Never use final chat text as proof by itself. Evidence must come from diff, tests, CI, reports, or a dated validation evidence file.
+- Evidence must match the claimed commit/release.
+- Test source is not test execution proof.
+- Green CI is not proof for a capability unless relevant tests/scenarios are linked.
+- Failed/skipped stages remain visible.
+- Docs-only work cannot claim runtime behavior.
+- Value claims require benchmark evidence.
+- Release claims require proof bundle and independent verification.

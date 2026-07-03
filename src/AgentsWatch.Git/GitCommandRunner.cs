@@ -75,8 +75,8 @@ public static class GitStatusParser
         }
 
         return statusOutput
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(ParseLine)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(static line => ParseLine(line.TrimEnd('\r')))
             .ToArray();
     }
 

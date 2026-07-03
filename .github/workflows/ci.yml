@@ -6,9 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
+  build-test-smoke:
+    name: Build, test, smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,11 +27,178 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Create proof directories
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/test-results | Out-Null
+          New-Item -ItemType Directory -Force -Path artifacts/proof/environment | Out-Null
+          New-Item -ItemType Directory -Force -Path artifacts/proof/smoke | Out-Null
+          dotnet --info | Out-File -FilePath artifacts/proof/environment/dotnet-info.txt -Encoding utf8
+          "runner.os=${{ runner.os }}`nrunner.arch=${{ runner.arch }}`ncommit=${{ github.sha }}" |
+            Out-File -FilePath artifacts/proof/environment/runner.txt -Encoding utf8
+
       - name: Restore
         run: dotnet restore AgentsWatch.sln
 
       - name: Build
         run: dotnet build AgentsWatch.sln --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test AgentsWatch.sln --configuration Release --no-build
+      - name: Test with TRX evidence
+        run: >-
+          dotnet test AgentsWatch.sln
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=agentswatch-tests-${{ runner.os }}.trx"
+          --results-directory artifacts/test-results
+
+      - name: CLI smoke with transcripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $project = 'src/AgentsWatch.Cli/AgentsWatch.Cli.csproj'
+          $smoke = 'artifacts/proof/smoke'
+
+          & dotnet run --project $project --configuration Release --no-build -- --help 2>&1 |
+            Tee-Object -FilePath "$smoke/help.txt"
+          if ($LASTEXITCODE -ne 0) { throw "help smoke failed with exit code $LASTEXITCODE" }
+
+          & dotnet run --project $project --configuration Release --no-build -- --version 2>&1 |
+            Tee-Object -FilePath "$smoke/version.txt"
+          if ($LASTEXITCODE -ne 0) { throw "version smoke failed with exit code $LASTEXITCODE" }
+
+          & dotnet run --project $project --configuration Release --no-build -- optimize "Fix one file. Scope: inspect only README.md. Stop if another subsystem is involved. Validation: dotnet test." 2>&1 |
+            Tee-Object -FilePath "$smoke/optimize.txt"
+          if ($LASTEXITCODE -ne 0) { throw "optimize smoke failed with exit code $LASTEXITCODE" }
+
+          & dotnet run --project $project --configuration Release --no-build -- status 2>&1 |
+            Tee-Object -FilePath "$smoke/status.txt"
+          if ($LASTEXITCODE -ne 0) { throw "status smoke failed with exit code $LASTEXITCODE" }
+
+          & dotnet run --project $project --configuration Release --no-build -- command-that-does-not-exist 2>&1 |
+            Tee-Object -FilePath "$smoke/unknown-command.txt"
+          $unknownExit = $LASTEXITCODE
+          if ($unknownExit -ne 2) { throw "unknown-command smoke expected exit code 2 but got $unknownExit" }
+
+          @{
+            help = 0
+            version = 0
+            optimize = 0
+            status = 0
+            unknownCommand = $unknownExit
+          } | ConvertTo-Json | Out-File -FilePath "$smoke/exit-codes.json" -Encoding utf8
+
+          # The final command is intentionally expected to return exit code 2.
+          # End the PowerShell step successfully after the expectation is asserted.
+          exit 0
+
+      - name: Upload build/test/smoke proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proof-${{ runner.os }}-${{ github.sha }}
+          path: |
+            artifacts/test-results
+            artifacts/proof
+          if-no-files-found: warn
+          retention-days: 30
+
+  package-clean-install:
+    name: Package and clean-install proof
+    runs-on: ubuntu-latest
+    needs: build-test-smoke
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore and build
+        run: |
+          dotnet restore AgentsWatch.sln
+          dotnet build AgentsWatch.sln --configuration Release --no-restore
+
+      - name: Pack tool
+        run: >-
+          dotnet pack src/AgentsWatch.Cli/AgentsWatch.Cli.csproj
+          --configuration Release
+          --no-build
+          --output artifacts/proof/package
+
+      - name: Generate checksum and clean-install proof
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $packageDir = Join-Path $PWD 'artifacts/proof/package'
+          $toolDir = Join-Path $PWD 'artifacts/proof/installed-tool'
+          $smokeDir = Join-Path $PWD 'artifacts/proof/clean-install'
+          New-Item -ItemType Directory -Force -Path $toolDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
+
+          $packages = Get-ChildItem -Path $packageDir -Filter '*.nupkg'
+          if ($packages.Count -ne 1) { throw "Expected one nupkg, found $($packages.Count)" }
+
+          $checksum = Get-FileHash -Path $packages[0].FullName -Algorithm SHA256
+          "$($checksum.Hash.ToLowerInvariant())  $($packages[0].Name)" |
+            Out-File -FilePath (Join-Path $packageDir 'SHA256SUMS.txt') -Encoding ascii
+
+          dotnet tool install AgentsWatch.Cli --tool-path $toolDir --add-source $packageDir --version 0.1.0 --ignore-failed-sources
+          if ($LASTEXITCODE -ne 0) { throw "clean tool install failed with exit code $LASTEXITCODE" }
+
+          $tool = Join-Path $toolDir 'agentswatch'
+          & $tool --help 2>&1 | Tee-Object -FilePath (Join-Path $smokeDir 'help.txt')
+          if ($LASTEXITCODE -ne 0) { throw "installed help smoke failed" }
+          & $tool --version 2>&1 | Tee-Object -FilePath (Join-Path $smokeDir 'version.txt')
+          if ($LASTEXITCODE -ne 0) { throw "installed version smoke failed" }
+
+          $manifest = [ordered]@{
+            schemaVersion = 1
+            repository = '${{ github.repository }}'
+            commitSha = '${{ github.sha }}'
+            branchOrTag = '${{ github.ref_name }}'
+            version = '0.1.0'
+            generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
+            runner = [ordered]@{
+              os = '${{ runner.os }}'
+              architecture = '${{ runner.arch }}'
+              dotnetSdk = (dotnet --version)
+            }
+            stages = [ordered]@{
+              restore = 'Pass'
+              build = 'Pass'
+              test = 'Pass'
+              smoke = 'Pass'
+              acceptance = 'Partial'
+              safety = 'NotRun'
+              pack = 'Pass'
+              cleanInstall = 'Pass'
+            }
+            capabilities = @(
+              [ordered]@{ id = 'AW-CAP-001'; claimedLevel = 'L4'; evidence = @('clean-install/help.txt'); result = 'Pass' },
+              [ordered]@{ id = 'AW-CAP-002'; claimedLevel = 'L4'; evidence = @('clean-install/version.txt'); result = 'Pass' },
+              [ordered]@{ id = 'AW-CAP-025'; claimedLevel = 'L4'; evidence = @('package/SHA256SUMS.txt', 'clean-install/help.txt'); result = 'Pass' }
+            )
+            artifacts = @(
+              [ordered]@{ path = "package/$($packages[0].Name)"; sha256 = $checksum.Hash.ToLowerInvariant() }
+            )
+            knownLimitations = @(
+              'Full acceptance and safety suites are not implemented yet.',
+              'Dogfood and independent release verification are not part of this CI job.'
+            )
+            dogfoodReferences = @()
+            generator = 'CI'
+          }
+
+          $manifest | ConvertTo-Json -Depth 8 |
+            Out-File -FilePath 'artifacts/proof/proof-manifest.json' -Encoding utf8
+
+      - name: Upload package proof bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-proof-${{ github.sha }}
+          path: artifacts/proof
+          if-no-files-found: error
+          retention-days: 30

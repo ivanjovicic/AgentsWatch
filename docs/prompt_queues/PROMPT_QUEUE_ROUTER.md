@@ -1,14 +1,28 @@
 # AgentsWatch Prompt Queue Router
 
-Last aligned: 2026-07-01
+Last aligned: 2026-07-03
 
 Use this file first when choosing the next agent prompt.
 
 ## Current global state
 
-Gate 0 is incomplete.
+Gate 0 has passed on PR #4 proof run `28650547744` for the tested PR merge commit.
 
-That means validation-first prompts have priority over feature prompts.
+Evidence:
+
+- Linux restore/build/test/smoke: Pass;
+- Windows restore/build/test/smoke: Pass;
+- tests: 8/8 passed on each OS;
+- package/checksum/isolated install: Pass;
+- validation record: `docs/VALIDATION_EVIDENCE_2026_07_03.md`.
+
+Main has not received these changes yet. Repository-wide Gate 0 remains pending until the PR is merged and the main-branch workflow passes.
+
+Therefore:
+
+- proof/discovery docs and review work may continue on the PR;
+- narrow corrections to this PR are allowed;
+- new mainline product feature work remains blocked until merge + green main confirmation.
 
 ## Mandatory pre-run lint
 
@@ -17,82 +31,102 @@ Before running any prompt, apply:
 - `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
 - `docs/PROMPT_LINT_CHECKLIST.md`
 - `docs/CONTEXT_PACKS.md`
+- relevant `docs/ai/learning/MISTAKE_LEDGER.md` items
+- `docs/FEATURE_CAPABILITY_REGISTRY.md` when behavior, tests, release, or claims change
 
-If the prompt fails lint or has no suitable pack, rewrite or split it before execution.
+If the prompt fails lint or has no suitable pack, rewrite or split it.
 
-## Fast decision tree
+## Mandatory post-run reconciliation
 
-```text
-Do we have restore/build/test evidence?
-  no  -> run AW-VAL-001
-  yes -> do we have CLI smoke evidence?
-          no  -> run AW-VAL-002
-          yes -> do we have evidence validator/workflow proof?
-                  no  -> run AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002
-                  yes -> do we have evidence review?
-                          no  -> run AW-VAL-003
-                          yes -> is init hardened?
-                                  no  -> run AW-VAL-004 or AW-002
-                                  yes -> continue MVP/productization prompts
-```
+Before learning-complete status:
 
-## Queue priority order
+1. write compact run evidence;
+2. classify mistakes;
+3. capture/reconcile out-of-scope discoveries;
+4. assign owners and focused follow-ups;
+5. update affected capability/traceability rows only to the proven level;
+6. link matching CI/package evidence;
+7. preserve failures, skips, blockers, and limitations.
 
-1. `bootstrap_validation.md`
-2. `agent_evidence_validation_followups_2026_07_01.md`
-3. `token_economy_hardening_2026_07_01.md`
-4. `token_economy_industry_followups_2026_07_01.md`
-5. `agentwatch_mvp.md`
-6. `productization.md`
-7. `roadmap_execution.md`
-8. `architecture_evolution.md`
+## Proof routing
 
-## Current next prompt
+Use `agentwatch_proof_and_verification.md` whenever work changes runtime behavior, tests, acceptance criteria, CI, packaging, release, README/product claims, versions, or value claims.
 
 ```text
-AW-VAL-001 — Build validation
+Capability missing from registry?
+  -> AW-PROOF-001
+Traceability incomplete?
+  -> AW-PROOF-002
+Tests/scenarios absent or failing?
+  -> AW-PROOF-003 / targeted test prompt
+Proof bundle missing/mismatched?
+  -> AW-PROOF-004
+Usefulness or efficiency claim?
+  -> AW-PROOF-005
+Release candidate?
+  -> AW-PROOF-006 and AW-PROOF-007
 ```
 
-Prompt file:
+## Gate decision
 
 ```text
-docs/prompts/AW-VAL-001-build-validation.md
+PR branch restore/build/test/smoke green?
+  yes
+Package/checksum/isolated install green?
+  yes
+Proof bundle manually inspected?
+  yes, automatic validator still planned
+PR merged to main?
+  no -> keep mainline feature work blocked
+Main workflow green after merge?
+  pending -> then mark repository Gate 0 complete
 ```
 
-## Do not run yet
+## Post-run overrides
 
-Until AW-VAL-001 and AW-VAL-002 are complete, do not run:
+```text
+Meaningful missed/risk/unrelated item?
+  -> DISC-001 and DISC-002
+Runtime/test/claim changed?
+  -> registry + traceability + AW-PROOF-002
+Recent follow-up lacks discovery ID?
+  -> DISC-005
+```
 
-- AW-002+ feature prompts;
-- PROD-001+ productization prompts;
-- ROAD implementation prompts;
-- architecture evolution prompts;
-- dashboard/SaaS prompts.
+## Queue priority order before main confirmation
 
-Evidence validator prompts may run after AW-VAL-001/AW-VAL-002 because they validate the agent process and do not add product features.
+1. final PR proof/traceability review;
+2. merge review and main-branch proof confirmation;
+3. `bootstrap_validation.md` evidence status update;
+4. `agentwatch_proof_and_verification.md` follow-ups;
+5. `agent_evidence_validation_followups_2026_07_01.md`;
+6. discovery/learning queues;
+7. MVP feature queues only after main Gate 0 passes.
 
-Token economy hardening prompts may run as docs-only planning after the evidence validator queue is clean. They must not implement runtime CLI behavior until Gate 0 is complete.
+## Current next actions
 
-Industry token economy follow-ups may run as docs/spec/checklist work after the first token economy queue. Runtime commands from that queue require Gate 0.
+```text
+1. Complete final CI for the latest PR head.
+2. Review final proof artifacts/claims.
+3. Merge PR #4 when review is accepted.
+4. Confirm the main-branch CI proof run.
+5. Run AW-VAL-003 evidence review.
+6. Continue with AW-VAL-004 / AW-002 init hardening.
+```
 
-Prior-conversation backfill docs are safe to read when choosing packs, state owners, feature profiles, and queue lifecycle fields. Do not load entire old conversations; read `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` instead.
+## First feature-proof sequence after main Gate 0
 
-## After Gate 0
-
-Recommended order:
-
-1. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002 — evidence validator and workflow proof
-2. AW-TOKEN-IND-002 — cache-aware prompt skeleton
-3. AW-TOKEN-IND-003 / AW-TOKEN-IND-004 / AW-TOKEN-IND-005 — config smell checklist, stale-context guard, queue token-budget fields
-4. AW-TOKEN-IND-011 / AW-TOKEN-IND-012 / AW-TOKEN-IND-013 — state-owner filter, feature-profile gating, queue lifecycle token report
-5. AW-VAL-004 / AW-002 — init hardening
-6. PROD-002 — init temp-directory tests
-7. PROD-001 — help output UX alignment
-8. PROD-003 — status non-git behavior
-9. AW-003 — git status/diff tracker and run reports
-10. AW-005 — prompt optimizer and task split
-11. AW-006/AW-007 — handoff and diff-only review
+1. AW-PROOF-TEST-001 — direct CLI process tests;
+2. AW-VAL-004 / AW-002 — init hardening;
+3. AW-PROOF-TEST-002 — init temp-repo/idempotency/no-overwrite/path safety;
+4. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002;
+5. AW-DISC-001 / AW-DISC-002;
+6. run-report spine;
+7. optimizer/task-split expansion;
+8. safety/privacy negative suite;
+9. dogfood benchmark after usable command spine;
+10. independent verification before stable release.
 
 ## Rule
 
-If any queue disagrees with this router, use this router while Gate 0 is incomplete.
+Capability maturity follows commit-bound evidence, not queue status. If another queue conflicts with this router before main confirmation, this router wins.
