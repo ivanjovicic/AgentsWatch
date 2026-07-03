@@ -51,26 +51,31 @@ Maturity levels are defined in `PROOF_AND_VERIFICATION_STRATEGY.md`.
 | AW-CAP-034 | Multi-agent worktree coordinator | `swarm`, `worker`, `integrate check` | L1 Specified | multi-agent/worktree research + epic contract | validate workflow and build dry-run ownership planner |
 | AW-CAP-035 | AI PR review debt reducer | `pr analyze/evidence/review-pack` | L1 Specified | agent-PR/review research + epic contract | maintainer interviews and deterministic review packet |
 | AW-CAP-036 | Agent/model regression canary | `canary init/run/compare` | L1 Specified | regression research + opportunity map | define stable task suite and comparison metrics |
+| AW-CAP-037 | Runtime capability negotiation and fallback planning | `compatibility detect/explain/compare` | L1 Specified | compatibility research, adapter contract, 50 acceptance scenarios | implement profile schema, detectors, handshake, support decision engine, and cross-surface fixtures |
 
-## Community opportunity status
+## Community opportunity and compatibility status
 
-The following documents establish problem and contract evidence only:
+The following documents establish problem, compatibility, and contract evidence only:
 
 - `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`;
 - `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md`;
-- `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`.
+- `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`;
+- `MODEL_TOOL_PERMISSION_ENVIRONMENT_COMPATIBILITY_2026_07.md`;
+- `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md`;
+- `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md`.
 
-They do not establish runtime implementation, test support, popularity, market demand, savings, or security effectiveness.
+They do not establish runtime implementation, test support, equal support across tools, popularity, market demand, savings, or security effectiveness.
 
-Before AW-CAP-028 through AW-CAP-036 move beyond L1:
+Before AW-CAP-028 through AW-CAP-037 move beyond L1:
 
-1. complete user/problem validation;
+1. complete user/problem validation where required;
 2. identify stable local inputs/events;
-3. build import-only or dry-run prototype;
-4. add deterministic acceptance tests;
-5. prove local-first/privacy behavior;
-6. update the traceability matrix;
-7. run paired dogfood where usefulness is claimed.
+3. detect the actual model/tool/surface/permission/environment profile;
+4. build import-only or dry-run prototypes;
+5. add deterministic acceptance tests and downgrade/fallback tests;
+6. prove local-first/privacy behavior;
+7. update the traceability matrix;
+8. run paired dogfood where usefulness is claimed.
 
 ## Current proof snapshot
 
@@ -83,7 +88,7 @@ CLI smoke: help/version/optimize/status exit `0`; unknown command expected exit 
 Package: `AgentsWatch.Cli.0.1.0.nupkg`  
 Package SHA-256: `3bc0a9b2acb20c200ffd749186a2697ac95e42a8497647c36234d1a79d330288`
 
-The current branch may contain later documentation-only descendants. Those descendants still require their own CI run before the whole PR head is called current-commit verified.
+The current branch contains later documentation-only descendants. Those descendants require their own CI run after PR #5 is retargeted to `main` before the whole PR head is called current-commit verified.
 
 ## Status interpretation
 
@@ -96,7 +101,7 @@ The current branch may contain later documentation-only descendants. Those desce
 
 ## Registry update rule
 
-Update a row when runtime, acceptance, tests, CI, dogfood, package, release, limitation, or deprecation evidence changes.
+Update a row when runtime, acceptance, tests, CI, dogfood, package, release, compatibility, limitation, or deprecation evidence changes.
 
 Every maturity increase must update the traceability matrix and cite exact evidence.
 
@@ -105,14 +110,15 @@ Every maturity increase must update the traceability matrix and cite exact evide
 ```text
 AgentsWatch has a CI-verified 0.1.0 CLI skeleton for help, version, basic prompt optimization/risk analysis, and clean-repository status output.
 The CLI packs and installs successfully as a local .NET tool in CI.
-Community research has identified and specified new control-plane opportunities, but these remain L1 planning contracts.
+Community and compatibility research has specified advanced control-plane opportunities and honest fallback modes, but these remain L1 planning contracts.
 ```
 
 ## Not allowed now
 
 ```text
+All planned features work equally across every model and coding tool.
+AgentsWatch automatically detects and enforces every tool permission or sandbox.
 The community-derived capabilities are already implemented.
-The new opportunities are market-validated or proven popular.
 AgentsWatch has proven numerical savings or complete security protection.
 AgentsWatch is production-ready or release-verified.
 ```
