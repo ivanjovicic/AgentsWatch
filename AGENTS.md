@@ -5,27 +5,30 @@ AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 ## Source of truth
 
 1. Current code and tests.
-2. `README.md`.
-3. `docs/AGENT_SHARED_OPERATING_STANDARD.md`.
-4. `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
-5. `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`.
-6. `.ai/RUN_LOG_TEMPLATE.md`, `.ai/DISCOVERY_RECORD_TEMPLATE.md`, and `.ai/runs/README.md`.
-7. `docs/ai/learning/MISTAKE_LEDGER.md`.
-8. `docs/DOCS_INDEX.md`.
-9. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
-10. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
-11. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/PROMPT_LINT_CHECKLIST.md`.
-12. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
-13. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
-14. `docs/WASTE_LEARNING_LOOP.md`.
-15. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-16. `docs/AGENT_OPERATING_SYSTEM.md`.
-17. `docs/CONTEXT_INDEX.md`.
-18. Bootstrap validation docs while Gate 0 is incomplete.
-19. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
-20. Prompt queues under `docs/prompt_queues/`.
+2. Commit-bound CI, acceptance, package, and release proof artifacts.
+3. `README.md`.
+4. `docs/AGENT_SHARED_OPERATING_STANDARD.md`.
+5. `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
+6. `docs/PROOF_AND_VERIFICATION_STRATEGY.md`.
+7. `docs/FEATURE_CAPABILITY_REGISTRY.md` and `docs/FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md`.
+8. `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`.
+9. `.ai/RUN_LOG_TEMPLATE.md`, `.ai/DISCOVERY_RECORD_TEMPLATE.md`, and `.ai/runs/README.md`.
+10. `docs/ai/learning/MISTAKE_LEDGER.md`.
+11. `docs/DOCS_INDEX.md`.
+12. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
+13. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
+14. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/PROMPT_LINT_CHECKLIST.md`.
+15. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
+16. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
+17. `docs/WASTE_LEARNING_LOOP.md`.
+18. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
+19. `docs/AGENT_OPERATING_SYSTEM.md`.
+20. `docs/CONTEXT_INDEX.md`.
+21. Bootstrap validation docs while Gate 0 is incomplete.
+22. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
+23. Prompt queues under `docs/prompt_queues/`.
 
-If documents disagree, current code/tests and committed `.ai/runs` evidence win over planning notes or chat history.
+If documents disagree, current code/tests and commit-matched proof artifacts win over planning notes, roadmap status, or chat history.
 
 ## Product rules
 
@@ -37,6 +40,7 @@ If documents disagree, current code/tests and committed `.ai/runs` evidence win 
 - Markdown report contracts come before SQLite/dashboard work.
 - No hidden telemetry or network calls in MVP.
 - Capture unrelated findings instead of silently losing them or fixing them through scope creep.
+- Register every advertised capability and never claim maturity above available evidence.
 
 ## Token economy rule
 
@@ -76,12 +80,14 @@ The agent must record:
 - out-of-scope discoveries observed or `none found`;
 - discovery records created/updated or duplicates linked;
 - primary owner and queue/prompt routing for actionable discoveries;
+- affected capability IDs;
+- proof/traceability rows updated or reason not applicable;
 - unresolved discovery IDs or `none`;
 - follow-up prompt;
 - residual risk;
 - commit SHA.
 
-For every meaningful issue, waste item, blocker, stale reference, unclear rule, repeated failure, or out-of-scope finding, the agent must do at least one of:
+For every meaningful issue, waste item, blocker, stale reference, unclear rule, repeated failure, proof gap, or out-of-scope finding, the agent must do at least one of:
 
 1. update an existing docs rule;
 2. add a new rule to the relevant playbook;
@@ -90,7 +96,8 @@ For every meaningful issue, waste item, blocker, stale reference, unclear rule, 
 5. update `docs/ai/learning/MISTAKE_LEDGER.md`;
 6. add or update a lint/test prompt;
 7. create or update a discovery record and assign a primary owner;
-8. record why no rule, prompt, or discovery update was needed.
+8. update the capability registry/traceability matrix and add missing proof work;
+9. record why no rule, prompt, discovery, or proof update was needed.
 
 A prompt cannot be marked high-confidence `Done` unless it references a run log or explicit fallback, and the score obeys `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
 
@@ -116,20 +123,52 @@ Before learning-complete status:
 6. create a focused prompt or record a no-op/rejection reason;
 7. link the discovery and prompt from the run log.
 
-Use:
+Use DISC-001 through DISC-006 from the discovery queue. Do not describe docs/manual workflows as implemented CLI automation.
 
-- `docs/prompts/DISC-001-capture-run-discoveries.md` after a run;
-- `docs/prompts/DISC-002-reconcile-discovery-inbox.md` for triage/routing;
-- `docs/prompts/DISC-003-promote-discovery-to-docs.md` for durable knowledge;
-- `docs/prompts/DISC-004-generate-follow-up-prompts.md` for actionable work;
-- `docs/prompts/DISC-005-review-untracked-findings.md` when recent evidence contains untracked follow-ups;
-- `docs/prompts/DISC-006-close-stale-discoveries.md` for periodic closure review.
+## Capability proof rule
 
-Do not describe these docs/manual workflows as implemented CLI automation. Runtime commands remain gated by Gate 0 and the discovery implementation queue.
+Use `docs/PROOF_AND_VERIFICATION_STRATEGY.md` whenever a task implements, tests, documents, releases, or advertises a product capability.
+
+Hard rule:
+
+```text
+No registry row = no supported feature claim.
+No executed evidence = no verified claim.
+No commit match = no proof for this version.
+```
+
+Maturity levels:
+
+```text
+L0 Idea
+L1 Specified
+L2 Implemented
+L3 Test-backed
+L4 CI-verified
+L5 Dogfood-verified
+L6 Release-verified
+```
+
+Before raising maturity:
+
+1. identify capability IDs;
+2. verify canonical contract and observable acceptance criteria;
+3. link implementation paths;
+4. add and execute targeted tests;
+5. execute required black-box scenarios;
+6. link CI evidence for the same commit;
+7. update registry and traceability matrix;
+8. retain failures, skips, blockers, and limitations;
+9. require dogfood for usefulness/value claims;
+10. require package checksum and clean-install evidence for release support.
+
+Test source alone does not prove tests passed. A green build alone does not prove every capability. Percentage token/time/cost claims require measured paired evidence under `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md`.
+
+Use AW-PROOF-001 through AW-PROOF-007 from `docs/prompt_queues/agentwatch_proof_and_verification.md`.
 
 ## Prompt batch review rule
 
-After 3-5 important prompt, queue, rule, evidence, discovery, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md` before continuing to add more prompt-system changes.
+After 3-5 important prompt, queue, rule, evidence, discovery, proof, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
 
 Batch review must check:
 
@@ -139,14 +178,17 @@ Batch review must check:
 - missing validation evidence;
 - missing discovery reconciliation;
 - unowned or duplicate discoveries;
-- contradiction between `AGENTS.md`, `DOCS_INDEX.md`, shared standard, run-log gate, discovery loop, router, queues, and prompt files;
+- capability claims missing from registry/matrix;
+- maturity levels exceeding evidence;
+- proof artifacts referencing another commit;
+- contradictions between rulebooks, router, queues, contracts, tests, and proof documents;
 - missing follow-up prompts for discovered issues.
 
-If review finds more than three unrelated issues, add/reconcile discovery records and follow-up prompts instead of fixing everything in one run.
+If review finds more than three unrelated issues, add/reconcile discoveries and follow-up prompts instead of fixing everything in one run.
 
 ## Bootstrap rule
 
-Gate 0 is not complete until restore/build/test and CLI smoke evidence exist.
+Gate 0 is not complete until restore/build/test and CLI smoke evidence exists for the current commit.
 
 Until then, work must prioritize:
 
@@ -155,9 +197,9 @@ Until then, work must prioritize:
 3. `AW-VAL-003` validation evidence review;
 4. `AW-VAL-004` init hardening.
 
-Do not add new CLI features before build/test/smoke evidence exists.
+The CI proof workflow may produce Gate 0 evidence now. Do not add new CLI features before build/test/smoke evidence exists.
 
-Docs/evidence discovery workflows may run now. Runtime discovery commands `AW-DISC-001+` remain blocked until the corresponding gates pass.
+Docs/evidence discovery and proof workflows may run now. Runtime discovery/proof commands remain gated by their implementation queues.
 
 ## Required prompt fields
 
@@ -168,6 +210,7 @@ Every non-trivial task must include:
 - queue;
 - run mode;
 - token budget;
+- affected capability IDs when applicable;
 - source discovery IDs when applicable;
 - scope limiter;
 - owned paths;
@@ -175,6 +218,7 @@ Every non-trivial task must include:
 - stop rules;
 - validation;
 - expected evidence;
+- expected proof/traceability updates;
 - expected discovery reconciliation;
 - relevant prior mistakes read;
 - handoff summary when split or blocked.
@@ -188,24 +232,22 @@ Use investigation-only first when root cause is unknown. Use diff-only review af
 3. Read `docs/ai/learning/MISTAKE_LEDGER.md` and select relevant mistake IDs.
 4. Read `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
 5. Lint the prompt with `docs/PROMPT_LINT_CHECKLIST.md`.
-6. Apply `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` limits.
-7. Follow `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md` during execution.
-8. If the user asks for the next prompt, use `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`.
-9. Read `docs/CONTEXT_INDEX.md` and the owning queue.
-10. If Gate 0 is incomplete, select from `docs/prompt_queues/bootstrap_validation.md`.
-11. Otherwise select one Ready prompt from the owning queue.
-12. Inspect only the relevant docs/files.
-13. Make the smallest safe change.
-14. Add targeted tests when runtime behavior changes.
-15. Run narrow validation when possible.
-16. Record validation honestly.
-17. Record run evidence using `.ai/RUN_LOG_TEMPLATE.md`.
-18. Apply `docs/WASTE_LEARNING_LOOP.md` and classify mistakes.
-19. Apply `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md` and reconcile all meaningful out-of-scope findings.
-20. Generate/update follow-up prompts and queue rows for actionable discoveries.
-21. If the run belongs to a 3-5 important prompt-system commit batch, apply `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-22. Mark prompt `Done`, `Blocked`, or `Needs evidence sync` with run-log path or fallback.
-23. Commit and push using the requested branch/PR flow; never claim main was changed when work only exists on a branch.
+6. Apply token/context limits.
+7. Read the owning queue and smallest relevant context pack.
+8. Identify affected capability IDs from `FEATURE_CAPABILITY_REGISTRY.md`.
+9. Inspect only relevant docs/files.
+10. Make the smallest safe change.
+11. Add targeted tests when runtime behavior changes.
+12. Run narrow validation and required acceptance scenarios when possible.
+13. Record validation honestly.
+14. Update capability registry/traceability only to the evidenced level.
+15. Record run evidence using `.ai/RUN_LOG_TEMPLATE.md`.
+16. Apply waste/mistake learning.
+17. Reconcile discoveries.
+18. Generate follow-up proof/prompts/queue rows for missing evidence.
+19. Apply batch review when triggered.
+20. Mark status with run-log and proof references.
+21. Commit and push using the requested branch/PR flow; never claim main changed when work only exists on a branch.
 
 ## Validation defaults
 
@@ -215,4 +257,6 @@ dotnet build AgentsWatch.sln
 dotnet test AgentsWatch.sln
 ```
 
-Do not claim validation passed unless it was actually run or CI evidence is available.
+For user-visible CLI changes, also run relevant black-box scenarios from `REPRODUCIBLE_ACCEPTANCE_SCENARIOS.md`.
+
+Do not claim validation passed unless it was actually run or matching CI evidence is available.
