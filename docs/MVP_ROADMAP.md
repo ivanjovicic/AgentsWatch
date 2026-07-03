@@ -19,9 +19,12 @@ The `control plane` positioning remains a user-validation hypothesis.
 
 - Current code/tests/proof override this roadmap.
 - Community demand signals do not prove market demand.
-- New community-derived capabilities remain incubator work until Gate 0, user discovery, and the existing run/evidence spine are complete.
+- A model or provider name does not prove runtime capability.
+- Tool, surface, observation, permission, environment, and VCS/delivery profiles must be resolved independently.
+- Every advanced feature must expose `Full`, `Guarded`, `Advisory`, `PostHoc`, `Manual`, or `Unavailable` support.
+- New community-derived capabilities remain incubator work until Gate 0, user discovery, the run/evidence spine, and the required compatibility gate are complete.
 - Import-only and dry-run slices come before live monitoring or enforcement.
-- Do not build six independent pipelines; share the normalized event/evidence foundation.
+- Do not build independent provider pipelines; share runtime-profile, normalized-event, evidence, and fallback foundations.
 
 ## Prototype: 3-7 days
 
@@ -96,12 +99,15 @@ Reduce command-loop waste by recommending targeted validation and avoiding large
 
 ## Community Opportunity Incubator — runs beside Phase 2 discovery
 
-Goal: validate the highest-signal problems without derailing the core MVP.
+Goal: validate high-signal problems without derailing the core MVP or assuming equal support across tools.
 
-Research source:
+Research and contracts:
 
 - `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`;
 - `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md`;
+- `MODEL_TOOL_PERMISSION_ENVIRONMENT_COMPATIBILITY_2026_07.md`;
+- `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md`;
+- `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md`;
 - `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`.
 
 ### Incubator Gate A — problem validation
@@ -114,53 +120,93 @@ For each opportunity:
 - willingness-to-try and willingness-to-pay notes;
 - measurable success and kill criteria.
 
-No runtime implementation before this gate unless the work is a very small reversible fixture/import spike.
+No broad runtime implementation before this gate unless the work is a small reversible fixture/import spike.
 
-### Incubator Gate B — shared event foundation
+### Incubator Gate B — runtime compatibility foundation
 
-Build only after the existing run/evidence model is stable:
+Implement AW-CAP-037 before provider-specific live features:
+
+1. versioned `EffectiveRuntimeProfile` schema;
+2. model-role, tool, and surface profiles;
+3. observation/event capability declaration;
+4. configured-versus-effective permission model;
+5. environment and VCS/delivery detection;
+6. deterministic support decision and fallback planner;
+7. generic/manual adapter;
+8. Linux/Windows compatibility report fixtures;
+9. profile revision and mid-run downgrade behavior.
+
+Definition of done:
+
+- every requested advanced capability receives exactly one support mode;
+- every non-Full mode has a reason and fallback;
+- Full/Guarded modes cite capability sources and blind spots;
+- unknown/conflicted capability cannot silently enable enforcement;
+- chat, local CLI, IDE, cloud/PR, CI, read-only, no-git, container, remote, worktree, and monorepo fixtures are represented.
+
+### Incubator Gate C — shared event/evidence foundation
+
+Build only after the run/evidence model and initial runtime profile are stable:
 
 1. normalized event schema;
 2. synthetic fixture importer;
 3. event timeline projection;
-4. adapter capability declaration;
-5. missing/unsupported data handling;
-6. privacy/redaction tests.
+4. adapter static declaration plus dynamic handshake;
+5. missing/unsupported event handling;
+6. adapter-health and profile-revision events;
+7. privacy/redaction tests.
 
-### Incubator Gate C — low-risk prototypes
+The first event adapters should represent materially different cases, not two nearly identical local CLIs.
+
+### Incubator Gate D — low-risk prototypes
 
 Recommended order:
 
-1. **Rules Compiler and Drift Detector** — deterministic free wedge.
-2. **Manual Context Snapshot and Resume Pack** — no live adapter.
-3. **Flight Recorder Import and Timeline** — fixture/session-log import only.
-4. **Offline Loop Analyzer** — no process termination.
-5. **Policy Dry-Run and Explain** — no execution broker.
-6. **Worktree Ownership Planner** — dry-run only.
-7. **Local PR Evidence Packet** — local git range only.
+1. **Rules Compiler and Drift Detector** — deterministic free wedge with target-loss reports.
+2. **Manual Context Snapshot and Resume Pack** — generic/manual target first.
+3. **Compatibility CLI** — detect/explain/compare/export runtime profiles.
+4. **Flight Recorder Import and Timeline** — fixture/session-log import only.
+5. **Trust Ledger** — git/process/CI evidence grades independent of agent self-report.
+6. **Offline Loop Analyzer** — no process termination.
+7. **Policy Dry-Run and Explain** — enforcement class and bypass disclosure, no execution broker.
+8. **Coordination Planner** — select LocalWorktree, CloudBranchPR, SharedWorkspaceOwnership, MessageOnly, or Unavailable.
+9. **PR Evidence Packet** — local range and cloud/PR variants.
+10. **Regression Canary** — complete comparison profile and confounder detection.
 
-### Incubator Gate D — dogfood decision
+Every prototype consumes an `EffectiveRuntimeProfile` or explicitly selects the generic/manual profile.
+
+### Incubator Gate E — cross-surface dogfood decision
 
 A prototype advances only when:
 
 - at least three users recognize the output as useful;
 - false positives are acceptable;
-- local-first input is available;
+- required inputs are locally available or provided through a documented export;
+- support modes downgrade correctly;
 - the output changes a real decision or saves measurable work;
-- maintenance cost of provider adapters is understood.
+- maintenance cost of adapters is understood.
 
-### Incubator Gate E — live/control behavior
+Minimum compatibility dogfood:
 
-Only after import-only/dry-run dogfood:
+- one rich-event local tool;
+- one local no-hook/wrapper flow;
+- one IDE/local flow;
+- one cloud/PR flow;
+- one chat/manual flow;
+- one constrained read-only or no-network flow.
+
+### Incubator Gate F — live/control behavior
+
+Only after import-only/dry-run and compatibility dogfood:
 
 - live loop warnings;
-- checkpoints and optional stopping;
-- policy enforcement/execution broker;
-- provider hooks;
-- agent process spawning;
-- GitHub posting.
+- checkpoints and optional stopping when AgentsWatch owns the process or a supported stop API exists;
+- policy enforcement only at a declared PE3/PE4/PE5 class;
+- provider hooks with handshake and downgrade;
+- controlled worker launching with exact workspace identity;
+- GitHub posting with explicit approval.
 
-These require separate safety, failure, and privacy gates.
+These require separate safety, failure, privacy, and compatibility gates.
 
 ## Phase 3: Local dashboard, 8-12 weeks total
 
@@ -182,22 +228,23 @@ Dashboard pages:
 - Validation results;
 - Command profile;
 - Changelog;
+- Runtime compatibility profile and revisions;
 - Event timeline when available;
 - Context snapshots when available;
 - Loop findings when available.
 
-The dashboard is not a prerequisite for event import or analysis.
+The dashboard is not a prerequisite for compatibility detection, event import, or analysis.
 
 ## Phase 4: Team beta, 3-5 months
 
-Add only after solo dogfood:
+Add only after solo and cross-surface dogfood:
 
 - GitHub PR diff/check ingestion;
 - PR review packet;
 - shared policy packs;
 - audit/evidence export;
-- multi-agent worktree status;
-- team usage overview;
+- local worktree and cloud branch/PR coordination views;
+- team usage overview with metric provenance;
 - optional minimal metadata sync.
 
 ## Phase 5: Paid SaaS, 6-9 months
@@ -231,25 +278,31 @@ Source, prompts, raw events, and full diffs remain local by default.
 11. Command Profiler / Fast Validation Advisor.
 12. Evidence/proof validation.
 
-Reason: git/diff/report creates immediate value before advanced agent integrations. Command profiling and evidence create the foundation for later loop, trust, policy, and coordination work.
+Reason: git/diff/report creates immediate value before advanced integrations. Command profiling and evidence create the foundation for later trust, loop, policy, and coordination work.
 
 ## Opportunity prototype priority after the core spine
 
-1. Rules Compiler and Drift Detector.
-2. Context Snapshot and Session Resume.
-3. Flight Recorder import/timeline.
-4. Offline Cost and Loop Guard.
-5. Policy Firewall dry-run.
-6. Local PR Review Debt packet.
-7. Multi-Agent Worktree planner.
-8. Regression Canary.
+1. Rules Compiler and Drift Detector using generic target/loss reports.
+2. Manual Context Snapshot and Session Resume.
+3. AW-CAP-037 runtime profile and support decision foundation.
+4. Compatibility CLI and fixture matrix.
+5. Flight Recorder import/timeline.
+6. Trust Ledger evidence grades.
+7. Offline Cost and Loop Guard.
+8. Policy Firewall dry-run.
+9. Local/cloud PR Review Debt packets.
+10. Multi-Agent coordination planner.
+11. Regression Canary.
 
 ## Explicitly deferred
 
-- live termination of agent processes;
+- live process termination without process ownership, checkpoint, and opt-in;
+- claims of equal cross-tool support;
+- policy enforcement without a declared enforcement class;
 - autonomous merge/deploy/release;
 - full IDE replacement;
 - cloud-only memory;
 - unrestricted subagent communication;
 - security claims before independent review;
+- pure model comparisons when tool, permissions, or environment changed;
 - public savings/popularity claims before measured validation.
