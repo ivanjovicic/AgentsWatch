@@ -47,4 +47,4 @@ Run log: `.ai/runs/2026-07-03-AW-DISCOVERY-SYSTEM-001-evidence.md`
 Mistake IDs: `AW-MISTAKE-DISCOVERY-001`  
 Queue row: `docs/prompt_queues/agentwatch_discovery_and_self_improvement.md`  
 Prompt file: none; queue defines implementation slices  
-Commit or pull request: pending
+Commit or pull request: `https://github.com/ivanjovicic/AgentsWatch/pull/4`
