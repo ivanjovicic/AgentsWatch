@@ -8,25 +8,31 @@ Last aligned: 2026-07-03
 |---|---|
 | `../README.md` | Project overview and current status. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
-| `AGENT_SHARED_OPERATING_STANDARD.md` | Shared rules for prompt shape, token budget, evidence, validation honesty, and docs-only truth. |
-| `AGENT_RUN_LOG_ENFORCEMENT.md` | Hard gate: no complete run log / classified mistakes means no high-confidence Done. |
-| `PROOF_AND_VERIFICATION_STRATEGY.md` | Canonical capability maturity and product-proof rules. |
-| `FEATURE_CAPABILITY_REGISTRY.md` | Truthful inventory of supported, implemented, specified, and unverified capabilities. |
-| `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Claim-to-contract-to-test-to-CI-to-release evidence links. |
-| `DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md` | Capture, route, document, prompt, and close findings outside active scope. |
-| `DISCOVERY_INDEX.md` | Discovery-system entry point. |
-| `../.ai/RUN_LOG_TEMPLATE.md` | Compact run-log template. |
-| `../.ai/DISCOVERY_RECORD_TEMPLATE.md` | Discovery record template. |
-| `../.ai/runs/README.md` | Run-log naming and evidence rules. |
-| `ai/learning/MISTAKE_LEDGER.md` | Active repeated-mistake memory. |
-| `DOCS_GOVERNANCE.md` | Source-of-truth and docs-update rules. |
-| `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow. |
-| `CONTEXT_INDEX.md` | Choose the smallest useful context. |
-| `CONTEXT_PACKS.md` | Active context-pack registry. |
-| `PRODUCT_SPEC.md` | Product positioning and MVP features. |
-| `CLI_SPEC.md` | CLI commands and outputs. |
-| `MVP_ROADMAP.md` | MVP phases and priority order. |
-| `ROADMAP_INDEX.md` | Roadmap entry point. |
+| `PRODUCT_SPEC.md` | Product positioning, strategic lanes, and MVP boundaries. |
+| `MVP_ROADMAP.md` | Core roadmap and community-opportunity incubator gates. |
+| `PROOF_AND_VERIFICATION_STRATEGY.md` | Capability maturity and product-proof rules. |
+| `FEATURE_CAPABILITY_REGISTRY.md` | Truthful inventory of supported, planned, and unverified capabilities. |
+| `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Claim-to-contract-to-test-to-CI-to-release links. |
+| `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | Current external problem research and source catalogue. |
+| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Ranked opportunity hypotheses and portfolio strategy. |
+| `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Detailed product epics, CLI concepts, acceptance, and proof gates. |
+| `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Issue-ready research, foundation, prototype, and dogfood slices. |
+
+## Community opportunity incubator
+
+| Document | Use for |
+|---|---|
+| `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | Repeated problems from papers, public issue trackers, Reddit/HN research, and security reports. |
+| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Weighted ranking, free/Pro/team portfolio, recommended order, and kill criteria. |
+| `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Flight Recorder, Context Portability, Loop Guard, Policy Firewall, Worktree Coordinator, and PR Review Debt contracts. |
+| `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Shared normalized local event journal and bounded-context architecture. |
+| `COMMUNITY_OPPORTUNITY_BACKLOG.md` | OPP-001 through OPP-081 issue-ready work. |
+| `prompt_queues/community_opportunity_validation.md` | Discovery, feasibility, prototype, dogfood, and live-feature gates. |
+| `prompts/OPP-001-user-interview-synthesis.md` | Turn interviews into Advance/Revise/Park/Reject decisions. |
+| `prompts/OPP-002-adapter-feasibility.md` | Verify stable local event/log/hook inputs and blind spots. |
+| `prompts/OPP-003-competitive-substitutes.md` | Compare substitutes, differentiation, and kill conditions. |
+
+Community research establishes problem signals, not runtime support, market size, willingness to pay, savings, or security effectiveness. AW-CAP-028 through AW-CAP-036 remain L1 until implementation and proof exist.
 
 ## Proof and verification
 
@@ -53,14 +59,14 @@ Last aligned: 2026-07-03
 | Document | Use for |
 |---|---|
 | `BUILD_VALIDATION_PLAN.md` | Restore/build/test/CLI smoke order. |
-| `VALIDATION_EVIDENCE_2026_06_29.md` | Historical Gate 0 evidence; must be updated from current CI. |
+| `VALIDATION_EVIDENCE_2026_06_29.md` | Historical Gate 0 evidence. |
+| `VALIDATION_EVIDENCE_2026_07_03.md` | Successful PR-branch Linux/Windows/package proof. |
 | `RISK_REGISTER.md` | Bootstrap and product risks. |
 | `BOOTSTRAP_NEXT_STEPS.md` | Required next order before feature work. |
 | `PROJECT_READINESS_CHECKLIST.md` | Checklist before CLI feature expansion. |
 | `ROADMAP_VALIDATION_GATES.md` | Phase gates and stop rules. |
 | `TEST_STRATEGY.md` | Test layers and command coverage. |
 | `TEST_MATRIX.md` | High-risk coverage summary. |
-| `REPRODUCIBLE_ACCEPTANCE_SCENARIOS.md` | Observable end-to-end behavior. |
 
 ## Agent workflow, evidence, learning, and discovery
 
@@ -80,7 +86,6 @@ Last aligned: 2026-07-03
 | `ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` | Roll up recent run logs. |
 | `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Context/token economy blueprint. |
 | `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Industry research synthesis. |
-| `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Prior patterns preserved outside always-loaded rules. |
 | `PROMPT_TOKEN_ECONOMY_RULEBOOK.md` | Hard anti-waste rules. |
 | `PROMPT_LINT_CHECKLIST.md` | Pre-run prompt pass/fail checklist. |
 | `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Minimal execution protocol. |
@@ -100,6 +105,7 @@ Last aligned: 2026-07-03
 |---|---|
 | `ARCHITECTURE.md` | Current MVP architecture snapshot. |
 | `TARGET_ARCHITECTURE.md` | Future-proof target architecture. |
+| `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Event-ingestion, trust, context, usage, policy, coordination, and review extensions. |
 | `ARCHITECTURE_DECISIONS.md` | ADRs and tradeoffs. |
 | `MODULE_BOUNDARIES.md` | Dependency direction and ownership. |
 | `COMMAND_CONTRACTS.md` | Detailed CLI command behavior. |
@@ -116,8 +122,10 @@ Last aligned: 2026-07-03
 
 | Document | Use for |
 |---|---|
-| `MVP_EPICS_AND_ACCEPTANCE.md` | Implementation epics and acceptance criteria. |
-| `ISSUE_BACKLOG.md` | Issue-ready backlog. |
+| `MVP_EPICS_AND_ACCEPTANCE.md` | Existing implementation epics and acceptance criteria. |
+| `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | New opportunity contracts and gates. |
+| `ISSUE_BACKLOG.md` | Existing issue-ready backlog. |
+| `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Community-derived discovery/prototype backlog. |
 | `USER_PERSONAS_AND_JOBS.md` | Users and jobs. |
 | `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning/pricing hypotheses and evidence rules. |
 | `RELEASE_AND_PACKAGING_PLAN.md` | Packaging/release stages. |
@@ -145,6 +153,7 @@ Last aligned: 2026-07-03
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for selecting work. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
+| `prompt_queues/community_opportunity_validation.md` | Community problem validation and gated prototypes. |
 | `prompt_queues/agentwatch_proof_and_verification.md` | Proof, acceptance, CI, benchmark, release verification. |
 | `prompt_queues/agentwatch_discovery_and_self_improvement.md` | Discovery capture/routing and runtime slices. |
 | `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator prompts. |
@@ -157,4 +166,4 @@ Last aligned: 2026-07-03
 
 ## Rule
 
-When documents disagree, use current code/tests and commit-matched proof first, then `AGENTS.md`, proof strategy/registry/matrix, shared operating standard, run-log/discovery contracts, prompt router, bootstrap validation evidence, and finally planning/roadmap documents.
+When documents disagree, use current code/tests and commit-matched proof first, then `AGENTS.md`, proof strategy/registry/matrix, shared operating standard, run-log/discovery contracts, prompt router, bootstrap validation evidence, and finally planning/research/roadmap documents.
