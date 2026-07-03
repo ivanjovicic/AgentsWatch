@@ -6,33 +6,31 @@ Use this file first when choosing the next agent prompt.
 
 ## Current global state
 
-Gate 0 has passed on PR #4 proof run `28650547744` for the tested PR merge commit.
-
-Evidence:
+Gate 0 has passed on PR #4 proof run `28650547744` for its tested PR merge commit:
 
 - Linux restore/build/test/smoke: Pass;
 - Windows restore/build/test/smoke: Pass;
 - tests: 8/8 passed on each OS;
 - package/checksum/isolated install: Pass;
-- validation record: `docs/VALIDATION_EVIDENCE_2026_07_03.md`.
+- evidence: `docs/VALIDATION_EVIDENCE_2026_07_03.md`.
 
-Main has not received these changes yet. Repository-wide Gate 0 remains pending until the PR is merged and the main-branch workflow passes.
+Main has not received these changes yet. Repository-wide Gate 0 remains pending until PR #4 is merged and the main-branch workflow passes.
 
 Therefore:
 
-- proof/discovery docs and review work may continue on the PR;
-- narrow corrections to this PR are allowed;
+- proof, discovery, product research, interviews, docs, and review may continue;
+- community-opportunity runtime prototypes remain blocked until their explicit gates pass;
 - new mainline product feature work remains blocked until merge + green main confirmation.
 
 ## Mandatory pre-run lint
 
 Before running any prompt, apply:
 
-- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
-- `docs/PROMPT_LINT_CHECKLIST.md`
-- `docs/CONTEXT_PACKS.md`
-- relevant `docs/ai/learning/MISTAKE_LEDGER.md` items
-- `docs/FEATURE_CAPABILITY_REGISTRY.md` when behavior, tests, release, or claims change
+- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`;
+- `docs/PROMPT_LINT_CHECKLIST.md`;
+- `docs/CONTEXT_PACKS.md`;
+- relevant mistake-ledger entries;
+- `docs/FEATURE_CAPABILITY_REGISTRY.md` when behavior, tests, release, positioning, or claims change.
 
 If the prompt fails lint or has no suitable pack, rewrite or split it.
 
@@ -42,91 +40,100 @@ Before learning-complete status:
 
 1. write compact run evidence;
 2. classify mistakes;
-3. capture/reconcile out-of-scope discoveries;
+3. capture/reconcile discoveries;
 4. assign owners and focused follow-ups;
-5. update affected capability/traceability rows only to the proven level;
-6. link matching CI/package evidence;
-7. preserve failures, skips, blockers, and limitations.
+5. update capability/traceability rows only to the proven level;
+6. link matching evidence;
+7. preserve failures, rejects, blockers, and limitations.
+
+## Community opportunity routing
+
+Use `community_opportunity_validation.md` when work concerns AW-CAP-028 through AW-CAP-036 or claims about community demand.
+
+```text
+Only online reports/papers exist?
+  -> OPP-RSCH-001 user interviews
+Stable local data source unknown?
+  -> OPP-RSCH-002 adapter feasibility
+Substitute/differentiation unclear?
+  -> OPP-RSCH-003 competitive review
+Problem validated but no shared event foundation?
+  -> OPP-EVENT-001..003
+Foundation exists and idea has evidence?
+  -> one import-only or dry-run OPP-PROT slice
+Prototype useful and low-noise?
+  -> paired dogfood
+Live observation/enforcement/spawning/posting requested?
+  -> remain blocked until explicit safety and proof gate
+```
+
+Hard rules:
+
+- community frequency is not market size;
+- pain is not willingness to pay;
+- research/specification remains L1;
+- import-only/dry-run precedes live control;
+- no source upload or hidden telemetry;
+- unknown provider capabilities remain unknown;
+- every idea must be allowed to be Parked or Rejected.
 
 ## Proof routing
 
 Use `agentwatch_proof_and_verification.md` whenever work changes runtime behavior, tests, acceptance criteria, CI, packaging, release, README/product claims, versions, or value claims.
 
 ```text
-Capability missing from registry?
-  -> AW-PROOF-001
-Traceability incomplete?
-  -> AW-PROOF-002
-Tests/scenarios absent or failing?
-  -> AW-PROOF-003 / targeted test prompt
-Proof bundle missing/mismatched?
-  -> AW-PROOF-004
-Usefulness or efficiency claim?
-  -> AW-PROOF-005
-Release candidate?
-  -> AW-PROOF-006 and AW-PROOF-007
+Capability missing from registry? -> AW-PROOF-001
+Traceability incomplete? -> AW-PROOF-002
+Tests/scenarios absent or failing? -> AW-PROOF-003
+Proof bundle missing/mismatched? -> AW-PROOF-004
+Usefulness/efficiency claim? -> AW-PROOF-005
+Release candidate? -> AW-PROOF-006 and AW-PROOF-007
 ```
 
 ## Gate decision
 
 ```text
-PR branch restore/build/test/smoke green?
-  yes
-Package/checksum/isolated install green?
-  yes
-Proof bundle manually inspected?
-  yes, automatic validator still planned
-PR merged to main?
-  no -> keep mainline feature work blocked
-Main workflow green after merge?
-  pending -> then mark repository Gate 0 complete
+PR #4 branch proof green? yes
+PR #4 merged to main? no
+Main proof green? pending
+Community research complete? initial desk research yes
+Community market validation complete? no
+New opportunity runtime work allowed? no, except explicitly approved tiny fixture/import spikes after main Gate 0
 ```
 
-## Post-run overrides
+## Queue priority before main confirmation
 
-```text
-Meaningful missed/risk/unrelated item?
-  -> DISC-001 and DISC-002
-Runtime/test/claim changed?
-  -> registry + traceability + AW-PROOF-002
-Recent follow-up lacks discovery ID?
-  -> DISC-005
-```
+1. merge review and main-branch proof confirmation for PR #4;
+2. `bootstrap_validation.md` and proof follow-ups;
+3. community OPP-RSCH-001 interviews;
+4. community OPP-RSCH-002 adapter feasibility;
+5. community OPP-RSCH-003 competitive substitute review;
+6. evidence/discovery queues;
+7. MVP runtime feature queues after main Gate 0;
+8. community prototypes only after their validation gates.
 
-## Queue priority order before main confirmation
+## First core sequence after main Gate 0
 
-1. final PR proof/traceability review;
-2. merge review and main-branch proof confirmation;
-3. `bootstrap_validation.md` evidence status update;
-4. `agentwatch_proof_and_verification.md` follow-ups;
-5. `agent_evidence_validation_followups_2026_07_01.md`;
-6. discovery/learning queues;
-7. MVP feature queues only after main Gate 0 passes.
+1. direct CLI process tests;
+2. init hardening and temp-repo safety;
+3. run-report/evidence spine;
+4. evidence validator;
+5. discovery runtime foundation;
+6. command profiler and safety/privacy suite.
 
-## Current next actions
+## Opportunity incubator sequence after the core evidence spine
 
-```text
-1. Complete final CI for the latest PR head.
-2. Review final proof artifacts/claims.
-3. Merge PR #4 when review is accepted.
-4. Confirm the main-branch CI proof run.
-5. Run AW-VAL-003 evidence review.
-6. Continue with AW-VAL-004 / AW-002 init hardening.
-```
-
-## First feature-proof sequence after main Gate 0
-
-1. AW-PROOF-TEST-001 — direct CLI process tests;
-2. AW-VAL-004 / AW-002 — init hardening;
-3. AW-PROOF-TEST-002 — init temp-repo/idempotency/no-overwrite/path safety;
-4. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002;
-5. AW-DISC-001 / AW-DISC-002;
-6. run-report spine;
-7. optimizer/task-split expansion;
-8. safety/privacy negative suite;
-9. dogfood benchmark after usable command spine;
-10. independent verification before stable release.
+1. Rules Compiler and Drift Detector;
+2. manual Context Snapshot and Resume Pack;
+3. normalized event schema/import journal;
+4. Flight Recorder and Trust Ledger;
+5. offline Cost and Loop Guard;
+6. Policy Firewall dry-run;
+7. local PR evidence packet;
+8. Worktree Coordinator planner;
+9. Regression Canary;
+10. live/enforcing behavior only after dogfood and review.
 
 ## Rule
 
-Capability maturity follows commit-bound evidence, not queue status. If another queue conflicts with this router before main confirmation, this router wins.
+Capability maturity follows commit-bound evidence, not queue or popularity status. If another queue conflicts before main confirmation, this router wins.
