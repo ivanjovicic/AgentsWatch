@@ -87,6 +87,10 @@ jobs:
             unknownCommand = $unknownExit
           } | ConvertTo-Json | Out-File -FilePath "$smoke/exit-codes.json" -Encoding utf8
 
+          # The final command is intentionally expected to return exit code 2.
+          # End the PowerShell step successfully after the expectation is asserted.
+          exit 0
+
       - name: Upload build/test/smoke proof
         if: always()
         uses: actions/upload-artifact@v4
