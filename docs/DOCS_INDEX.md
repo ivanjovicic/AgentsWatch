@@ -13,10 +13,25 @@ Last aligned: 2026-07-03
 | `PROOF_AND_VERIFICATION_STRATEGY.md` | Capability maturity and product-proof rules. |
 | `FEATURE_CAPABILITY_REGISTRY.md` | Truthful inventory of supported, planned, and unverified capabilities. |
 | `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Claim-to-contract-to-test-to-CI-to-release links. |
+| `COMPATIBILITY_INDEX.md` | Cross-model, tool, permission, environment, and fallback entry point. |
 | `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | Current external problem research and source catalogue. |
 | `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Ranked opportunity hypotheses and portfolio strategy. |
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Detailed product epics, CLI concepts, acceptance, and proof gates. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Issue-ready research, foundation, prototype, and dogfood slices. |
+
+## Runtime compatibility
+
+| Document | Use for |
+|---|---|
+| `COMPATIBILITY_INDEX.md` | Entry point and proof order. |
+| `MODEL_TOOL_PERMISSION_ENVIRONMENT_COMPATIBILITY_2026_07.md` | Detailed research, compatibility dimensions, per-feature adaptations, and feasibility matrix. |
+| `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md` | Effective runtime profile, support-mode decision, provenance, confidence, downgrade, and fallback contract. |
+| `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md` | Fifty scenarios across local, IDE, cloud, CI, chat, read-only, no-git, containers, WSL, remote, worktrees, monorepos, and production-risk cases. |
+| `ADAPTER_SPEC.md` | Composable tool, surface, model, event, permission, environment, VCS/CI, stack, rules, and usage adapter families. |
+| `COMPATIBILITY_IMPLEMENTATION_BACKLOG.md` | COMPAT-001 through COMPAT-020 issue-ready implementation order for AW-CAP-037. |
+| `prompts/OPP-004-runtime-compatibility-audit.md` | Audit one real tool/surface/model/permission/environment combination. |
+
+Compatibility research proves that planned concepts are not equally observable or enforceable in every setup. `AW-CAP-037` remains L1; no current runtime automatically negotiates these profiles.
 
 ## Community opportunity incubator
 
@@ -27,12 +42,13 @@ Last aligned: 2026-07-03
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Flight Recorder, Context Portability, Loop Guard, Policy Firewall, Worktree Coordinator, and PR Review Debt contracts. |
 | `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Shared normalized local event journal and bounded-context architecture. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | OPP-001 through OPP-081 issue-ready work. |
-| `prompt_queues/community_opportunity_validation.md` | Discovery, feasibility, prototype, dogfood, and live-feature gates. |
+| `prompt_queues/community_opportunity_validation.md` | Discovery, compatibility, prototype, dogfood, and live-feature gates. |
 | `prompts/OPP-001-user-interview-synthesis.md` | Turn interviews into Advance/Revise/Park/Reject decisions. |
 | `prompts/OPP-002-adapter-feasibility.md` | Verify stable local event/log/hook inputs and blind spots. |
 | `prompts/OPP-003-competitive-substitutes.md` | Compare substitutes, differentiation, and kill conditions. |
+| `prompts/OPP-004-runtime-compatibility-audit.md` | Evaluate model/tool/surface/rights/environment support rather than provider-name assumptions. |
 
-Community research establishes problem signals, not runtime support, market size, willingness to pay, savings, or security effectiveness. AW-CAP-028 through AW-CAP-036 remain L1 until implementation and proof exist.
+Community research establishes problem signals, not runtime support, market size, willingness to pay, savings, security effectiveness, or equal cross-tool support. AW-CAP-028 through AW-CAP-037 remain L1 until implementation and proof exist.
 
 ## Proof and verification
 
@@ -42,6 +58,7 @@ Community research establishes problem signals, not runtime support, market size
 | `FEATURE_CAPABILITY_REGISTRY.md` | Current capability/maturity truth. |
 | `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Acceptance/test/scenario/CI/dogfood/release traceability. |
 | `REPRODUCIBLE_ACCEPTANCE_SCENARIOS.md` | Black-box scenarios for current and planned commands. |
+| `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md` | Cross-runtime support/downgrade/fallback scenarios. |
 | `PROOF_BUNDLE_SPEC.md` | Commit-bound CI/release artifact and manifest format. |
 | `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md` | Paired usefulness/token/context benchmark rules. |
 | `INDEPENDENT_VERIFICATION_RUNBOOK.md` | Clean-install, black-box, independent release review. |
@@ -106,6 +123,7 @@ Community research establishes problem signals, not runtime support, market size
 | `ARCHITECTURE.md` | Current MVP architecture snapshot. |
 | `TARGET_ARCHITECTURE.md` | Future-proof target architecture. |
 | `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Event-ingestion, trust, context, usage, policy, coordination, and review extensions. |
+| `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md` | Compatibility layer required before advanced provider integrations. |
 | `ARCHITECTURE_DECISIONS.md` | ADRs and tradeoffs. |
 | `MODULE_BOUNDARIES.md` | Dependency direction and ownership. |
 | `COMMAND_CONTRACTS.md` | Detailed CLI command behavior. |
@@ -113,7 +131,7 @@ Community research establishes problem signals, not runtime support, market size
 | `CONFIG_REFERENCE.md` | Config schema. |
 | `REPORT_FORMATS.md` | Reports, handoffs, and review prompts. |
 | `DATA_MODEL.md` | Markdown/JSON/SQLite model. |
-| `ADAPTER_SPEC.md` | Stack adapter scope. |
+| `ADAPTER_SPEC.md` | All adapter families and composition rules. |
 | `RISK_SCORING_MODEL.md` | Explainable risk scoring. |
 | `TOKEN_WASTE_METRICS.md` | Token/context metrics and safe claims. |
 | `PROMPT_OPTIMIZATION_PLAYBOOK.md` | Prompt risk, split, handoff, and review. |
@@ -126,6 +144,7 @@ Community research establishes problem signals, not runtime support, market size
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | New opportunity contracts and gates. |
 | `ISSUE_BACKLOG.md` | Existing issue-ready backlog. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Community-derived discovery/prototype backlog. |
+| `COMPATIBILITY_IMPLEMENTATION_BACKLOG.md` | Runtime compatibility and fallback implementation backlog. |
 | `USER_PERSONAS_AND_JOBS.md` | Users and jobs. |
 | `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning/pricing hypotheses and evidence rules. |
 | `RELEASE_AND_PACKAGING_PLAN.md` | Packaging/release stages. |
@@ -153,7 +172,7 @@ Community research establishes problem signals, not runtime support, market size
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for selecting work. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
-| `prompt_queues/community_opportunity_validation.md` | Community problem validation and gated prototypes. |
+| `prompt_queues/community_opportunity_validation.md` | Community, compatibility, and gated prototype workflow. |
 | `prompt_queues/agentwatch_proof_and_verification.md` | Proof, acceptance, CI, benchmark, release verification. |
 | `prompt_queues/agentwatch_discovery_and_self_improvement.md` | Discovery capture/routing and runtime slices. |
 | `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator prompts. |
@@ -166,4 +185,4 @@ Community research establishes problem signals, not runtime support, market size
 
 ## Rule
 
-When documents disagree, use current code/tests and commit-matched proof first, then `AGENTS.md`, proof strategy/registry/matrix, shared operating standard, run-log/discovery contracts, prompt router, bootstrap validation evidence, and finally planning/research/roadmap documents.
+When documents disagree, use current code/tests and commit-matched proof first, then `AGENTS.md`, proof strategy/registry/matrix, compatibility contracts, shared operating standard, run-log/discovery contracts, prompt router, bootstrap validation evidence, and finally planning/research/roadmap documents.
