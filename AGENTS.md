@@ -8,21 +8,22 @@ AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
 2. `README.md`.
 3. `docs/AGENT_SHARED_OPERATING_STANDARD.md`.
 4. `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
-5. `.ai/RUN_LOG_TEMPLATE.md` and `.ai/runs/README.md`.
-6. `docs/ai/learning/MISTAKE_LEDGER.md`.
-7. `docs/DOCS_INDEX.md`.
-8. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
-9. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
-10. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/PROMPT_LINT_CHECKLIST.md`.
-11. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
-12. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
-13. `docs/WASTE_LEARNING_LOOP.md`.
-14. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-15. `docs/AGENT_OPERATING_SYSTEM.md`.
-16. `docs/CONTEXT_INDEX.md`.
-17. Bootstrap validation docs while Gate 0 is incomplete.
-18. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
-19. Prompt queues under `docs/prompt_queues/`.
+5. `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`.
+6. `.ai/RUN_LOG_TEMPLATE.md`, `.ai/DISCOVERY_RECORD_TEMPLATE.md`, and `.ai/runs/README.md`.
+7. `docs/ai/learning/MISTAKE_LEDGER.md`.
+8. `docs/DOCS_INDEX.md`.
+9. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
+10. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
+11. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/PROMPT_LINT_CHECKLIST.md`.
+12. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
+13. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
+14. `docs/WASTE_LEARNING_LOOP.md`.
+15. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
+16. `docs/AGENT_OPERATING_SYSTEM.md`.
+17. `docs/CONTEXT_INDEX.md`.
+18. Bootstrap validation docs while Gate 0 is incomplete.
+19. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
+20. Prompt queues under `docs/prompt_queues/`.
 
 If documents disagree, current code/tests and committed `.ai/runs` evidence win over planning notes or chat history.
 
@@ -35,6 +36,7 @@ If documents disagree, current code/tests and committed `.ai/runs` evidence win 
 - Keep prompts small and split broad work.
 - Markdown report contracts come before SQLite/dashboard work.
 - No hidden telemetry or network calls in MVP.
+- Capture unrelated findings instead of silently losing them or fixing them through scope creep.
 
 ## Token economy rule
 
@@ -71,11 +73,15 @@ The agent must record:
 - mistakes observed or `none`;
 - docs/rules updated to prevent repeat;
 - optimized prompt added or reason none was needed;
+- out-of-scope discoveries observed or `none found`;
+- discovery records created/updated or duplicates linked;
+- primary owner and queue/prompt routing for actionable discoveries;
+- unresolved discovery IDs or `none`;
 - follow-up prompt;
 - residual risk;
 - commit SHA.
 
-For every meaningful issue, waste item, blocker, stale reference, unclear rule, or repeated failure, the agent must do at least one of:
+For every meaningful issue, waste item, blocker, stale reference, unclear rule, repeated failure, or out-of-scope finding, the agent must do at least one of:
 
 1. update an existing docs rule;
 2. add a new rule to the relevant playbook;
@@ -83,13 +89,47 @@ For every meaningful issue, waste item, blocker, stale reference, unclear rule, 
 4. add a new optimized prompt;
 5. update `docs/ai/learning/MISTAKE_LEDGER.md`;
 6. add or update a lint/test prompt;
-7. record why no rule or prompt update was needed.
+7. create or update a discovery record and assign a primary owner;
+8. record why no rule, prompt, or discovery update was needed.
 
 A prompt cannot be marked high-confidence `Done` unless it references a run log or explicit fallback, and the score obeys `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
 
+## Out-of-scope discovery rule
+
+Use `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md` for every meaningful finding that should not be implemented inside the active prompt.
+
+Hard rule:
+
+```text
+Do not fix unrelated work inside the current task.
+Do not lose it either.
+Capture -> deduplicate -> classify -> route -> generate follow-up -> verify closure.
+```
+
+Before learning-complete status:
+
+1. extract findings from missed work, residual risk, mistakes, waste, blockers, and follow-up notes;
+2. search `.ai/discoveries/`, mistake cards, risks, prompts, and queues for the same root issue;
+3. create/update/link a discovery record;
+4. assign one primary owner;
+5. select a truthful status and gate;
+6. create a focused prompt or record a no-op/rejection reason;
+7. link the discovery and prompt from the run log.
+
+Use:
+
+- `docs/prompts/DISC-001-capture-run-discoveries.md` after a run;
+- `docs/prompts/DISC-002-reconcile-discovery-inbox.md` for triage/routing;
+- `docs/prompts/DISC-003-promote-discovery-to-docs.md` for durable knowledge;
+- `docs/prompts/DISC-004-generate-follow-up-prompts.md` for actionable work;
+- `docs/prompts/DISC-005-review-untracked-findings.md` when recent evidence contains untracked follow-ups;
+- `docs/prompts/DISC-006-close-stale-discoveries.md` for periodic closure review.
+
+Do not describe these docs/manual workflows as implemented CLI automation. Runtime commands remain gated by Gate 0 and the discovery implementation queue.
+
 ## Prompt batch review rule
 
-After 3-5 important prompt, queue, rule, evidence, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md` before continuing to add more prompt-system changes.
+After 3-5 important prompt, queue, rule, evidence, discovery, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md` before continuing to add more prompt-system changes.
 
 Batch review must check:
 
@@ -97,10 +137,12 @@ Batch review must check:
 - stale queue statuses;
 - prompts marked Ready despite blocked gates;
 - missing validation evidence;
-- contradiction between `AGENTS.md`, `DOCS_INDEX.md`, shared standard, run-log gate, router, queues, and prompt files;
+- missing discovery reconciliation;
+- unowned or duplicate discoveries;
+- contradiction between `AGENTS.md`, `DOCS_INDEX.md`, shared standard, run-log gate, discovery loop, router, queues, and prompt files;
 - missing follow-up prompts for discovered issues.
 
-If review finds more than three unrelated issues, add follow-up prompts instead of fixing everything in one run.
+If review finds more than three unrelated issues, add/reconcile discovery records and follow-up prompts instead of fixing everything in one run.
 
 ## Bootstrap rule
 
@@ -115,6 +157,8 @@ Until then, work must prioritize:
 
 Do not add new CLI features before build/test/smoke evidence exists.
 
+Docs/evidence discovery workflows may run now. Runtime discovery commands `AW-DISC-001+` remain blocked until the corresponding gates pass.
+
 ## Required prompt fields
 
 Every non-trivial task must include:
@@ -124,12 +168,14 @@ Every non-trivial task must include:
 - queue;
 - run mode;
 - token budget;
+- source discovery IDs when applicable;
 - scope limiter;
 - owned paths;
 - avoid paths;
 - stop rules;
 - validation;
 - expected evidence;
+- expected discovery reconciliation;
 - relevant prior mistakes read;
 - handoff summary when split or blocked.
 
@@ -154,10 +200,12 @@ Use investigation-only first when root cause is unknown. Use diff-only review af
 15. Run narrow validation when possible.
 16. Record validation honestly.
 17. Record run evidence using `.ai/RUN_LOG_TEMPLATE.md`.
-18. Apply `docs/WASTE_LEARNING_LOOP.md` and `docs/ai/learning/MISTAKE_LEDGER.md`.
-19. If the run belongs to a 3-5 important prompt-system commit batch, apply `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-20. Mark prompt `Done`, `Blocked`, or `Needs evidence sync` with run-log path or fallback.
-21. Commit and push to `main` unless the user requests another flow.
+18. Apply `docs/WASTE_LEARNING_LOOP.md` and classify mistakes.
+19. Apply `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md` and reconcile all meaningful out-of-scope findings.
+20. Generate/update follow-up prompts and queue rows for actionable discoveries.
+21. If the run belongs to a 3-5 important prompt-system commit batch, apply `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
+22. Mark prompt `Done`, `Blocked`, or `Needs evidence sync` with run-log path or fallback.
+23. Commit and push using the requested branch/PR flow; never claim main was changed when work only exists on a branch.
 
 ## Validation defaults
 
