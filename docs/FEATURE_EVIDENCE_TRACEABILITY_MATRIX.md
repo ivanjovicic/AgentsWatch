@@ -38,8 +38,31 @@ Evidence snapshot used below:
 | AW-CAP-025 Packaging | release/package contracts | CLI csproj tool config | AW-SCN-PACK-001/002 behavior: package, hash, isolated install/help/version | package artifact `8062492587`; checksum verified | L4 | signed/public release and independent verification |
 | AW-CAP-026 Local-first/privacy | security/privacy contracts | partial architecture | no dedicated negative suite | none | L1 | no-network/path/secret/binary tests |
 | AW-CAP-027 Proof bundle generation | proof contracts | `.github/workflows/ci.yml` | Linux/Windows TRX/smoke + package manifest/checksum generated | all three artifacts produced; checksum verified | L4 initial bundle | automatic schema/maturity validator and release retention |
+| AW-CAP-028 Flight recorder | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` AW-OPP-01 | not implemented | acceptance criteria defined; no tests/scenarios | none | L1 | validate event sources and implement import-only schema |
+| AW-CAP-029 Trust ledger | AW-OPP-01 claim verifier contract | not implemented | supported/contradicted/missing/not-verifiable cases specified | none | L1 | deterministic claim fixture suite |
+| AW-CAP-030 Context/session rescue | AW-OPP-02 | not implemented | deterministic export and lost-rule criteria specified | none | L1 | interviews, manual snapshot prototype, paired resume study |
+| AW-CAP-031 Rules compiler/drift | AW-OPP-02 | not implemented | no-overwrite, deterministic output, unsupported-target criteria specified | none | L1 | target format research and fixture/golden tests |
+| AW-CAP-032 Cost/loop guard | AW-OPP-03 | not implemented | repeated-action, budget, checkpoint, false-positive criteria specified | none | L1 | offline analyzer corpus and provider event adapters |
+| AW-CAP-033 Policy firewall | AW-OPP-04 | not implemented | path, precedence, approval, traversal, and secret-path criteria specified | none | L1 | threat model, dry-run implementation, security review |
+| AW-CAP-034 Multi-agent coordinator | AW-OPP-05 | not implemented | worktree, ownership, status, integration criteria specified | none | L1 | workflow interviews and synthetic worktree scenarios |
+| AW-CAP-035 PR review debt reducer | AW-OPP-06 | not implemented | scope/evidence packet and commit-match criteria specified | none | L1 | maintainer interviews and local fixture benchmark |
+| AW-CAP-036 Regression canary | `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | concept only | no acceptance suite yet | none | L1 | dedicated contract, stable canary tasks, comparison metrics |
 
-## Test result details
+## Community opportunity proof rule
+
+The July 2026 research proves that the problems are repeatedly reported across public sources. It does **not** prove:
+
+- market size;
+- willingness to pay;
+- runtime feasibility;
+- provider event stability;
+- security effectiveness;
+- numerical savings;
+- product popularity.
+
+AW-CAP-028 through AW-CAP-036 may move to L2 only after code exists. They may move to L3/L4 only after the specific tests and black-box scenarios in the epic contracts pass.
+
+## Test result details for current implemented skeleton
 
 Both Linux and Windows TRX files report:
 
