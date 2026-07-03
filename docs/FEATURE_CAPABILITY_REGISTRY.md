@@ -42,6 +42,35 @@ Maturity levels are defined in `PROOF_AND_VERIFICATION_STRATEGY.md`.
 | AW-CAP-025 | Package as .NET tool | NuGet/local tool | L4 CI-verified | `AgentsWatch.Cli.0.1.0.nupkg`, SHA-256 `3bc0a9b2...30288`, isolated install/help/version in artifact `8062492587` | signed/public release and independent verification for L6 |
 | AW-CAP-026 | Local-first/no telemetry default | whole product | L1 Specified | privacy/security/test docs | automated no-network/path/privacy negative tests and release audit |
 | AW-CAP-027 | Proof bundle generation | CI/release evidence | L4 CI-verified for initial bundle | workflow `28650547744` produced Linux/Windows TRX/smoke artifacts and package manifest/checksum | automatic schema/maturity validator, safety suite, permanent release retention |
+| AW-CAP-028 | Agent event flight recorder | `record`, `timeline`, `replay` | L1 Specified | community research + `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | validate event availability and implement import-only schema |
+| AW-CAP-029 | Claim-to-evidence trust ledger | `evidence verify` | L1 Specified | false-completion research + epic contract | implement deterministic claim fixtures |
+| AW-CAP-030 | Portable context snapshot and session rescue | `context snapshot/export`, `resume` | L1 Specified | context-loss research + epic contract | interview users and prototype fresh-session resume |
+| AW-CAP-031 | Agent rules compiler and drift detector | `rules compile/diff/lint` | L1 Specified | cross-tool rules research + epic contract | validate target formats and no-overwrite ownership |
+| AW-CAP-032 | Cost and loop guard | `budget`, `loops analyze`, `watch` | L1 Specified | usage/loop research + epic contract | implement offline action fingerprinting before live control |
+| AW-CAP-033 | Policy firewall and safe execution broker | `policy`, optional execution wrapper | L1 Specified | scope/security research + epic contract | threat model and dry-run path/command rules |
+| AW-CAP-034 | Multi-agent worktree coordinator | `swarm`, `worker`, `integrate check` | L1 Specified | multi-agent/worktree research + epic contract | validate workflow and build dry-run ownership planner |
+| AW-CAP-035 | AI PR review debt reducer | `pr analyze/evidence/review-pack` | L1 Specified | agent-PR/review research + epic contract | maintainer interviews and deterministic review packet |
+| AW-CAP-036 | Agent/model regression canary | `canary init/run/compare` | L1 Specified | regression research + opportunity map | define stable task suite and comparison metrics |
+
+## Community opportunity status
+
+The following documents establish problem and contract evidence only:
+
+- `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`;
+- `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md`;
+- `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`.
+
+They do not establish runtime implementation, test support, popularity, market demand, savings, or security effectiveness.
+
+Before AW-CAP-028 through AW-CAP-036 move beyond L1:
+
+1. complete user/problem validation;
+2. identify stable local inputs/events;
+3. build import-only or dry-run prototype;
+4. add deterministic acceptance tests;
+5. prove local-first/privacy behavior;
+6. update the traceability matrix;
+7. run paired dogfood where usefulness is claimed.
 
 ## Current proof snapshot
 
@@ -75,16 +104,15 @@ Every maturity increase must update the traceability matrix and cite exact evide
 
 ```text
 AgentsWatch has a CI-verified 0.1.0 CLI skeleton for help, version, basic prompt optimization/risk analysis, and clean-repository status output.
-Eight current unit/regression tests pass on Linux and Windows.
 The CLI packs and installs successfully as a local .NET tool in CI.
-Many run-report, learning, discovery, validation, and supervised-queue capabilities remain specified rather than implemented.
+Community research has identified and specified new control-plane opportunities, but these remain L1 planning contracts.
 ```
 
 ## Not allowed now
 
 ```text
-AgentsWatch fully validates agent work automatically.
-AgentsWatch has proven 30-50% token savings.
-All planned commands work.
+The community-derived capabilities are already implemented.
+The new opportunities are market-validated or proven popular.
+AgentsWatch has proven numerical savings or complete security protection.
 AgentsWatch is production-ready or release-verified.
 ```
