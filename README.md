@@ -1,8 +1,8 @@
 # AgentsWatch
 
-AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
+AgentsWatch is a local-first AI coding-agent supervisor and context/token-waste optimizer.
 
-It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, profiling expensive commands, logging post-prompt lessons, and generating compact handoff summaries.
+It is designed to help developers run smaller, safer, more reviewable AI coding tasks by splitting broad prompts, limiting scope, tracking git evidence, preserving discoveries, learning from runs, and proving which capabilities actually work.
 
 ## Core promise
 
@@ -10,23 +10,53 @@ It helps developers run smaller, safer, cheaper AI coding tasks by splitting bro
 Spend fewer tokens. Merge safer AI code.
 ```
 
-Practical target:
+Current evidence-safe positioning:
 
 ```text
-Reduce AI coding-agent token waste by 30-50% on typical multi-file tasks by splitting prompts, limiting scope, tracking diffs, learning from run logs, and using compact handoff summaries.
+Designed to reduce avoidable context, repeated work, scope creep, and evidence mistakes.
 ```
 
-Use higher savings claims only for oversized repo-analysis prompts.
+The earlier `30-50%` target is a product hypothesis, not a measured result. Numerical savings claims require the paired benchmark and quality guardrails in `docs/BENCHMARK_AND_DOGFOOD_METHODOLOGY.md`.
 
-## MVP scope
+## Capability truth
 
-Start with a local CLI. Do not start with SaaS, billing, cloud sync, deep IDE integration, automatic code editing, or runtime DRM/license enforcement.
+AgentsWatch uses evidence maturity levels:
 
-Initial commands:
+```text
+L0 Idea
+L1 Specified
+L2 Implemented
+L3 Test-backed
+L4 CI-verified
+L5 Dogfood-verified
+L6 Release-verified
+```
+
+Authoritative status:
+
+- `docs/FEATURE_CAPABILITY_REGISTRY.md`
+- `docs/FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md`
+- commit-bound CI/proof artifacts
+
+A roadmap or documentation page proves intent, not runtime support.
+
+## Current implemented skeleton
+
+Current source contains:
 
 ```bash
 agentswatch init
 agentswatch optimize <prompt-file-or-text>
+agentswatch status
+agentswatch --help
+agentswatch --version
+```
+
+Prompt risk analysis, basic git-status parsing, and basic project-type/validation suggestions also have some unit-test source. The current commit still needs executed CI/acceptance evidence before these capabilities can be described as verified.
+
+## Planned CLI
+
+```bash
 agentswatch task split <prompt-file>
 agentswatch start <task-id>
 agentswatch finish <task-id>
@@ -34,90 +64,115 @@ agentswatch report
 agentswatch handoff
 agentswatch review-diff <commit-or-range>
 agentswatch validate
-agentswatch status
-```
-
-Planned command profiler commands:
-
-```bash
 agentswatch run -- <command>
-agentswatch validate --suggest
-agentswatch validate --profile
-```
-
-Mistake-learning commands planned after the core run/report spine:
-
-```bash
 agentswatch mistakes list
-agentswatch mistakes check <run-log>
-agentswatch rollup mistakes --last 5
 agentswatch lint evidence
-agentswatch lint learning
+agentswatch discover reconcile <run-id|discovery-id>
+agentswatch lint discoveries
+agentswatch finish <task-id> --learn --reconcile
 ```
 
-## Post-prompt logging rule
+These commands are planned/specification items unless the capability registry says otherwise.
 
-Every agent run should leave compact evidence and one learning note.
+## Proof system
+
+Every supported capability should have:
+
+```text
+claim
+-> contract
+-> acceptance criteria
+-> implementation
+-> targeted tests
+-> black-box scenario
+-> CI artifact
+-> dogfood evidence when usefulness is claimed
+-> release proof when support is claimed
+```
+
+See:
+
+- `docs/PROOF_AND_VERIFICATION_STRATEGY.md`
+- `docs/REPRODUCIBLE_ACCEPTANCE_SCENARIOS.md`
+- `docs/PROOF_BUNDLE_SPEC.md`
+- `docs/INDEPENDENT_VERIFICATION_RUNBOOK.md`
+- `docs/prompt_queues/agentwatch_proof_and_verification.md`
+
+CI is configured to produce Linux/Windows build-test-smoke artifacts and a package/checksum/isolated-install proof bundle. Actual maturity changes only after the workflow succeeds for the relevant commit.
+
+## Discovery and self-improvement
+
+AgentsWatch should not expand the current task to fix unrelated work, but it should not lose useful findings.
+
+```text
+Capture -> deduplicate -> classify -> route -> generate follow-up -> verify closure.
+```
+
+See:
+
+- `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`
+- `.ai/DISCOVERY_RECORD_TEMPLATE.md`
+- `docs/prompt_queues/agentwatch_discovery_and_self_improvement.md`
+
+The manual docs/evidence workflow exists now. Runtime discovery automation is still gated and planned.
+
+## Run evidence and learning
+
+Every meaningful agent run should leave:
+
+- compact run evidence;
+- validation result or blocked reason;
+- one useful learning note;
+- classified mistakes;
+- reconciled out-of-scope findings;
+- affected capability/proof updates;
+- follow-up prompt and residual risk.
 
 See:
 
 - `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
 - `docs/MISTAKE_LEARNING_SPEC.md`
-- `docs/CLI_LEARNING_ADDENDUM.md`
-- `docs/prompts/LOG-001-post-prompt-run-log.md`
-- `docs/prompts/LOG-002-mistake-pattern-review.md`
-- `docs/prompts/LOG-003-flutter-agent-run-review.md`
+- `.ai/RUN_LOG_TEMPLATE.md`
+- `docs/ai/learning/MISTAKE_LEDGER.md`
 
-## Supervised autopilot rule
+## Supervised automation
 
-AgentsWatch may sequence prompts, but should not run uncontrolled continuous autopilot in MVP.
+AgentsWatch may sequence prompts, but MVP does not allow uncontrolled continuous autopilot.
+
+Risky actions require explicit approval. No hidden UI automation, autonomous deploy/merge/release, or approval bypass.
 
 See:
 
 - `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/prompts/AUTO-001-design-supervised-autopilot-queue.md`
-- `docs/prompts/AUTO-002-generate-tool-prompt-envelope.md`
-- `docs/prompts/AUTO-003-review-queued-agent-run.md`
-- `docs/prompts/AUTO-004-manual-assisted-queue-runbook.md`
-
-## Agent safety rule
-
-Agents may suggest risky actions, but must not execute them without an explicit approval gate.
-
-See:
-
 - `docs/AGENT_RISK_BOUNDARIES.md`
 - `docs/AGENT_PERMISSION_MODEL.md`
-- `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
 
-## Commercial trial rule — post-MVP
+## Privacy
 
-AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
-
-The product must not pretend that files or generated outputs used locally can be made impossible to copy. Commercial protection should use compiled/signed packages, server-signed feature entitlements, OS-protected local license state, visible periodic lease refresh, and optional server-side execution only for the highest-value premium logic.
-
-License checks must not upload repository source code, prompts, diffs, validation output, reports, command logs, or run history.
+The local MVP must not upload repository source, prompts, diffs, run logs, discoveries, validation output, or proof artifacts containing private content by default.
 
 See:
 
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
+- `docs/SECURITY_AND_PRIVACY.md`
+- `docs/PROOF_BUNDLE_SPEC.md`
 
-## Bootstrap warning
+## Bootstrap gate
 
-The initial skeleton was created through GitHub file writes, so the next work must be validation-first:
+The skeleton was initially created through GitHub file writes. Runtime feature work remains validation-first:
 
-1. run `AW-VAL-001` build validation;
-2. run `AW-VAL-002` CLI smoke validation;
-3. review validation evidence;
-4. only then continue runtime feature work.
+1. restore;
+2. build;
+3. tests;
+4. CLI smoke;
+5. proof artifact review;
+6. only then continue gated runtime features.
 
 See:
 
 - `docs/BUILD_VALIDATION_PLAN.md`
-- `docs/RISK_REGISTER.md`
-- `docs/BOOTSTRAP_NEXT_STEPS.md`
+- `docs/VALIDATION_EVIDENCE_2026_06_29.md`
 - `docs/prompt_queues/bootstrap_validation.md`
+- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
 
 ## Repository layout
 
@@ -131,53 +186,37 @@ src/
 tests/
   AgentsWatch.Tests/
 docs/
-.ai/templates/
+.ai/
+  runs/
+  discoveries/
+.github/workflows/
 ```
 
 ## Development principles
 
-- Local-first CLI before dashboard or SaaS.
-- Git, markdown, and file-system behavior before LLM/API integrations.
-- Universal repo behavior before language-specific adapters.
-- Token budget and scope limiter for every non-trivial task.
-- Investigation-only first for uncertain bugs.
-- Diff-only review after implementation commits.
-- Compact handoff summaries instead of long chat history.
-- Compact command summaries instead of full terminal logs.
-- One learning note after every agent run.
-- Risky actions require explicit approval gates.
-- Supervised prompt sequencing before continuous autopilot.
-- Licensing design may be documented early, but runtime enforcement starts only after CLI MVP and dogfood evidence.
+- Local-first CLI before dashboard/SaaS.
+- Current code/tests/proof before planning claims.
+- Universal git/markdown/file behavior before adapters.
+- One primary run mode and bounded context per task.
+- Investigation before uncertain implementation.
+- Targeted validation before broad validation.
+- Diff-only review after implementation.
+- Compact evidence instead of long logs/chat history.
+- Every meaningful discovery gets a disposition.
+- Every advertised capability gets a registry row.
+- No numerical efficiency claim without measured benchmark evidence.
+- No release support claim without package, checksum, clean install, proof bundle, and independent verification.
 
-## Current status
+## Documentation
 
-Planning and skeleton stage. See:
+Start with:
 
+- `AGENTS.md`
+- `docs/DOCS_INDEX.md`
 - `docs/PRODUCT_SPEC.md`
 - `docs/CLI_SPEC.md`
-- `docs/CLI_LEARNING_ADDENDUM.md`
-- `docs/MVP_ROADMAP.md`
-- `docs/FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
-- `docs/FEATURE_SELECTION_SPEC.md`
-- `docs/MISTAKE_LEARNING_SPEC.md`
-- `docs/MISTAKE_LEARNING_ROADMAP_ADDENDUM.md`
+- `docs/PROOF_AND_VERIFICATION_STRATEGY.md`
+- `docs/FEATURE_CAPABILITY_REGISTRY.md`
+- `docs/DISCOVERY_AND_SELF_IMPROVEMENT_LOOP.md`
 - `docs/TEST_STRATEGY.md`
-- `docs/ARCHITECTURE.md`
-- `docs/SECURITY_AND_PRIVACY.md`
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
-- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
-- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
-- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/AGENT_RISK_BOUNDARIES.md`
-- `docs/AGENT_PERMISSION_MODEL.md`
-- `docs/BUILD_VALIDATION_PLAN.md`
-- `docs/BOOTSTRAP_NEXT_STEPS.md`
-- `docs/prompt_queues/bootstrap_validation.md`
-- `docs/prompt_queues/agentwatch_mvp.md`
-- `docs/prompt_queues/agentwatch_foundation_followups.md`
-- `docs/prompt_queues/agentwatch_feature_selection.md`
-- `docs/prompt_queues/agentwatch_learning_followups.md`
-- `docs/prompt_queues/agentwatch_testing.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
-- `docs/samples/README.md`
+- `docs/RELEASE_AND_PACKAGING_PLAN.md`
