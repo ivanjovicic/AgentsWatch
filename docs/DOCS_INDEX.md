@@ -10,6 +10,7 @@ Last aligned: 2026-07-03
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
 | `PRODUCT_SPEC.md` | Product positioning, strategic lanes, and MVP boundaries. |
 | `MVP_ROADMAP.md` | Core roadmap and community-opportunity incubator gates. |
+| `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md` | Canonical one-product plan: CLI, adapters, optional service/dashboard/IDE, GitHub Action/App, Team Server, installation, and delivery order. |
 | `PROOF_AND_VERIFICATION_STRATEGY.md` | Capability maturity and product-proof rules. |
 | `FEATURE_CAPABILITY_REGISTRY.md` | Truthful inventory of supported, planned, and unverified capabilities. |
 | `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Claim-to-contract-to-test-to-CI-to-release links. |
@@ -122,6 +123,7 @@ Community research establishes problem signals, not runtime support, market size
 |---|---|
 | `ARCHITECTURE.md` | Current MVP architecture snapshot. |
 | `TARGET_ARCHITECTURE.md` | Future-proof target architecture. |
+| `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md` | One shared core and the planned CLI, adapters, optional service/dashboard/IDE, GitHub, and Team Server topology. |
 | `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Event-ingestion, trust, context, usage, policy, coordination, and review extensions. |
 | `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md` | Compatibility layer required before advanced provider integrations. |
 | `ARCHITECTURE_DECISIONS.md` | ADRs and tradeoffs. |
@@ -140,6 +142,7 @@ Community research establishes problem signals, not runtime support, market size
 
 | Document | Use for |
 |---|---|
+| `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md` | Canonical component, installation, edition, and staged-delivery plan. |
 | `MVP_EPICS_AND_ACCEPTANCE.md` | Existing implementation epics and acceptance criteria. |
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | New opportunity contracts and gates. |
 | `ISSUE_BACKLOG.md` | Existing issue-ready backlog. |
@@ -147,9 +150,9 @@ Community research establishes problem signals, not runtime support, market size
 | `COMPATIBILITY_IMPLEMENTATION_BACKLOG.md` | Runtime compatibility and fallback implementation backlog. |
 | `USER_PERSONAS_AND_JOBS.md` | Users and jobs. |
 | `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning/pricing hypotheses and evidence rules. |
-| `RELEASE_AND_PACKAGING_PLAN.md` | Packaging/release stages. |
+| `RELEASE_AND_PACKAGING_PLAN.md` | NuGet, standalone, package-manager, Action, optional component, and Team Server packaging stages. |
 | `EXAMPLES_CATALOG.md` | Example quality rules. |
-| `INTEGRATION_STRATEGY.md` | Local-first integration order. |
+| `INTEGRATION_STRATEGY.md` | Local CLI → Action → adapters/service/dashboard/IDE → App/Team integration order. |
 | `DOGFOOD_RUNBOOK.md` | Operational dogfood workflow. |
 | `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md` | Controlled usefulness evidence. |
 | `INDEPENDENT_VERIFICATION_RUNBOOK.md` | Release-candidate verification. |
