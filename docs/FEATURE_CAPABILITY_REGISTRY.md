@@ -1,6 +1,6 @@
 # AgentsWatch Feature Capability Registry
 
-Last aligned: 2026-07-03  
+Last aligned: 2026-07-05  
 Status: canonical capability inventory
 
 ## Purpose
@@ -10,6 +10,8 @@ This registry is the authoritative list of what AgentsWatch claims to provide.
 A feature not listed here must not be presented as supported. Maturity is valid only when linked evidence exists for the named commit or package.
 
 Maturity levels are defined in `PROOF_AND_VERIFICATION_STRATEGY.md`.
+
+Market priority does not change capability maturity. A high-priority opportunity remains L1 until implementation and proof exist.
 
 ## Current capability inventory
 
@@ -33,7 +35,7 @@ Maturity levels are defined in `PROOF_AND_VERIFICATION_STRATEGY.md`.
 | AW-CAP-016 | Diff-only review prompt | `agentswatch review-diff` | L1 Specified | report/test contracts | implement and prove changed-file-only scope |
 | AW-CAP-017 | Validation runner | `agentswatch validate` | L1 Specified | CLI/test/adapter docs | implement opt-in execution, timeout/cancel/failure evidence |
 | AW-CAP-018 | Command profiler | `agentswatch run --` | L1 Specified | profiler contracts/queue | gated implementation and privacy-safe output tests |
-| AW-CAP-019 | Claims-vs-actual review | lint/review | L1 Specified/manual checklist | `CLAIMS_VS_ACTUAL_REVIEW.md` | deterministic rules and regression scenarios |
+| AW-CAP-019 | Claims-vs-actual review | lint/review | L1 Specified/manual checklist | `CLAIMS_VS_ACTUAL_REVIEW.md` | deterministic claim classification, commit identity, and regression scenarios |
 | AW-CAP-020 | Mistake ledger/list/check | `agentswatch mistakes ...` | L1 Specified; manual docs exist | learning specs/ledger | implement parser/lint and repeated-mistake regression suite |
 | AW-CAP-021 | Evidence lint | `agentswatch lint evidence` | L1 Specified | evidence standards/prompts | implement deterministic linter and known-error fixture suite |
 | AW-CAP-022 | Discovery capture/reconciliation | `agentswatch discover ...` | L1 Specified; manual workflow available | discovery contracts/prompts/inbox | implement AW-DISC slices and dogfood end-to-end |
@@ -42,40 +44,62 @@ Maturity levels are defined in `PROOF_AND_VERIFICATION_STRATEGY.md`.
 | AW-CAP-025 | Package as .NET tool | NuGet/local tool | L4 CI-verified | `AgentsWatch.Cli.0.1.0.nupkg`, SHA-256 `3bc0a9b2...30288`, isolated install/help/version in artifact `8062492587` | signed/public release and independent verification for L6 |
 | AW-CAP-026 | Local-first/no telemetry default | whole product | L1 Specified | privacy/security/test docs | automated no-network/path/privacy negative tests and release audit |
 | AW-CAP-027 | Proof bundle generation | CI/release evidence | L4 CI-verified for initial bundle | workflow `28650547744` produced Linux/Windows TRX/smoke artifacts and package manifest/checksum | automatic schema/maturity validator, safety suite, permanent release retention |
-| AW-CAP-028 | Agent event flight recorder | `record`, `timeline`, `replay` | L1 Specified | community research + `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | validate event availability and implement import-only schema |
-| AW-CAP-029 | Claim-to-evidence trust ledger | `evidence verify` | L1 Specified | false-completion research + epic contract | implement deterministic claim fixtures |
-| AW-CAP-030 | Portable context snapshot and session rescue | `context snapshot/export`, `resume` | L1 Specified | context-loss research + epic contract | interview users and prototype fresh-session resume |
-| AW-CAP-031 | Agent rules compiler and drift detector | `rules compile/diff/lint` | L1 Specified | cross-tool rules research + epic contract | validate target formats and no-overwrite ownership |
-| AW-CAP-032 | Cost and loop guard | `budget`, `loops analyze`, `watch` | L1 Specified | usage/loop research + epic contract | implement offline action fingerprinting before live control |
-| AW-CAP-033 | Policy firewall and safe execution broker | `policy`, optional execution wrapper | L1 Specified | scope/security research + epic contract | threat model and dry-run path/command rules |
-| AW-CAP-034 | Multi-agent worktree coordinator | `swarm`, `worker`, `integrate check` | L1 Specified | multi-agent/worktree research + epic contract | validate workflow and build dry-run ownership planner |
-| AW-CAP-035 | AI PR review debt reducer | `pr analyze/evidence/review-pack` | L1 Specified | agent-PR/review research + epic contract | maintainer interviews and deterministic review packet |
-| AW-CAP-036 | Agent/model regression canary | `canary init/run/compare` | L1 Specified | regression research + opportunity map | define stable task suite and comparison metrics |
+| AW-CAP-028 | Agent event flight recorder | `record`, `timeline`, `replay` | L1 Specified | community research + epic contract | validate event availability and implement import-only schema after evidence spine |
+| AW-CAP-029 | Claim-to-evidence Trust Ledger and completion integrity | `evidence verify`, claim classification | L1 Specified | false-completion research + market synthesis + epic contract | define deterministic statuses/fixtures and link claims to git/command/CI evidence |
+| AW-CAP-030 | Portable context snapshot and session rescue | `context snapshot/export`, `resume` | L1 Specified | context-loss research + market synthesis + epic contract | prototype fresh-session/cross-tool resume with explicit loss report |
+| AW-CAP-031 | Agent rules compiler, target-loss report, and drift detector | `rules compile/diff/lint` | L1 Specified | cross-tool rules research + market synthesis + epic contract | validate target formats, semantic-loss statuses, precedence, and no-overwrite ownership |
+| AW-CAP-032 | Offline cost/loop/waste analysis and later guard | `waste`, `loops`, optional `watch` | L1 Specified | usage/loop research + market synthesis + epic contract | implement observable offline action fingerprinting before live control or cost claims |
+| AW-CAP-033 | Policy dry-run and optional safe execution broker | `policy`, optional execution wrapper | L1 Specified | scope/security research + epic contract | threat model, effective-permission report, and dry-run rules before enforcement naming |
+| AW-CAP-034 | Multi-agent workspace/ownership diagnostics and later coordinator | `coordination`, `worker`, `integrate check` | L1 Specified | multi-agent/worktree research + market synthesis + epic contract | validate workflow and build dry-run workspace/ownership/stale-state diagnostics |
+| AW-CAP-035 | PR Evidence Packet and review debt reducer | `pr evidence/analyze/review-pack` | L1 Specified | agent-PR/review research + market synthesis + epic contract | define deterministic packet, run 30-real-PR experiment, measure decision impact/repeat use |
+| AW-CAP-036 | Agent/model regression canary | `canary init/run/compare` | L1 Specified | regression research + opportunity map | define stable task suite and full-profile comparison metrics |
 | AW-CAP-037 | Runtime capability negotiation and fallback planning | `compatibility detect/explain/compare` | L1 Specified | compatibility research, adapter contract, 50 acceptance scenarios | implement profile schema, detectors, handshake, support decision engine, and cross-surface fixtures |
 
-## Community opportunity and compatibility status
+## Market priority versus implementation dependency
 
-The following documents establish problem, compatibility, and contract evidence only:
+Current market-experiment order:
+
+1. AW-CAP-035 PR Evidence Packet;
+2. AW-CAP-029 Trust Ledger/completion integrity;
+3. AW-CAP-030 Context Snapshot/Resume;
+4. AW-CAP-031 Rules Compiler/target-loss report;
+5. AW-CAP-032 offline Loop/Waste Analyzer.
+
+Implementation still depends on the existing run/evidence spine and AW-CAP-037 where runtime-specific support is required.
+
+No row advances above L1 merely because external research rates the problem highly.
+
+## Community opportunity, market, and compatibility status
+
+The following documents establish problem, market-hypothesis, compatibility, and contract evidence only:
 
 - `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`;
+- `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md`;
 - `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md`;
 - `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`;
 - `MODEL_TOOL_PERMISSION_ENVIRONMENT_COMPATIBILITY_2026_07.md`;
 - `RUNTIME_CAPABILITY_NEGOTIATION_AND_FALLBACKS.md`;
 - `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md`.
 
-They do not establish runtime implementation, test support, equal support across tools, popularity, market demand, savings, or security effectiveness.
+They do not establish runtime implementation, test support, equal support across tools, popularity, market size, willingness to pay, savings, security effectiveness, or product-market fit.
 
 Before AW-CAP-028 through AW-CAP-037 move beyond L1:
 
 1. complete user/problem validation where required;
 2. identify stable local inputs/events;
 3. detect the actual model/tool/surface/permission/environment profile;
-4. build import-only or dry-run prototypes;
+4. build manual, import-only, or dry-run prototypes;
 5. add deterministic acceptance tests and downgrade/fallback tests;
 6. prove local-first/privacy behavior;
 7. update the traceability matrix;
 8. run paired dogfood where usefulness is claimed.
+
+Before AW-CAP-035 is called market-validated:
+
+- complete the 30-real-PR experiment;
+- measure decision impact and false positives;
+- demonstrate repeat use;
+- obtain paid or explicitly budgeted pilot evidence.
 
 ## Current proof snapshot
 
@@ -101,21 +125,26 @@ The current branch contains later documentation-only descendants. Those descenda
 
 ## Registry update rule
 
-Update a row when runtime, acceptance, tests, CI, dogfood, package, release, compatibility, limitation, or deprecation evidence changes.
+Update a row when runtime, acceptance, tests, CI, dogfood, package, release, compatibility, limitation, deprecation, or market-validation evidence changes.
 
 Every maturity increase must update the traceability matrix and cite exact evidence.
+
+Market-validation outcomes may change priority or positioning without changing technical maturity.
 
 ## Allowed wording now
 
 ```text
 AgentsWatch has a CI-verified 0.1.0 CLI skeleton for help, version, basic prompt optimization/risk analysis, and clean-repository status output.
 The CLI packs and installs successfully as a local .NET tool in CI.
-Community and compatibility research has specified advanced control-plane opportunities and honest fallback modes, but these remain L1 planning contracts.
+External research identifies completion integrity, review debt, context loss, fragmented rules, and repeated work as strong problem signals.
+PR Evidence, Trust Ledger, context, rules, loop, policy, coordination, and compatibility features remain L1 planning contracts.
 ```
 
 ## Not allowed now
 
 ```text
+AgentsWatch PR Evidence is implemented or proven useful.
+AgentsWatch has product-market fit or proven willingness to pay.
 All planned features work equally across every model and coding tool.
 AgentsWatch automatically detects and enforces every tool permission or sandbox.
 The community-derived capabilities are already implemented.
