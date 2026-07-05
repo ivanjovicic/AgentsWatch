@@ -127,7 +127,7 @@ public static class ScopeMatcher
         }
 
         var normalizedPattern = Normalize(pattern.Trim());
-        if (normalizedPattern.EndsWith('/', StringComparison.Ordinal))
+        if (normalizedPattern.EndsWith("/", StringComparison.Ordinal))
         {
             normalizedPattern += "**";
         }
