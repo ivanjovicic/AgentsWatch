@@ -16,7 +16,6 @@ public sealed record RunManifest(
     DateTimeOffset StartedAt,
     DateTimeOffset? FinishedAt,
     RunLifecycleStatus Status,
-    string RepositoryRoot,
     string StartBranch,
     string StartCommitSha,
     string? EndBranch,
@@ -31,14 +30,12 @@ public sealed record RunManifest(
     public static RunManifest Start(
         string taskId,
         string title,
-        string repositoryRoot,
         GitSnapshot snapshot,
         IReadOnlyList<string> allowedPaths,
         DateTimeOffset startedAt)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(allowedPaths);
 
@@ -49,7 +46,6 @@ public sealed record RunManifest(
             startedAt,
             null,
             RunLifecycleStatus.InProgress,
-            repositoryRoot,
             snapshot.Branch,
             snapshot.CommitSha,
             null,
