@@ -137,7 +137,6 @@ public sealed class MarkdownRunEvidenceFormatter
         builder.AppendLine();
         builder.AppendLine($"- Title: {manifest.Title}");
         builder.AppendLine($"- Status: {manifest.Status}");
-        builder.AppendLine($"- Repository: `{manifest.RepositoryRoot}`");
         builder.AppendLine($"- Started: {manifest.StartedAt:O}");
         builder.AppendLine($"- Finished: {(manifest.FinishedAt is null ? "not finished" : manifest.FinishedAt.Value.ToString("O"))}");
         builder.AppendLine($"- Start branch: `{manifest.StartBranch}`");
