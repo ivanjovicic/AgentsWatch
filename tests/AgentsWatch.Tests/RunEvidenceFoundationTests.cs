@@ -13,6 +13,8 @@ public sealed class RunEvidenceFoundationTests
     [InlineData("src/Auth/TokenService.cs", "src/Payments/**", false)]
     [InlineData("src\\Payments\\Retry.cs", "src/**", true)]
     [InlineData("README.md", "*.md", true)]
+    [InlineData("Root.cs", "**/*.cs", true)]
+    [InlineData("src/Nested.cs", "**/*.cs", true)]
     public void ScopeMatcher_supports_cross_platform_globs(string path, string pattern, bool expected)
     {
         var actual = ScopeMatcher.IsAllowed(path, [pattern]);
@@ -34,6 +36,16 @@ public sealed class RunEvidenceFoundationTests
     public void RunId_rejects_unsafe_values(string taskId)
     {
         Assert.Throws<ArgumentException>(() => RunId.Validate(taskId));
+    }
+
+    [Theory]
+    [InlineData(".ai/runs/TASK-001.json", true)]
+    [InlineData(".ai\\runs\\TASK-001.md", true)]
+    [InlineData(".ai/runs/TASK-002.json", false)]
+    [InlineData("src/TASK-001.json", false)]
+    public void RunArtifactPaths_only_excludes_current_run_outputs(string path, bool expected)
+    {
+        Assert.Equal(expected, RunArtifactPaths.IsCurrentRunArtifact(path, "TASK-001"));
     }
 
     [Fact]
@@ -106,6 +118,16 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
+    public async Task GitChangeSetReader_rejects_non_object_revision_input()
+    {
+        var reader = new GitChangeSetReader(new StubGitCommandRunner(string.Empty));
+        var snapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => reader.ReadSinceAsync("/repo", "--output=/tmp/file", snapshot));
+    }
+
+    [Fact]
     public async Task RunManifestStore_round_trips_and_refuses_overwrite()
     {
         var root = CreateTemporaryDirectory();
@@ -115,7 +137,6 @@ public sealed class RunEvidenceFoundationTests
             var manifest = RunManifest.Start(
                 "TASK-001",
                 "Test run",
-                root,
                 snapshot,
                 ["src/**"],
                 DateTimeOffset.Parse("2026-07-05T12:00:00Z"));
@@ -130,7 +151,6 @@ public sealed class RunEvidenceFoundationTests
             Assert.Equal(manifest.Title, loaded.Title);
             Assert.Equal(manifest.StartedAt, loaded.StartedAt);
             Assert.Equal(manifest.Status, loaded.Status);
-            Assert.Equal(manifest.RepositoryRoot, loaded.RepositoryRoot);
             Assert.Equal(manifest.StartBranch, loaded.StartBranch);
             Assert.Equal(manifest.StartCommitSha, loaded.StartCommitSha);
             Assert.Equal(manifest.AllowedPaths, loaded.AllowedPaths);
@@ -158,7 +178,6 @@ public sealed class RunEvidenceFoundationTests
                 DateTimeOffset.UtcNow,
                 null,
                 RunLifecycleStatus.InProgress,
-                root,
                 "main",
                 new string('a', 40),
                 null,
@@ -178,13 +197,12 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
-    public void Markdown_report_makes_current_evidence_boundary_explicit()
+    public void Markdown_report_makes_current_evidence_boundary_explicit_and_omits_local_root()
     {
         var snapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
         var manifest = RunManifest.Start(
                 "TASK-002",
                 "Evidence boundary",
-                "/repo",
                 snapshot,
                 ["src/**"],
                 DateTimeOffset.Parse("2026-07-05T12:00:00Z"))
@@ -200,6 +218,7 @@ public sealed class RunEvidenceFoundationTests
         Assert.Contains("`src/Feature.cs` — modified", output);
         Assert.Contains("`docs/Unexpected.md` — added", output);
         Assert.Contains("does not yet prove which build, test, UI, database, or runtime validation commands were executed", output);
+        Assert.DoesNotContain("/repo", output);
     }
 
     private static string CreateTemporaryDirectory()
