@@ -25,18 +25,13 @@ public sealed class RunManifestStore
 
         var path = GetJsonPath(repositoryRoot, manifest.TaskId);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path))
+        {
+            throw new IOException($"Run manifest already exists: {path}");
+        }
 
         var json = JsonSerializer.Serialize(manifest, JsonOptions);
-        await using var stream = new FileStream(
-            path,
-            FileMode.CreateNew,
-            FileAccess.Write,
-            FileShare.None,
-            bufferSize: 4096,
-            useAsync: true);
-        await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-        await writer.WriteAsync(json.AsMemory(), cancellationToken);
-        await writer.FlushAsync(cancellationToken);
+        await AtomicTextFile.WriteNewAsync(path, json, cancellationToken);
         return path;
     }
 
@@ -51,25 +46,10 @@ public sealed class RunManifestStore
 
         var path = GetJsonPath(repositoryRoot, manifest.TaskId);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-
-        var temporaryPath = path + ".tmp-" + Guid.NewGuid().ToString("N");
-        try
-        {
-            var json = JsonSerializer.Serialize(manifest, JsonOptions);
-            await File.WriteAllTextAsync(
-                temporaryPath,
-                json,
-                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-                cancellationToken);
-            File.Move(temporaryPath, path, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
+        await AtomicTextFile.WriteReplaceAsync(
+            path,
+            JsonSerializer.Serialize(manifest, JsonOptions),
+            cancellationToken);
     }
 
     public async Task<RunManifest> LoadAsync(
@@ -100,10 +80,65 @@ public sealed class RunManifestStore
         return manifest;
     }
 
+    public async Task<IReadOnlyList<RunManifest>> LoadAllAsync(
+        string repositoryRoot,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+        var directory = GetManifestDirectory(repositoryRoot);
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var manifests = new List<RunManifest>();
+        foreach (var path in Directory.EnumerateFiles(directory, "*.json", SearchOption.TopDirectoryOnly)
+                     .OrderBy(static path => path, StringComparer.Ordinal))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var taskId = Path.GetFileNameWithoutExtension(path);
+            try
+            {
+                manifests.Add(await LoadAsync(repositoryRoot, taskId, cancellationToken));
+            }
+            catch (ArgumentException ex)
+            {
+                throw new InvalidDataException($"Invalid run manifest filename '{path}'.", ex);
+            }
+        }
+
+        return manifests
+            .OrderBy(static manifest => manifest.StartedAt)
+            .ThenBy(static manifest => manifest.TaskId, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    public async Task<RunManifest?> FindLatestAsync(
+        string repositoryRoot,
+        CancellationToken cancellationToken = default)
+    {
+        var manifests = await LoadAllAsync(repositoryRoot, cancellationToken);
+        return manifests
+            .OrderByDescending(static manifest => manifest.StartedAt)
+            .ThenByDescending(static manifest => manifest.TaskId, StringComparer.Ordinal)
+            .FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<RunManifest>> FindActiveAsync(
+        string repositoryRoot,
+        CancellationToken cancellationToken = default)
+    {
+        var manifests = await LoadAllAsync(repositoryRoot, cancellationToken);
+        return manifests
+            .Where(static manifest => manifest.Status == RunLifecycleStatus.InProgress)
+            .OrderBy(static manifest => manifest.StartedAt)
+            .ToArray();
+    }
+
     public string GetJsonPath(string repositoryRoot, string taskId)
     {
         RunId.Validate(taskId);
-        return Path.Combine(repositoryRoot, ".ai", "runs", taskId + ".json");
+        return Path.Combine(GetManifestDirectory(repositoryRoot), taskId + ".json");
     }
 
     public string GetMarkdownPath(string repositoryRoot, string taskId)
@@ -111,6 +146,9 @@ public sealed class RunManifestStore
         RunId.Validate(taskId);
         return Path.Combine(repositoryRoot, ".ai", "runs", taskId + ".md");
     }
+
+    private static string GetManifestDirectory(string repositoryRoot) =>
+        Path.Combine(repositoryRoot, ".agentwatch", "runs");
 
     private static void ValidateManifest(RunManifest manifest)
     {
@@ -122,6 +160,41 @@ public sealed class RunManifestStore
         {
             throw new InvalidDataException(
                 $"Unsupported run manifest schema '{manifest.SchemaVersion}'. Expected '{RunManifest.CurrentSchemaVersion}'.");
+        }
+
+        if (string.IsNullOrWhiteSpace(manifest.Title)
+            || string.IsNullOrWhiteSpace(manifest.StartBranch)
+            || manifest.AllowedPaths is null
+            || manifest.ChangedFiles is null
+            || manifest.OutOfScopeFiles is null
+            || manifest.Warnings is null)
+        {
+            throw new InvalidDataException("Run manifest is missing required fields.");
+        }
+
+        ValidateObjectId(manifest.StartCommitSha, "start");
+        if (manifest.Status == RunLifecycleStatus.Finished)
+        {
+            if (manifest.FinishedAt is null
+                || string.IsNullOrWhiteSpace(manifest.EndBranch)
+                || string.IsNullOrWhiteSpace(manifest.EndCommitSha))
+            {
+                throw new InvalidDataException("Finished run manifest is missing end evidence.");
+            }
+
+            ValidateObjectId(manifest.EndCommitSha, "end");
+        }
+    }
+
+    private static void ValidateObjectId(string value, string label)
+    {
+        try
+        {
+            GitObjectId.Validate(value);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidDataException($"Run manifest contains an invalid {label} Git object ID.", ex);
         }
     }
 }
@@ -137,6 +210,7 @@ public sealed class MarkdownRunEvidenceFormatter
         builder.AppendLine();
         builder.AppendLine($"- Title: {manifest.Title}");
         builder.AppendLine($"- Status: {manifest.Status}");
+        builder.AppendLine($"- Validation: {manifest.ValidationStatus}");
         builder.AppendLine($"- Started: {manifest.StartedAt:O}");
         builder.AppendLine($"- Finished: {(manifest.FinishedAt is null ? "not finished" : manifest.FinishedAt.Value.ToString("O"))}");
         builder.AppendLine($"- Start branch: `{manifest.StartBranch}`");
@@ -158,7 +232,7 @@ public sealed class MarkdownRunEvidenceFormatter
         }
         else
         {
-            foreach (var file in manifest.ChangedFiles)
+            foreach (var file in manifest.ChangedFiles.OrderBy(static file => file.Path, StringComparer.Ordinal))
             {
                 builder.AppendLine($"- `{file.Path}` — {file.Status}");
             }
@@ -167,13 +241,17 @@ public sealed class MarkdownRunEvidenceFormatter
         builder.AppendLine();
         builder.AppendLine("## Outside declared scope");
         builder.AppendLine();
-        if (manifest.OutOfScopeFiles.Count == 0)
+        if (manifest.AllowedPaths.Count == 0)
+        {
+            builder.AppendLine("Not evaluated because no scope restriction was declared.");
+        }
+        else if (manifest.OutOfScopeFiles.Count == 0)
         {
             builder.AppendLine("No out-of-scope files recorded.");
         }
         else
         {
-            foreach (var file in manifest.OutOfScopeFiles)
+            foreach (var file in manifest.OutOfScopeFiles.OrderBy(static file => file.Path, StringComparer.Ordinal))
             {
                 builder.AppendLine($"- `{file.Path}` — {file.Status}");
             }
@@ -186,7 +264,8 @@ public sealed class MarkdownRunEvidenceFormatter
         builder.AppendLine();
         builder.AppendLine("## Evidence boundary");
         builder.AppendLine();
-        builder.AppendLine("This report records Git state and declared scope only. It does not yet prove which build, test, UI, database, or runtime validation commands were executed.");
+        builder.AppendLine("This report records Git state and declared scope only.");
+        builder.AppendLine("Validation is `NotRun`; no build, test, CI, UI, database, runtime, or agent-claim evidence was captured by this slice.");
 
         return builder.ToString();
     }
@@ -198,11 +277,7 @@ public sealed class MarkdownRunEvidenceFormatter
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await File.WriteAllTextAsync(
-            path,
-            Format(manifest),
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-            cancellationToken);
+        await AtomicTextFile.WriteReplaceAsync(path, Format(manifest), cancellationToken);
         return path;
     }
 
@@ -217,6 +292,56 @@ public sealed class MarkdownRunEvidenceFormatter
         foreach (var value in values)
         {
             builder.AppendLine($"- `{value}`");
+        }
+    }
+}
+
+internal static class AtomicTextFile
+{
+    private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+    public static async Task WriteNewAsync(
+        string path,
+        string content,
+        CancellationToken cancellationToken)
+    {
+        var temporaryPath = CreateTemporaryPath(path);
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, content, Utf8NoBom, cancellationToken);
+            File.Move(temporaryPath, path, overwrite: false);
+        }
+        finally
+        {
+            DeleteIfPresent(temporaryPath);
+        }
+    }
+
+    public static async Task WriteReplaceAsync(
+        string path,
+        string content,
+        CancellationToken cancellationToken)
+    {
+        var temporaryPath = CreateTemporaryPath(path);
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, content, Utf8NoBom, cancellationToken);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            DeleteIfPresent(temporaryPath);
+        }
+    }
+
+    private static string CreateTemporaryPath(string path) =>
+        path + ".tmp-" + Guid.NewGuid().ToString("N");
+
+    private static void DeleteIfPresent(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
         }
     }
 }
