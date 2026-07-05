@@ -36,11 +36,14 @@ internal static class StartCommand
         }
 
         var snapshot = await new GitSnapshotReader(gitRunner).ReadAsync(repositoryRoot);
-        if (snapshot.ChangedFiles.Count > 0)
+        var dirtyUserFiles = snapshot.ChangedFiles
+            .Where(file => !RunArtifactPaths.IsManagedArtifact(file.Path))
+            .ToArray();
+        if (dirtyUserFiles.Length > 0)
         {
             Console.Error.WriteLine("Cannot start run evidence from a dirty working tree.");
-            Console.Error.WriteLine("Commit, stash, or remove existing changes first so later changes can be attributed to this run.");
-            foreach (var file in snapshot.ChangedFiles)
+            Console.Error.WriteLine("Commit, stash, or remove existing non-AgentsWatch changes first so later changes can be attributed to this run.");
+            foreach (var file in dirtyUserFiles)
             {
                 Console.Error.WriteLine($"- {file.Status} {file.Path}");
             }
@@ -163,13 +166,13 @@ internal static class FinishCommand
             manifest.StartCommitSha,
             endSnapshot);
         var changedFiles = allChangedFiles
-            .Where(file => !RunArtifactPaths.IsCurrentRunArtifact(file.Path, taskId))
+            .Where(file => !RunArtifactPaths.IsManagedArtifact(file.Path))
             .ToArray();
         var outOfScopeFiles = changedFiles
             .Where(file => !ScopeMatcher.IsAllowed(file.Path, manifest.AllowedPaths))
             .ToArray();
         var uncommittedUserFiles = endSnapshot.ChangedFiles
-            .Where(file => !RunArtifactPaths.IsCurrentRunArtifact(file.Path, taskId))
+            .Where(file => !RunArtifactPaths.IsManagedArtifact(file.Path))
             .ToArray();
 
         var warnings = new List<string>();
