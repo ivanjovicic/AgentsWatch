@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AgentsWatch.Core;
@@ -43,7 +44,7 @@ public sealed record RunManifest(
 
         return new RunManifest(
             CurrentSchemaVersion,
-            taskId,
+            RunId.Validate(taskId),
             title,
             startedAt,
             null,
@@ -103,6 +104,22 @@ public static class RunId
     }
 }
 
+public static class RunArtifactPaths
+{
+    public static bool IsCurrentRunArtifact(string path, string taskId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        RunId.Validate(taskId);
+
+        var normalizedPath = Normalize(path);
+        var prefix = $".ai/runs/{taskId}";
+        return string.Equals(normalizedPath, prefix + ".json", StringComparison.Ordinal)
+            || string.Equals(normalizedPath, prefix + ".md", StringComparison.Ordinal);
+    }
+
+    private static string Normalize(string value) => value.Replace('\\', '/').TrimStart('/');
+}
+
 public static class ScopeMatcher
 {
     public static bool IsAllowed(string path, IReadOnlyList<string> allowedPatterns)
@@ -132,16 +149,47 @@ public static class ScopeMatcher
             normalizedPattern += "**";
         }
 
-        var regexPattern = "^" + Regex.Escape(normalizedPattern)
-            .Replace("\\*\\*", ".*", StringComparison.Ordinal)
-            .Replace("\\*", "[^/]*", StringComparison.Ordinal)
-            .Replace("\\?", "[^/]", StringComparison.Ordinal) + "$";
-
         return Regex.IsMatch(
             normalizedPath,
-            regexPattern,
+            BuildRegex(normalizedPattern),
             RegexOptions.CultureInvariant,
             TimeSpan.FromMilliseconds(250));
+    }
+
+    private static string BuildRegex(string pattern)
+    {
+        var builder = new StringBuilder("^");
+        for (var index = 0; index < pattern.Length; index++)
+        {
+            var character = pattern[index];
+            if (character == '*')
+            {
+                var isDoubleStar = index + 1 < pattern.Length && pattern[index + 1] == '*';
+                if (isDoubleStar)
+                {
+                    var followedBySlash = index + 2 < pattern.Length && pattern[index + 2] == '/';
+                    builder.Append(followedBySlash ? "(?:.*/)?" : ".*");
+                    index += followedBySlash ? 2 : 1;
+                }
+                else
+                {
+                    builder.Append("[^/]*");
+                }
+
+                continue;
+            }
+
+            if (character == '?')
+            {
+                builder.Append("[^/]");
+                continue;
+            }
+
+            builder.Append(Regex.Escape(character.ToString()));
+        }
+
+        builder.Append('$');
+        return builder.ToString();
     }
 
     private static string Normalize(string value) => value.Replace('\\', '/').TrimStart('/');
