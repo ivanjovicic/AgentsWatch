@@ -204,8 +204,15 @@ internal static class StartCommand
 
         var gitRunner = new GitCommandRunner();
         var repositoryRoot = await new GitRepositoryLocator(gitRunner).FindRootAsync(workingDirectory);
-        var snapshot = await new GitSnapshotReader(gitRunner).ReadAsync(repositoryRoot);
+        var store = new RunManifestStore();
+        var jsonPath = store.GetJsonPath(repositoryRoot, options.TaskId);
+        if (File.Exists(jsonPath))
+        {
+            Console.Error.WriteLine($"Run '{options.TaskId}' already exists. Existing evidence will not be overwritten.");
+            return 3;
+        }
 
+        var snapshot = await new GitSnapshotReader(gitRunner).ReadAsync(repositoryRoot);
         if (snapshot.ChangedFiles.Count > 0)
         {
             Console.Error.WriteLine("Cannot start run evidence from a dirty working tree.");
@@ -225,14 +232,6 @@ internal static class StartCommand
             snapshot,
             options.AllowedPaths,
             DateTimeOffset.UtcNow);
-
-        var store = new RunManifestStore();
-        var jsonPath = store.GetJsonPath(repositoryRoot, options.TaskId);
-        if (File.Exists(jsonPath))
-        {
-            Console.Error.WriteLine($"Run '{options.TaskId}' already exists. Existing evidence will not be overwritten.");
-            return 3;
-        }
 
         await store.CreateAsync(repositoryRoot, manifest);
         var formatter = new MarkdownRunEvidenceFormatter();
@@ -258,7 +257,11 @@ internal static class StartCommand
             return false;
         }
 
-        var taskId = RunId.Validate(args[0]);
+        if (!CliInput.TryValidateTaskId(args[0], out var taskId))
+        {
+            return false;
+        }
+
         var title = taskId;
         var scopes = new List<string>();
 
@@ -309,12 +312,21 @@ internal static class FinishCommand
             return 2;
         }
 
-        var taskId = RunId.Validate(args[0]);
+        if (!CliInput.TryValidateTaskId(args[0], out var taskId))
+        {
+            return 2;
+        }
+
         var gitRunner = new GitCommandRunner();
         var repositoryRoot = await new GitRepositoryLocator(gitRunner).FindRootAsync(workingDirectory);
         var store = new RunManifestStore();
-        var manifest = await store.LoadAsync(repositoryRoot, taskId);
+        if (!File.Exists(store.GetJsonPath(repositoryRoot, taskId)))
+        {
+            Console.Error.WriteLine($"Run '{taskId}' does not exist.");
+            return 3;
+        }
 
+        var manifest = await store.LoadAsync(repositoryRoot, taskId);
         if (manifest.Status == RunLifecycleStatus.Completed)
         {
             Console.Error.WriteLine($"Run '{taskId}' is already completed. Existing evidence will not be rewritten by finish.");
@@ -331,12 +343,18 @@ internal static class FinishCommand
         }
 
         var endSnapshot = await new GitSnapshotReader(gitRunner).ReadAsync(repositoryRoot);
-        var changedFiles = await new GitChangeSetReader(gitRunner).ReadSinceAsync(
+        var allChangedFiles = await new GitChangeSetReader(gitRunner).ReadSinceAsync(
             repositoryRoot,
             manifest.StartCommitSha,
             endSnapshot);
+        var changedFiles = allChangedFiles
+            .Where(file => !RunArtifactPaths.IsCurrentRunArtifact(file.Path, taskId))
+            .ToArray();
         var outOfScopeFiles = changedFiles
             .Where(file => !ScopeMatcher.IsAllowed(file.Path, manifest.AllowedPaths))
+            .ToArray();
+        var uncommittedUserFiles = endSnapshot.ChangedFiles
+            .Where(file => !RunArtifactPaths.IsCurrentRunArtifact(file.Path, taskId))
             .ToArray();
 
         var warnings = new List<string>();
@@ -350,9 +368,9 @@ internal static class FinishCommand
             warnings.Add($"Branch changed during the run: {manifest.StartBranch} -> {endSnapshot.Branch}.");
         }
 
-        if (endSnapshot.ChangedFiles.Count > 0)
+        if (uncommittedUserFiles.Length > 0)
         {
-            warnings.Add("The repository contains uncommitted changes at finish time.");
+            warnings.Add("The repository contains uncommitted non-AgentsWatch changes at finish time.");
         }
 
         var completed = manifest.Complete(
@@ -370,7 +388,7 @@ internal static class FinishCommand
 
         Console.WriteLine($"Finished run: {taskId}");
         Console.WriteLine($"Head commit: {endSnapshot.CommitSha}");
-        Console.WriteLine($"Changed files: {changedFiles.Count}");
+        Console.WriteLine($"Changed files: {changedFiles.Length}");
         Console.WriteLine($"Outside declared scope: {outOfScopeFiles.Length}");
         Console.WriteLine($"Report: {markdownPath}");
         Console.WriteLine("Evidence boundary: build, test, CI, runtime, and agent-claim evidence are not captured yet.");
@@ -388,13 +406,41 @@ internal static class ReportCommand
             return 2;
         }
 
-        var taskId = RunId.Validate(args[0]);
+        if (!CliInput.TryValidateTaskId(args[0], out var taskId))
+        {
+            return 2;
+        }
+
         var gitRunner = new GitCommandRunner();
         var repositoryRoot = await new GitRepositoryLocator(gitRunner).FindRootAsync(workingDirectory);
         var store = new RunManifestStore();
+        if (!File.Exists(store.GetJsonPath(repositoryRoot, taskId)))
+        {
+            Console.Error.WriteLine($"Run '{taskId}' does not exist.");
+            return 3;
+        }
+
         var manifest = await store.LoadAsync(repositoryRoot, taskId);
         var formatter = new MarkdownRunEvidenceFormatter();
         Console.Write(formatter.Format(manifest));
         return 0;
+    }
+}
+
+internal static class CliInput
+{
+    public static bool TryValidateTaskId(string value, out string taskId)
+    {
+        try
+        {
+            taskId = RunId.Validate(value);
+            return true;
+        }
+        catch (ArgumentException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            taskId = string.Empty;
+            return false;
+        }
     }
 }
