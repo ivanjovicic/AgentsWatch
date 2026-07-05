@@ -130,6 +130,15 @@ public static class RunId
 
 public static class RunArtifactPaths
 {
+    public static bool IsManagedArtifact(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var normalizedPath = Normalize(path);
+
+        return HasFileWithExtension(normalizedPath, ".agentwatch/runs/", ".json")
+            || HasFileWithExtension(normalizedPath, ".ai/runs/", ".md");
+    }
+
     public static bool IsCurrentRunArtifact(string path, string taskId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -144,6 +153,18 @@ public static class RunArtifactPaths
                 normalizedPath,
                 $".ai/runs/{taskId}.md",
                 StringComparison.Ordinal);
+    }
+
+    private static bool HasFileWithExtension(string path, string prefix, string extension)
+    {
+        if (!path.StartsWith(prefix, StringComparison.Ordinal)
+            || !path.EndsWith(extension, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var fileName = path[prefix.Length..^extension.Length];
+        return fileName.Length > 0 && !fileName.Contains('/');
     }
 
     private static string Normalize(string value) => value.Replace('\\', '/').TrimStart('/');
