@@ -21,7 +21,7 @@ public sealed class RunManifestStore
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         ArgumentNullException.ThrowIfNull(manifest);
-        RunId.Validate(manifest.TaskId);
+        ValidateManifest(manifest);
 
         var path = GetJsonPath(repositoryRoot, manifest.TaskId);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -47,7 +47,7 @@ public sealed class RunManifestStore
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         ArgumentNullException.ThrowIfNull(manifest);
-        RunId.Validate(manifest.TaskId);
+        ValidateManifest(manifest);
 
         var path = GetJsonPath(repositoryRoot, manifest.TaskId);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -87,8 +87,17 @@ public sealed class RunManifestStore
         }
 
         var json = await File.ReadAllTextAsync(path, cancellationToken);
-        var manifest = JsonSerializer.Deserialize<RunManifest>(json, JsonOptions);
-        return manifest ?? throw new InvalidDataException($"Run manifest '{path}' is empty or invalid.");
+        var manifest = JsonSerializer.Deserialize<RunManifest>(json, JsonOptions)
+            ?? throw new InvalidDataException($"Run manifest '{path}' is empty or invalid.");
+
+        ValidateManifest(manifest);
+        if (!string.Equals(manifest.TaskId, taskId, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                $"Run manifest identity mismatch: requested '{taskId}', file contains '{manifest.TaskId}'.");
+        }
+
+        return manifest;
     }
 
     public string GetJsonPath(string repositoryRoot, string taskId)
@@ -101,6 +110,19 @@ public sealed class RunManifestStore
     {
         RunId.Validate(taskId);
         return Path.Combine(repositoryRoot, ".ai", "runs", taskId + ".md");
+    }
+
+    private static void ValidateManifest(RunManifest manifest)
+    {
+        RunId.Validate(manifest.TaskId);
+        if (!string.Equals(
+                manifest.SchemaVersion,
+                RunManifest.CurrentSchemaVersion,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                $"Unsupported run manifest schema '{manifest.SchemaVersion}'. Expected '{RunManifest.CurrentSchemaVersion}'.");
+        }
     }
 }
 
@@ -115,6 +137,7 @@ public sealed class MarkdownRunEvidenceFormatter
         builder.AppendLine();
         builder.AppendLine($"- Title: {manifest.Title}");
         builder.AppendLine($"- Status: {manifest.Status}");
+        builder.AppendLine($"- Repository: `{manifest.RepositoryRoot}`");
         builder.AppendLine($"- Started: {manifest.StartedAt:O}");
         builder.AppendLine($"- Finished: {(manifest.FinishedAt is null ? "not finished" : manifest.FinishedAt.Value.ToString("O"))}");
         builder.AppendLine($"- Start branch: `{manifest.StartBranch}`");
