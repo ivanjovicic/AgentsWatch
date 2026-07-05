@@ -45,12 +45,12 @@ public sealed class GitChangeSetReader
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
-        ArgumentException.ThrowIfNullOrWhiteSpace(baseCommitSha);
         ArgumentNullException.ThrowIfNull(currentSnapshot);
+        ValidateObjectId(baseCommitSha);
 
         var trackedOutput = await _git.RunAsync(
             workingDirectory,
-            $"diff --name-status --find-renames {QuoteRevision(baseCommitSha)} --",
+            $"diff --name-status --find-renames {baseCommitSha} --",
             cancellationToken);
 
         var tracked = GitNameStatusParser.Parse(trackedOutput);
@@ -71,15 +71,16 @@ public sealed class GitChangeSetReader
             .ToArray();
     }
 
-    private static string QuoteRevision(string revision)
+    private static void ValidateObjectId(string revision)
     {
-        if (revision.Any(static character =>
-                !(char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.' or '/')))
+        ArgumentException.ThrowIfNullOrWhiteSpace(revision);
+        if (revision.Length is not (40 or 64)
+            || revision.Any(static character => !Uri.IsHexDigit(character)))
         {
-            throw new ArgumentException("Git revision contains unsupported characters.", nameof(revision));
+            throw new ArgumentException(
+                "Run evidence requires a full 40- or 64-character hexadecimal Git object ID.",
+                nameof(revision));
         }
-
-        return revision;
     }
 }
 
