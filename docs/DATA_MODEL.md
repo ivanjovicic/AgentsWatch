@@ -1,390 +1,356 @@
 # AgentsWatch Data Model
 
-Last aligned: 2026-06-30  
-Status: draft contract
+Last aligned: 2026-07-05  
+Status: run manifest v1 implemented on feature branch; wider model planned
 
 ## Purpose
 
-Start with markdown files. Move to SQLite only after the CLI report model stabilizes.
+Define local, versioned data shapes so CLI commands, reports, adapters, and future storage do not invent incompatible models.
 
-This document defines the future local data model so early commands do not invent incompatible shapes.
+Principles:
 
----
+- local-first;
+- JSON/Markdown before SQLite;
+- evidence provenance and unknown states preserved;
+- no full chat history or raw terminal output by default;
+- no absolute local repository root in shareable run artifacts;
+- schema changes must be versioned and validated.
 
 ## Storage phases
 
-### Phase 1 — Markdown only
+### Current foundation
 
-Use:
+Human report:
 
 ```text
-.ai/tasks/
-.ai/runs/
-.ai/generated/
-.ai/learning/LESSONS.md
-.ai/learning/MISTAKE_PATTERNS.md
-.ai/learning/DO_NOT_REPEAT.md
-.ai/STATUS.md
-.ai/CHANGELOG_AI.md
+.ai/runs/<task-id>.md
 ```
 
-### Phase 2 — JSON sidecars
-
-Optional machine-readable run files:
+Machine sidecar:
 
 ```text
-.agentwatch/runs/<run-id>.json
+.agentwatch/runs/<task-id>.json
+```
+
+### Next local event/evidence files
+
+```text
 .agentwatch/command-history.jsonl
-.agentwatch/learning-events.jsonl
-.agentwatch/mistake-patterns.json
+.agentwatch/evidence/<task-id>-pr-evidence.json
+.ai/evidence/<task-id>-pr-evidence.md
 ```
 
-### Phase 3 — SQLite
+### Future SQLite
 
-Future local history:
+Only after JSON/report contracts and migration rules stabilize:
 
 ```text
 .agentwatch/agentswatch.db
 ```
 
----
+## RunManifest schema v1.0
 
-## Entities
-
-### Project
+Implemented shape:
 
 ```text
-ProjectId
-Name
-RootPath
-DetectedTypes
-CreatedAt
-UpdatedAt
-```
-
-### Task
-
-```text
+SchemaVersion
 TaskId
 Title
-RunMode
-TokenBudget
-Status
-PromptPath
-CreatedAt
-UpdatedAt
-```
-
-### Run
-
-```text
-RunId
-TaskId
 StartedAt
 FinishedAt
-Tool
-Model
-StartCommitSha
-EndCommitSha
-Branch
-RiskLevel
 Status
+ValidationStatus
+StartBranch
+StartCommitSha
+EndBranch
+EndCommitSha
+AllowedPaths
+ChangedFiles
+OutOfScopeFiles
+Warnings
 ```
+
+JSON field names use camel case.
+
+### Lifecycle status
+
+```text
+InProgress
+Finished
+```
+
+`Finished` means the Git/scope capture was closed. It does not mean acceptance criteria, build, tests, CI, UI, database, or runtime behavior passed.
+
+### Validation status
+
+Schema values:
+
+```text
+NotRun
+Pass
+Fail
+BlockedByEnvironment
+Unknown
+```
+
+The current foundation writes only `NotRun`.
+
+Future `Pass`/`Fail` values require linked command, CI, adapter, or explicit user-entered evidence.
+
+### Git identity
+
+Start/end identities use full hexadecimal object IDs:
+
+```text
+40 characters — SHA-1 repositories
+64 characters — SHA-256 repositories
+```
+
+Arbitrary revision/command strings are not valid persisted object IDs.
 
 ### ChangedFile
 
 ```text
-RunId
 Path
 Status
-AddedLines
-DeletedLines
-RiskLevel
-RiskReasons
+AddedLines optional
+DeletedLines optional
 ```
 
-### Validation
+Current normalized statuses:
 
 ```text
-RunId
-Command
-Status
-StartedAt
-FinishedAt
-OutputSummary
+added
+modified
+deleted
+type-changed
+unmerged
+renamed
+copied
+untracked
+unknown/provider status
 ```
 
-### CommandProfile
+Current foundation lists the final path for rename/copy events. Rich old/new path lineage is a later schema extension.
 
-Planned for AW-011.
+### AllowedPaths
+
+Repository-relative glob patterns.
+
+Current matcher supports:
 
 ```text
+*   within one path segment
+?   one non-separator character
+**  zero or more nested path segments
+```
+
+An empty list means unrestricted scope. It does not mean a scope check passed; it means out-of-scope evaluation is not applicable.
+
+### Warnings
+
+Current warning examples:
+
+- branch changed during run;
+- non-AgentsWatch uncommitted changes at finish;
+- scope unrestricted/not evaluated;
+- validation not captured.
+
+Warnings must be deterministic evidence notes, not model-generated prose presented as fact.
+
+## Machine/human artifact ownership
+
+Managed run artifacts:
+
+```text
+.agentwatch/runs/*.json
+.ai/runs/*.md
+```
+
+They are:
+
+- excluded from coding-agent change attribution;
+- ignored when deciding whether only previous managed evidence makes a baseline dirty;
+- still protected from accidental overwrite by run ID/lifecycle rules.
+
+Other `.ai` and `.agentwatch` files are not automatically excluded.
+
+## Future CommandEvidence
+
+Planned for `agentswatch run -- <command>`:
+
+```text
+SchemaVersion
 CommandId
-RunId
-WorkingDirectory
-DetectedProjectTypes
-CommandDisplay
+RunId optional
+CommandDisplay redacted
 CommandHash
 CommandRedactionApplied
 CommandRefusedReason
+WorkingDirectoryIdentity
 StartedAt
 FinishedAt
 DurationMs
+StartCommitSha
+EndCommitSha
 ExitCode
 StdoutBytes
 StderrBytes
 Status
-FirstErrorLine
-OutputSummary
+FirstErrorLine redacted
+OutputSummary redacted
 SuggestedByAgentsWatch
-ChangedFilesBefore
-ChangedFilesAfter
 ```
 
-Rules:
-
-- command profiles are local-first evidence;
-- markdown reports should include compact summaries only;
-- full stdout/stderr is not part of the default data model;
-- optional raw log files, if added later, must be local-only and referenced by path only when explicitly requested;
-- secret-looking values must be redacted before `OutputSummary` is stored;
-- raw secret-looking command strings must not be persisted or displayed.
-
-Phase 2 JSONL shape:
-
-```json
-{
-  "schemaVersion": 1,
-  "commandId": "2026-06-30T120000Z-dotnet-test-filter-git",
-  "runId": "optional-run-id",
-  "workingDirectory": ".",
-  "detectedProjectTypes": ["dotnet"],
-  "commandDisplay": "dotnet test --filter Git",
-  "commandHash": "sha256:<hash>",
-  "commandRedactionApplied": false,
-  "commandRefusedReason": null,
-  "startedAtUtc": "2026-06-30T12:00:00Z",
-  "finishedAtUtc": "2026-06-30T12:00:04Z",
-  "durationMs": 4012,
-  "exitCode": 0,
-  "stdoutBytes": 8200,
-  "stderrBytes": 0,
-  "status": "Pass",
-  "firstErrorLine": null,
-  "outputSummary": "Tests passed. 12 tests run.",
-  "suggestedByAgentsWatch": true,
-  "changedFilesBefore": 2,
-  "changedFilesAfter": 2
-}
-```
-
-### AgentRunLog
-
-```text
-RunId
-PromptId
-QueueItemId
-Tool
-Model
-PermissionMode
-RunMode
-TokenBudget
-Status
-FilesInspectedCount
-FilesChangedCount
-ValidationStatus
-CommandProfileSummary
-MistakeCategories
-MissedWork
-ScopeCreep
-TokenWasteSummary
-LearningNote
-NextPrompt
-DoNotRepeat
-```
-
-Rules:
-
-- one compact log per agent run;
-- one learning note per completed or blocked run;
-- do not store full chat history;
-- do not store full terminal output;
-- do not store secrets.
-
-### LearningEvent
-
-```text
-LearningEventId
-RunId
-Category
-Message
-RuleCandidate
-AppliesToProjectTypes
-CreatedAt
-Accepted
-```
-
-Use for project-local learning such as:
-
-```text
-Next time, run flutter analyze before full flutter test for small UI-only changes.
-```
-
-### MistakePattern
-
-```text
-PatternId
-Category
-Description
-SeenCount
-LastSeenRunId
-RecommendedPromptRule
-RecommendedValidationRule
-RecommendedContextRule
-Status
-```
-
-Status values:
-
-```text
-Candidate
-Accepted
-Ignored
-Deprecated
-```
-
-### FlutterRunSignals
-
-Optional per-run shape for Flutter projects:
-
-```text
-RunId
-TouchedWidgets
-TouchedProvidersOrState
-TouchedNavigationOrRouter
-TouchedPersistenceOrOfflineStorage
-TouchedPlatformFiles
-WidgetTestsAffected
-ValidationSuggested
-ValidationRun
-RiskNote
-```
-
-Use only when Flutter project files are detected.
-
-### RiskFinding
-
-```text
-RunId
-Level
-Category
-Message
-Path
-SuggestedFollowUp
-```
-
-### Handoff
-
-```text
-RunId
-SummaryPath
-NextPrompt
-ResidualRisk
-LearningNote
-DoNotRepeat
-```
-
----
-
-## Status values
-
-Task status:
-
-```text
-Ready
-InProgress
-Done
-Blocked
-NeedsEvidence
-NeedsHandoff
-NeedsLearningLog
-```
-
-Validation status:
+Command statuses:
 
 ```text
 Pass
 Fail
-NotRun
-BlockedByEnvironment
-```
-
-Command status:
-
-```text
-Pass
-Fail
-NotRun
 BlockedByEnvironment
 TimedOut
+Cancelled
 Killed
+Refused
 Unknown
 ```
 
-Run status:
+Rules:
+
+- command execution explicit;
+- no source/output upload;
+- raw stdout/stderr not persisted by default;
+- secret-looking values redacted before display/storage;
+- exit code 0 supports only the observed command result, not every agent claim;
+- command evidence links to immutable Git state when available.
+
+## Future Claim and Trust Ledger
 
 ```text
-Done
-NeedsEvidence
-NeedsReview
-NeedsApproval
-Blocked
-Failed
+ClaimId
+RunId
+Text or structured statement
+ClaimType
+EvidenceLinks
+Assessment
+Reason
+Confidence
+AssessedAt
 ```
 
-Risk levels:
+Assessments:
 
 ```text
-Low
-Medium
-High
+SUPPORTED
+PARTIALLY_SUPPORTED
+CONTRADICTED
+MISSING_EVIDENCE
+STALE_EVIDENCE
+NOT_OBSERVED
+NOT_VERIFIABLE
+SKIPPED
 ```
 
-Mistake categories:
+Rules:
+
+- missing observation is not contradiction;
+- stale evidence identifies the mismatched object/commit;
+- confidence reflects evidence quality;
+- model self-confidence is not evidence.
+
+## Future PR Evidence Packet
 
 ```text
-ScopeCreep
-OverRead
-OverTest
-UnderTest
-ValidationSkipped
-WrongModel
-WrongTool
-SensitivePathTouched
-LargeLogPasted
-RepeatedFailure
-MissingHandoff
-ClaimedButNotDone
-FlutterStateRisk
-FlutterNavigationRisk
-FlutterPersistenceRisk
+PacketId
+RunId
+BaseObjectId
+HeadObjectId
+DeclaredTask
+DeclaredScope
+ChangedFiles
+OutOfScopeFiles
+Claims
+CommandEvidence
+ValidationEvidence
+CiEvidence
+EvidenceObjectMatches
+RiskFindings
+ReviewerActions
+GeneratedAt
 ```
 
----
+The current run foundation is only a prerequisite and does not implement this packet.
+
+## Future ContextSnapshot
+
+```text
+SnapshotId
+TaskId
+SourceObjectId
+Goal
+Constraints
+Decisions
+Completed
+Pending
+RelevantFiles
+FailedApproaches
+ValidationSummary
+OpenRisks
+TargetExports
+LossReport
+```
+
+## Future runtime compatibility references
+
+Runtime-specific evidence should reference:
+
+```text
+EffectiveRuntimeProfileId
+ProfileRevision
+SupportMode
+CapabilityProvenance
+BlindSpots
+Fallback
+```
+
+Do not embed assumptions from a provider/model name directly into evidence truth.
+
+## Data integrity rules
+
+- unknown schema versions rejected;
+- required fields validated during load/save;
+- task IDs path-safe;
+- start/end object IDs validated;
+- new manifests written without overwrite;
+- updates written through temporary file and atomic replacement;
+- finished runs require finish time, end branch, and end object ID;
+- no silent conversion of unknown values into success;
+- migrations must preserve user-owned evidence and support rollback/export.
+
+## Privacy rules
+
+Default persisted/shared artifacts exclude:
+
+- absolute repository root;
+- source contents;
+- full diffs;
+- full prompts/chat history;
+- raw stdout/stderr;
+- secrets;
+- cloud credentials;
+- private organization identity unless explicitly supplied.
+
+Paths inside the repository may be listed because scope/change review requires them; future redaction policy may mask sensitive path segments.
 
 ## Compatibility rule
 
-Every markdown report should be convertible to the future JSON/SQLite model without losing:
+Every Markdown projection must preserve enough structure to convert to JSON/SQLite without losing:
 
-- task id;
-- run mode;
-- budget;
-- changed files;
-- validation status;
-- command profile summary if available;
-- risk findings;
-- missed work;
-- learning note;
-- do-not-repeat rule if present;
-- follow-up prompt;
-- handoff summary.
+- identity/schema;
+- lifecycle/timestamps;
+- immutable Git identities;
+- declared scope;
+- changes and scope findings;
+- validation status/provenance;
+- warnings/unknowns;
+- future command and claim evidence links.
