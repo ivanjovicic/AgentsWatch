@@ -87,7 +87,18 @@ public sealed class RunEvidenceFoundationTests
             var loaded = await store.LoadAsync(root, "TASK-001");
 
             Assert.True(File.Exists(path));
-            Assert.Equal(manifest, loaded);
+            Assert.Equal(manifest.SchemaVersion, loaded.SchemaVersion);
+            Assert.Equal(manifest.TaskId, loaded.TaskId);
+            Assert.Equal(manifest.Title, loaded.Title);
+            Assert.Equal(manifest.StartedAt, loaded.StartedAt);
+            Assert.Equal(manifest.Status, loaded.Status);
+            Assert.Equal(manifest.RepositoryRoot, loaded.RepositoryRoot);
+            Assert.Equal(manifest.StartBranch, loaded.StartBranch);
+            Assert.Equal(manifest.StartCommitSha, loaded.StartCommitSha);
+            Assert.Equal(manifest.AllowedPaths, loaded.AllowedPaths);
+            Assert.Empty(loaded.ChangedFiles);
+            Assert.Empty(loaded.OutOfScopeFiles);
+            Assert.Empty(loaded.Warnings);
             await Assert.ThrowsAsync<IOException>(() => store.CreateAsync(root, manifest));
         }
         finally
