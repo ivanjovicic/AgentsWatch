@@ -22,11 +22,15 @@ public static class Program
 
         try
         {
+            var workingDirectory = Directory.GetCurrentDirectory();
             return args[0] switch
             {
-                "init" => InitCommand.Run(Directory.GetCurrentDirectory()),
+                "init" => InitCommand.Run(workingDirectory),
                 "optimize" => OptimizeCommand.Run(args.Skip(1).ToArray()),
-                "status" => await StatusCommand.RunAsync(Directory.GetCurrentDirectory()),
+                "status" => await StatusCommand.RunAsync(workingDirectory),
+                "start" => await StartCommand.RunAsync(args.Skip(1).ToArray(), workingDirectory),
+                "finish" => await FinishCommand.RunAsync(args.Skip(1).ToArray(), workingDirectory),
+                "report" => await ReportCommand.RunAsync(args.Skip(1).ToArray(), workingDirectory),
                 _ => Unknown(args[0])
             };
         }
@@ -45,19 +49,27 @@ public static class Program
     }
 
     private static string HelpText() => """
-AgentsWatch — AI coding-agent supervisor and token optimizer
+AgentsWatch — local evidence and control layer for AI coding-agent work
 
 Usage:
   agentswatch init
   agentswatch optimize <prompt text or prompt file>
   agentswatch status
+  agentswatch start <task-id> [--title <text>] [--scope <glob>]...
+  agentswatch finish <task-id>
+  agentswatch report [task-id]
   agentswatch --version
+
+Current run-evidence boundary:
+  start requires a clean Git working tree and no other active run.
+  finish records Git changes since the start commit and scope findings.
+  validation is recorded as NotRun until command evidence exists.
+  build, test, CI, runtime, and agent-claim evidence are not captured yet.
 
 Planned:
   agentswatch task split <prompt-file>
-  agentswatch start <task-id>
-  agentswatch finish <task-id>
-  agentswatch report
+  agentswatch run -- <command>
+  agentswatch pr evidence --run <task-id> --base <branch>
   agentswatch handoff
   agentswatch review-diff <commit-or-range>
   agentswatch validate

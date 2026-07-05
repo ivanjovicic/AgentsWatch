@@ -1,47 +1,48 @@
 # AgentsWatch CLI Command Contracts
 
-Last aligned: 2026-06-30  
-Status: product contract, not yet fully implemented
+Last aligned: 2026-07-05  
+Status: product contract; implementation maturity governed by capability registry
 
 ## Purpose
 
-Define command behavior before implementation so agents do not invent different UX, file paths, or report formats.
+Define command behavior before and during implementation so agents do not invent incompatible UX, file paths, exit codes, or evidence claims.
 
-This document is authoritative for CLI behavior after Gate 0 validation passes.
+Use with:
 
----
+- `RUN_EVIDENCE_FOUNDATION_CONTRACT.md`;
+- `CLI_UX_OUTPUT_SPEC.md`;
+- `REPORT_FORMATS.md`;
+- `DATA_MODEL.md`;
+- `FEATURE_CAPABILITY_REGISTRY.md`.
 
 ## Global command rules
 
 All commands should:
 
-- work from any repository root;
-- use current directory as default project root;
+- work from the current directory and resolve the repository root when Git evidence is required;
 - avoid network calls by default;
-- avoid overwriting user files without an explicit flag;
-- print concise output by default;
-- return non-zero exit code on real failure;
-- write markdown artifacts only when the command promises to write them;
-- keep sensitive file contents out of reports;
-- keep full stdout/stderr out of markdown reports by default;
-- summarize command output with duration, exit code, byte counts, and compact error signatures.
+- avoid overwriting user-owned or prior evidence files without an explicit contract;
+- print concise, stable labels;
+- return non-zero on real failure;
+- keep sensitive contents and full stdout/stderr out of default reports;
+- distinguish observed evidence from inference;
+- never claim validation passed without command, CI, adapter, or explicit user-entered evidence;
+- preserve unknown/not-observed states.
 
-Exit codes draft:
+Exit codes:
 
 | Code | Meaning |
 |---:|---|
 | 0 | success |
-| 1 | command failed |
+| 1 | unexpected command/runtime failure |
 | 2 | invalid arguments |
-| 3 | validation failed |
+| 3 | evidence/validation/lifecycle condition failed |
 | 4 | blocked by environment |
 | 5 | unsafe operation refused |
 
----
-
 ## `agentswatch init`
 
-Purpose: create local AgentsWatch workspace.
+Purpose: create the local AgentsWatch workspace.
 
 Creates:
 
@@ -58,25 +59,24 @@ Creates:
 
 Rules:
 
-- must be idempotent;
-- must not overwrite existing files;
-- should print what was created and what already existed;
-- future `--force` must be explicit and tested.
+- idempotent;
+- preserve existing files;
+- future `--force` must be explicit and tested;
+- output should eventually list created and preserved paths.
 
-Minimum tests:
+Minimum proof:
 
-- empty temp directory;
-- existing `.ai/config.yml` is preserved;
-- existing folders are handled;
-- Windows/Unix path compatibility.
-
----
+- empty temporary directory;
+- second run;
+- edited generated file remains unchanged;
+- Windows/Unix paths;
+- no writes outside selected root.
 
 ## `agentswatch status`
 
-Purpose: show repository, project-type, validation, and git status summary.
+Purpose: show repository, project type, validation suggestions, and Git summary without running validation.
 
-Output should include:
+Target output:
 
 ```text
 Project root:
@@ -91,18 +91,16 @@ Next safe prompt:
 
 Rules:
 
-- should handle clean git repo;
-- should handle dirty git repo;
-- should handle non-git directory with a clear message;
-- should not run validation by default.
-
----
+- handle clean and dirty Git repositories;
+- handle non-Git directories with a clear message;
+- do not run validation automatically;
+- do not print file contents.
 
 ## `agentswatch optimize <prompt>`
 
-Purpose: classify a rough prompt and return a safer prompt plan.
+Purpose: classify a rough prompt and return a safer plan.
 
-Output should include:
+Output includes:
 
 ```text
 Risk:
@@ -115,18 +113,16 @@ Optimized prompt:
 
 Rules:
 
-- file path input and inline text input both supported;
-- broad prompts should become high-risk;
-- missing validation/stop/scope should be listed as waste causes;
-- generated prompt must include run mode, token budget, scope limiter, stop rules, and validation.
+- support inline text and file input;
+- broad/multi-mode prompts become higher risk;
+- identify missing scope, stop, and validation fields;
+- do not invent repository-specific paths.
 
----
+## `agentswatch task split <prompt-file>` — planned
 
-## `agentswatch task split <prompt-file>`
+Purpose: write focused markdown task prompts.
 
-Purpose: write scoped markdown task files from one broad prompt.
-
-Default output:
+Default planned output:
 
 ```text
 .ai/tasks/001-investigate-only.md
@@ -137,190 +133,200 @@ Default output:
 
 Rules:
 
-- refuse to overwrite existing generated task files unless explicit flag is provided;
+- no overwrite by default;
 - print generated paths;
-- include required prompt fields from `docs/PROMPT_RULES.md`.
+- include required prompt fields and stop/validation rules.
 
----
+## `agentswatch start <task-id> [--title <text>] [--scope <glob>]...`
 
-## `agentswatch start <task-id>`
+Purpose: create an attributable Git/scope run baseline.
 
-Purpose: record run start state.
-
-Writes later:
+Implemented storage:
 
 ```text
-.ai/runs/<run-id>-start.md
+.agentwatch/runs/<task-id>.json
+.ai/runs/<task-id>.md
 ```
 
 Captures:
 
-- task id;
-- timestamp;
+- path-safe task ID;
+- optional title;
+- UTC timestamp;
 - branch;
-- commit;
-- current changed files;
-- run mode and budget if known.
+- full 40/64-character Git object ID;
+- optional allowed-scope globs;
+- lifecycle `InProgress`;
+- validation `NotRun`.
 
 Rules:
 
-- should refuse a second active run unless `--allow-overlap` exists later;
-- should warn if worktree is already dirty.
+- refuse an existing task ID rather than overwrite;
+- refuse a second active run;
+- ignore existing AgentsWatch-managed run artifacts during dirty-state evaluation;
+- refuse other dirty paths so later changes can be attributed to this run;
+- write JSON and Markdown atomically;
+- do not store the absolute local repository root in shareable artifacts;
+- do not claim that an agent was observed.
 
----
+Current managed artifacts:
+
+```text
+.agentwatch/runs/*.json
+.ai/runs/*.md
+```
+
+Detailed contract: `RUN_EVIDENCE_FOUNDATION_CONTRACT.md`.
 
 ## `agentswatch finish <task-id>`
 
-Purpose: record run completion state and produce evidence.
+Purpose: close the Git/scope run and write evidence honestly.
 
 Captures:
 
-- end timestamp;
-- changed files;
-- validation entered by user or read from run notes;
-- profiled command summaries if present;
-- missed work;
-- follow-up;
-- residual risk.
+- finish timestamp;
+- end branch and full Git object ID;
+- tracked changes since the immutable start object;
+- current untracked paths;
+- normalized statuses;
+- paths outside declared scope;
+- branch-change warning;
+- uncommitted non-AgentsWatch change warning;
+- `Validation: NotRun` in the current slice.
 
-Writes:
+Rules:
+
+- require an existing in-progress run;
+- refuse a second finish/rewrite;
+- exclude all managed run artifacts from agent-change attribution;
+- sort file output deterministically;
+- empty allowed scope means unrestricted, so report `not evaluated`, not a false clean result;
+- never claim validation passed;
+- do not include full diffs or file contents.
+
+Current limitation:
 
 ```text
-.ai/runs/<run-id>.md
-.ai/runs/<run-id>-handoff.md
+No command, build, test, CI, UI, database, runtime, or agent-claim evidence is captured yet.
 ```
+
+## `agentswatch report [task-id]`
+
+Purpose: reprint a human-readable run report.
+
+Behavior:
+
+- no task ID: select the most recently started manifest;
+- one task ID: select that manifest;
+- more than one argument: invalid arguments;
+- no runs or missing task: exit 3 with a clear message.
 
 Rules:
 
-- should include compact validation evidence only;
-- should not include full command logs by default;
-- should never claim validation passed unless command evidence or user-entered evidence exists.
+- stable sections and deterministic file order;
+- preserve `Validation: NotRun` until evidence exists;
+- omit absolute local root, file contents, raw diffs, raw logs, and secrets;
+- make the evidence boundary explicit.
 
----
+## `agentswatch run -- <command>` — next planned vertical slice
 
-## `agentswatch report`
+Purpose: execute a local command explicitly and record compact evidence linked to an active run.
 
-Purpose: generate or reprint latest run report.
+Planned records:
 
-Rules:
-
-- default to latest run;
-- support `--task <id>` later;
-- never claim validation passed unless evidence exists;
-- include command profile summaries when available;
-- omit raw stdout/stderr unless a future explicit debug/export flag is used.
-
----
-
-## `agentswatch handoff`
-
-Purpose: generate compact continuation context.
-
-Rules:
-
-- target 10-20 lines;
-- include relevant files, validation, missed work, next prompt, residual risk;
-- include only compact command evidence;
-- no long chat history;
-- no full terminal logs.
-
----
-
-## `agentswatch review-diff <commit-or-range>`
-
-Purpose: generate a diff-only review prompt.
-
-Rules:
-
-- review changed files only;
-- include missed-test checklist;
-- include claims-vs-actual checklist;
-- forbid whole-repo review by default.
-
----
-
-## `agentswatch validate`
-
-Purpose: run or suggest configured validation commands.
-
-MVP behavior:
-
-- suggest commands by default;
-- support `--suggest` as explicit no-run behavior;
-- running commands should be explicit with `--run` later;
-- record pass/fail/not-run honestly;
-- recommend targeted validation before broad validation when changed files allow it.
-
-Suggested later options:
-
-```text
-agentswatch validate --suggest
-agentswatch validate --profile
-agentswatch validate --run fast
-agentswatch validate --run default
-```
-
-`--suggest` output should include:
-
-```text
-Detected types:
-Changed files:
-Recommended fast validation:
-Recommended full validation:
-Avoid by default:
-Why:
-```
-
-Do not implement broad automatic validation before the command safety design is validated.
-
----
-
-## `agentswatch run -- <command>`
-
-Purpose: execute a local command through the Command Profiler and record compact evidence.
-
-Planned examples:
-
-```bash
-agentswatch run -- dotnet test --filter Git
-agentswatch run -- flutter analyze
-agentswatch run -- npm run build
-agentswatch run -- pytest tests/foo -q
-```
-
-Records:
-
-- command text;
-- working directory;
-- detected project types;
-- start/end timestamps;
-- duration in milliseconds;
+- redacted command display/hash;
+- repository-relative or minimized working-directory identity;
+- start/end timestamps and duration;
+- start/end Git object IDs;
 - exit code;
 - stdout/stderr byte counts;
-- first useful error line;
+- first useful redacted error signature;
 - compact output summary;
-- whether the command was suggested by AgentsWatch.
+- timeout/cancellation/refusal status;
+- whether AgentsWatch suggested the command.
 
-Writes later:
+Planned storage:
 
 ```text
 .agentwatch/command-history.jsonl
 ```
 
-Optional raw logs later:
+Rules:
+
+- execution must be explicit after `--`;
+- no upload;
+- no full output in Markdown by default;
+- redact secret-looking values before persistence/display;
+- preserve failure, timeout, cancellation, and unknown states;
+- exit code 0 alone must not automatically prove every completion claim.
+
+See `COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`.
+
+## `agentswatch validate` — planned
+
+Purpose: suggest or explicitly run configured validation commands.
+
+Initial sequence:
 
 ```text
-.agentwatch/logs/<command-id>.stdout.txt
-.agentwatch/logs/<command-id>.stderr.txt
+validate --suggest
+run -- <selected command>
+validation evidence projection
 ```
 
 Rules:
 
-- command execution must be explicit;
-- never upload command output;
-- never paste full stdout/stderr into markdown reports by default;
-- redact secret-looking values before writing summaries;
-- keep output concise enough to paste into an agent handoff;
-- if output is huge, record byte counts and a short summary only.
+- suggestion is default/no execution;
+- execution requires explicit choice;
+- targeted validation before broad validation where justified;
+- record Pass/Fail/NotRun/BlockedByEnvironment honestly;
+- no automatic broad validation before command safety is proven.
 
-See `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md` for the full AW-011 contract.
+## `agentswatch handoff` — planned
+
+Purpose: generate compact continuation context from verified run evidence.
+
+Rules:
+
+- target 10-20 lines;
+- include changed files, validation state, missed work, next prompt, and residual risk;
+- no long chat history or full logs;
+- distinguish evidence from user/agent claims.
+
+## `agentswatch review-diff <commit-or-range>` — planned
+
+Purpose: generate a changed-file-only review prompt.
+
+Rules:
+
+- changed files only by default;
+- include missed-test and claims-vs-actual checklist;
+- include compact evidence references;
+- forbid whole-repository review unless a changed-file dependency requires it.
+
+## `agentswatch pr evidence --run <task-id> --base <branch-or-object>` — planned
+
+Purpose: generate the first market-facing PR Evidence Packet after command and claim evidence exist.
+
+Required inputs later:
+
+- declared task/scope;
+- Git change inventory;
+- command/build/test/CI evidence with commit binding;
+- structured claims;
+- evidence classifications;
+- remaining reviewer actions.
+
+This command must not be implemented as a generic model-only bug reviewer or claim support from missing observations.
+
+## Command implementation order
+
+```text
+start / finish / report foundation
+-> execute and prove foundation scenarios
+-> run -- command evidence
+-> validation evidence projection
+-> structured claims/Trust Ledger
+-> pr evidence packet
+-> GitHub Action only after user demand
+```
