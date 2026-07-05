@@ -1,6 +1,6 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-07-03
+Last aligned: 2026-07-05
 
 ## Start here
 
@@ -8,17 +8,32 @@ Last aligned: 2026-07-03
 |---|---|
 | `../README.md` | Project overview and current status. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
-| `PRODUCT_SPEC.md` | Product positioning, strategic lanes, and MVP boundaries. |
-| `MVP_ROADMAP.md` | Core roadmap and community-opportunity incubator gates. |
+| `PRODUCT_SPEC.md` | Evidence-first positioning, strategic lanes, first market product, and MVP boundaries. |
+| `MVP_ROADMAP.md` | Core roadmap, 30-PR Market Gate M, and community-opportunity incubator gates. |
+| `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md` | Current evidence on real agent problems, revised product focus, competitive boundary, and what remains unproven. |
+| `PR_EVIDENCE_MARKET_VALIDATION_RUNBOOK.md` | Execute the 30-real-PR experiment and decide Advance/Revise/Park/Reject. |
 | `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md` | Canonical one-product plan: CLI, adapters, optional service/dashboard/IDE, GitHub Action/App, Team Server, installation, and delivery order. |
 | `PROOF_AND_VERIFICATION_STRATEGY.md` | Capability maturity and product-proof rules. |
 | `FEATURE_CAPABILITY_REGISTRY.md` | Truthful inventory of supported, planned, and unverified capabilities. |
 | `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Claim-to-contract-to-test-to-CI-to-release links. |
 | `COMPATIBILITY_INDEX.md` | Cross-model, tool, permission, environment, and fallback entry point. |
-| `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | Current external problem research and source catalogue. |
-| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Ranked opportunity hypotheses and portfolio strategy. |
+| `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | External problem research and source catalogue. |
+| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Revised evidence-first ranking and portfolio strategy. |
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Detailed product epics, CLI concepts, acceptance, and proof gates. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Issue-ready research, foundation, prototype, and dogfood slices. |
+
+## Market and problem validation
+
+| Document | Use for |
+|---|---|
+| `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md` | Separates strong external problem signals from missing AgentsWatch-specific demand/payment evidence. |
+| `PR_EVIDENCE_MARKET_VALIDATION_RUNBOOK.md` | Sample, packet format, metrics, privacy, thresholds, and decision process for 30 PRs. |
+| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Evidence-first public messaging, Free/Pro/Team hypotheses, buyer roles, and claims that remain prohibited. |
+| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Ranks PR Evidence/Trust Ledger first, then context, rules, offline waste, and compatibility. |
+| `USER_PERSONAS_AND_JOBS.md` | Target users and jobs to be done. |
+| `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md` | Controlled usefulness and efficiency evidence. |
+
+Current decision: the broad control-plane architecture remains valid, but the first market-facing experiment is `PR Evidence + Trust Ledger`. External research establishes a strong problem signal; it does not establish product-market fit or willingness to pay.
 
 ## Runtime compatibility
 
@@ -39,8 +54,9 @@ Compatibility research proves that planned concepts are not equally observable o
 | Document | Use for |
 |---|---|
 | `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md` | Repeated problems from papers, public issue trackers, Reddit/HN research, and security reports. |
-| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Weighted ranking, free/Pro/team portfolio, recommended order, and kill criteria. |
-| `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Flight Recorder, Context Portability, Loop Guard, Policy Firewall, Worktree Coordinator, and PR Review Debt contracts. |
+| `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md` | Converts external evidence into product priority, competitive boundaries, and validation questions. |
+| `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md` | Revised ranking, Free/Pro/Team portfolio, execution order, and kill criteria. |
+| `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | Flight Recorder, Context Portability, Loop Guard, Policy, Worktree, and PR Evidence contracts. |
 | `COMMUNITY_OPPORTUNITY_ARCHITECTURE_ADDENDUM.md` | Shared normalized local event journal and bounded-context architecture. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | OPP-001 through OPP-081 issue-ready work. |
 | `prompt_queues/community_opportunity_validation.md` | Discovery, compatibility, prototype, dogfood, and live-feature gates. |
@@ -49,14 +65,14 @@ Compatibility research proves that planned concepts are not equally observable o
 | `prompts/OPP-003-competitive-substitutes.md` | Compare substitutes, differentiation, and kill conditions. |
 | `prompts/OPP-004-runtime-compatibility-audit.md` | Evaluate model/tool/surface/rights/environment support rather than provider-name assumptions. |
 
-Community research establishes problem signals, not runtime support, market size, willingness to pay, savings, security effectiveness, or equal cross-tool support. AW-CAP-028 through AW-CAP-037 remain L1 until implementation and proof exist.
+Community and market research establishes problem/budget signals, not runtime support, market size, willingness to pay, savings, security effectiveness, equal cross-tool support, or product-market fit. AW-CAP-028 through AW-CAP-037 remain L1 until implementation and proof exist.
 
 ## Proof and verification
 
 | Document | Use for |
 |---|---|
 | `PROOF_AND_VERIFICATION_STRATEGY.md` | L0-L6 maturity, evidence hierarchy, false-proof prevention, and completion gate. |
-| `FEATURE_CAPABILITY_REGISTRY.md` | Current capability/maturity truth. |
+| `FEATURE_CAPABILITY_REGISTRY.md` | Current capability/maturity truth and market-priority distinction. |
 | `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md` | Acceptance/test/scenario/CI/dogfood/release traceability. |
 | `REPRODUCIBLE_ACCEPTANCE_SCENARIOS.md` | Black-box scenarios for current and planned commands. |
 | `COMPATIBILITY_ACCEPTANCE_SCENARIOS.md` | Cross-runtime support/downgrade/fallback scenarios. |
@@ -131,7 +147,7 @@ Community research establishes problem signals, not runtime support, market size
 | `COMMAND_CONTRACTS.md` | Detailed CLI command behavior. |
 | `CLI_UX_OUTPUT_SPEC.md` | Output labels and test anchors. |
 | `CONFIG_REFERENCE.md` | Config schema. |
-| `REPORT_FORMATS.md` | Reports, handoffs, and review prompts. |
+| `REPORT_FORMATS.md` | Reports, handoffs, review prompts, and future PR Evidence output. |
 | `DATA_MODEL.md` | Markdown/JSON/SQLite model. |
 | `ADAPTER_SPEC.md` | All adapter families and composition rules. |
 | `RISK_SCORING_MODEL.md` | Explainable risk scoring. |
@@ -145,11 +161,12 @@ Community research establishes problem signals, not runtime support, market size
 | `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md` | Canonical component, installation, edition, and staged-delivery plan. |
 | `MVP_EPICS_AND_ACCEPTANCE.md` | Existing implementation epics and acceptance criteria. |
 | `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md` | New opportunity contracts and gates. |
+| `PR_EVIDENCE_MARKET_VALIDATION_RUNBOOK.md` | First market experiment before broad infrastructure. |
 | `ISSUE_BACKLOG.md` | Existing issue-ready backlog. |
 | `COMMUNITY_OPPORTUNITY_BACKLOG.md` | Community-derived discovery/prototype backlog. |
 | `COMPATIBILITY_IMPLEMENTATION_BACKLOG.md` | Runtime compatibility and fallback implementation backlog. |
 | `USER_PERSONAS_AND_JOBS.md` | Users and jobs. |
-| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning/pricing hypotheses and evidence rules. |
+| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Evidence-first positioning/pricing hypotheses and evidence rules. |
 | `RELEASE_AND_PACKAGING_PLAN.md` | NuGet, standalone, package-manager, Action, optional component, and Team Server packaging stages. |
 | `EXAMPLES_CATALOG.md` | Example quality rules. |
 | `INTEGRATION_STRATEGY.md` | Local CLI → Action → adapters/service/dashboard/IDE → App/Team integration order. |
@@ -175,7 +192,7 @@ Community research establishes problem signals, not runtime support, market size
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for selecting work. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt. |
 | `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
-| `prompt_queues/community_opportunity_validation.md` | Community, compatibility, and gated prototype workflow. |
+| `prompt_queues/community_opportunity_validation.md` | Community, market, compatibility, and gated prototype workflow. |
 | `prompt_queues/agentwatch_proof_and_verification.md` | Proof, acceptance, CI, benchmark, release verification. |
 | `prompt_queues/agentwatch_discovery_and_self_improvement.md` | Discovery capture/routing and runtime slices. |
 | `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator prompts. |
