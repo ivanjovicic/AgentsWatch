@@ -68,6 +68,44 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
+    public async Task GitChangeSetReader_combines_tracked_and_untracked_files_without_duplicates()
+    {
+        var runner = new StubGitCommandRunner("M\tsrc/Tracked.cs\nA\tsrc/New.cs\n");
+        var snapshot = new GitSnapshot(
+            "feature/test",
+            new string('b', 40),
+            [
+                new ChangedFile("src/Tracked.cs", " M"),
+                new ChangedFile("notes.txt", "??")
+            ],
+            " M src/Tracked.cs\n?? notes.txt");
+
+        var files = await new GitChangeSetReader(runner).ReadSinceAsync(
+            "/repo",
+            new string('a', 40),
+            snapshot);
+
+        Assert.Collection(
+            files,
+            file =>
+            {
+                Assert.Equal("notes.txt", file.Path);
+                Assert.Equal("untracked", file.Status);
+            },
+            file =>
+            {
+                Assert.Equal("src/New.cs", file.Path);
+                Assert.Equal("added", file.Status);
+            },
+            file =>
+            {
+                Assert.Equal("src/Tracked.cs", file.Path);
+                Assert.Equal("modified", file.Status);
+            });
+        Assert.Contains("diff --name-status --find-renames", runner.LastArguments);
+    }
+
+    [Fact]
     public async Task RunManifestStore_round_trips_and_refuses_overwrite()
     {
         var root = CreateTemporaryDirectory();
@@ -108,6 +146,38 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
+    public async Task RunManifestStore_rejects_unknown_schema()
+    {
+        var root = CreateTemporaryDirectory();
+        try
+        {
+            var manifest = new RunManifest(
+                "99.0",
+                "TASK-003",
+                "Unsupported schema",
+                DateTimeOffset.UtcNow,
+                null,
+                RunLifecycleStatus.InProgress,
+                root,
+                "main",
+                new string('a', 40),
+                null,
+                null,
+                [],
+                [],
+                [],
+                []);
+
+            await Assert.ThrowsAsync<InvalidDataException>(
+                () => new RunManifestStore().CreateAsync(root, manifest));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Markdown_report_makes_current_evidence_boundary_explicit()
     {
         var snapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
@@ -137,5 +207,26 @@ public sealed class RunEvidenceFoundationTests
         var path = Path.Combine(Path.GetTempPath(), "agentswatch-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    private sealed class StubGitCommandRunner : IGitCommandRunner
+    {
+        private readonly string _output;
+
+        public StubGitCommandRunner(string output)
+        {
+            _output = output;
+        }
+
+        public string LastArguments { get; private set; } = string.Empty;
+
+        public Task<string> RunAsync(
+            string workingDirectory,
+            string arguments,
+            CancellationToken cancellationToken = default)
+        {
+            LastArguments = arguments;
+            return Task.FromResult(_output);
+        }
     }
 }
