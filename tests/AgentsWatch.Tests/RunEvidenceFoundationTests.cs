@@ -39,9 +39,9 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Theory]
-    [InlineData(".ai/runs/TASK-001.json", true)]
+    [InlineData(".agentwatch/runs/TASK-001.json", true)]
     [InlineData(".ai\\runs\\TASK-001.md", true)]
-    [InlineData(".ai/runs/TASK-002.json", false)]
+    [InlineData(".agentwatch/runs/TASK-002.json", false)]
     [InlineData("src/TASK-001.json", false)]
     public void RunArtifactPaths_only_excludes_current_run_outputs(string path, bool expected)
     {
@@ -128,7 +128,7 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
-    public async Task RunManifestStore_round_trips_and_refuses_overwrite()
+    public async Task RunManifestStore_round_trips_refuses_overwrite_and_uses_private_sidecar_path()
     {
         var root = CreateTemporaryDirectory();
         try
@@ -145,12 +145,14 @@ public sealed class RunEvidenceFoundationTests
             var path = await store.CreateAsync(root, manifest);
             var loaded = await store.LoadAsync(root, "TASK-001");
 
+            Assert.Equal(Path.Combine(root, ".agentwatch", "runs", "TASK-001.json"), path);
             Assert.True(File.Exists(path));
             Assert.Equal(manifest.SchemaVersion, loaded.SchemaVersion);
             Assert.Equal(manifest.TaskId, loaded.TaskId);
             Assert.Equal(manifest.Title, loaded.Title);
             Assert.Equal(manifest.StartedAt, loaded.StartedAt);
-            Assert.Equal(manifest.Status, loaded.Status);
+            Assert.Equal(RunLifecycleStatus.InProgress, loaded.Status);
+            Assert.Equal(ValidationEvidenceStatus.NotRun, loaded.ValidationStatus);
             Assert.Equal(manifest.StartBranch, loaded.StartBranch);
             Assert.Equal(manifest.StartCommitSha, loaded.StartCommitSha);
             Assert.Equal(manifest.AllowedPaths, loaded.AllowedPaths);
@@ -158,6 +160,51 @@ public sealed class RunEvidenceFoundationTests
             Assert.Empty(loaded.OutOfScopeFiles);
             Assert.Empty(loaded.Warnings);
             await Assert.ThrowsAsync<IOException>(() => store.CreateAsync(root, manifest));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RunManifestStore_finds_active_and_latest_runs()
+    {
+        var root = CreateTemporaryDirectory();
+        try
+        {
+            var startSnapshot = new GitSnapshot("main", new string('a', 40), [], string.Empty);
+            var endSnapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
+            var olderFinished = RunManifest.Start(
+                    "TASK-OLD",
+                    "Older finished run",
+                    startSnapshot,
+                    [],
+                    DateTimeOffset.Parse("2026-07-05T10:00:00Z"))
+                .Complete(
+                    endSnapshot,
+                    [],
+                    [],
+                    ["Validation was not run."],
+                    DateTimeOffset.Parse("2026-07-05T10:30:00Z"));
+            var newerActive = RunManifest.Start(
+                "TASK-NEW",
+                "Newer active run",
+                endSnapshot,
+                ["src/**"],
+                DateTimeOffset.Parse("2026-07-05T11:00:00Z"));
+            var store = new RunManifestStore();
+
+            await store.CreateAsync(root, olderFinished);
+            await store.CreateAsync(root, newerActive);
+
+            var active = await store.FindActiveAsync(root);
+            var latest = await store.FindLatestAsync(root);
+
+            Assert.Single(active);
+            Assert.Equal("TASK-NEW", active[0].TaskId);
+            Assert.NotNull(latest);
+            Assert.Equal("TASK-NEW", latest.TaskId);
         }
         finally
         {
@@ -178,6 +225,7 @@ public sealed class RunEvidenceFoundationTests
                 DateTimeOffset.UtcNow,
                 null,
                 RunLifecycleStatus.InProgress,
+                ValidationEvidenceStatus.NotRun,
                 "main",
                 new string('a', 40),
                 null,
@@ -197,27 +245,35 @@ public sealed class RunEvidenceFoundationTests
     }
 
     [Fact]
-    public void Markdown_report_makes_current_evidence_boundary_explicit_and_omits_local_root()
+    public void Markdown_report_is_deterministic_honest_and_omits_local_root()
     {
-        var snapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
+        var startSnapshot = new GitSnapshot("main", new string('a', 40), [], string.Empty);
+        var endSnapshot = new GitSnapshot("main", new string('b', 40), [], string.Empty);
         var manifest = RunManifest.Start(
                 "TASK-002",
                 "Evidence boundary",
-                snapshot,
+                startSnapshot,
                 ["src/**"],
                 DateTimeOffset.Parse("2026-07-05T12:00:00Z"))
             .Complete(
-                snapshot,
-                [new ChangedFile("src/Feature.cs", "modified")],
+                endSnapshot,
+                [
+                    new ChangedFile("src/Zeta.cs", "modified"),
+                    new ChangedFile("src/Alpha.cs", "added")
+                ],
                 [new ChangedFile("docs/Unexpected.md", "added")],
                 ["Repository has uncommitted changes at finish time."],
                 DateTimeOffset.Parse("2026-07-05T12:30:00Z"));
 
         var output = new MarkdownRunEvidenceFormatter().Format(manifest);
 
-        Assert.Contains("`src/Feature.cs` — modified", output);
+        Assert.Contains("- Status: Finished", output);
+        Assert.Contains("- Validation: NotRun", output);
+        Assert.True(
+            output.IndexOf("`src/Alpha.cs`", StringComparison.Ordinal)
+            < output.IndexOf("`src/Zeta.cs`", StringComparison.Ordinal));
         Assert.Contains("`docs/Unexpected.md` — added", output);
-        Assert.Contains("does not yet prove which build, test, UI, database, or runtime validation commands were executed", output);
+        Assert.Contains("no build, test, CI, UI, database, runtime, or agent-claim evidence was captured", output);
         Assert.DoesNotContain("/repo", output);
     }
 
