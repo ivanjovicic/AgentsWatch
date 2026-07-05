@@ -46,11 +46,11 @@ public sealed class GitChangeSetReader
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(currentSnapshot);
-        ValidateObjectId(baseCommitSha);
+        var validatedBase = GitObjectId.Validate(baseCommitSha);
 
         var trackedOutput = await _git.RunAsync(
             workingDirectory,
-            $"diff --name-status --find-renames {baseCommitSha} --",
+            $"diff --name-status --find-renames {validatedBase} --",
             cancellationToken);
 
         var tracked = GitNameStatusParser.Parse(trackedOutput);
@@ -69,18 +69,6 @@ public sealed class GitChangeSetReader
         return combined.Values
             .OrderBy(static file => file.Path, StringComparer.Ordinal)
             .ToArray();
-    }
-
-    private static void ValidateObjectId(string revision)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(revision);
-        if (revision.Length is not (40 or 64)
-            || revision.Any(static character => !Uri.IsHexDigit(character)))
-        {
-            throw new ArgumentException(
-                "Run evidence requires a full 40- or 64-character hexadecimal Git object ID.",
-                nameof(revision));
-        }
     }
 }
 
