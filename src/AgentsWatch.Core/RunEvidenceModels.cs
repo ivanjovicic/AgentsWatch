@@ -6,7 +6,16 @@ namespace AgentsWatch.Core;
 public enum RunLifecycleStatus
 {
     InProgress,
-    Completed
+    Finished
+}
+
+public enum ValidationEvidenceStatus
+{
+    NotRun,
+    Pass,
+    Fail,
+    BlockedByEnvironment,
+    Unknown
 }
 
 public sealed record RunManifest(
@@ -16,6 +25,7 @@ public sealed record RunManifest(
     DateTimeOffset StartedAt,
     DateTimeOffset? FinishedAt,
     RunLifecycleStatus Status,
+    ValidationEvidenceStatus ValidationStatus,
     string StartBranch,
     string StartCommitSha,
     string? EndBranch,
@@ -46,8 +56,9 @@ public sealed record RunManifest(
             startedAt,
             null,
             RunLifecycleStatus.InProgress,
+            ValidationEvidenceStatus.NotRun,
             snapshot.Branch,
-            snapshot.CommitSha,
+            GitObjectId.Validate(snapshot.CommitSha),
             null,
             null,
             allowedPaths,
@@ -71,13 +82,30 @@ public sealed record RunManifest(
         return this with
         {
             FinishedAt = finishedAt,
-            Status = RunLifecycleStatus.Completed,
+            Status = RunLifecycleStatus.Finished,
             EndBranch = endSnapshot.Branch,
-            EndCommitSha = endSnapshot.CommitSha,
+            EndCommitSha = GitObjectId.Validate(endSnapshot.CommitSha),
             ChangedFiles = changedFiles,
             OutOfScopeFiles = outOfScopeFiles,
             Warnings = warnings
         };
+    }
+}
+
+public static class GitObjectId
+{
+    public static string Validate(string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        if (value.Length is not (40 or 64)
+            || value.Any(static character => !Uri.IsHexDigit(character)))
+        {
+            throw new ArgumentException(
+                "Git evidence requires a full 40- or 64-character hexadecimal object ID.",
+                nameof(value));
+        }
+
+        return value;
     }
 }
 
@@ -108,9 +136,14 @@ public static class RunArtifactPaths
         RunId.Validate(taskId);
 
         var normalizedPath = Normalize(path);
-        var prefix = $".ai/runs/{taskId}";
-        return string.Equals(normalizedPath, prefix + ".json", StringComparison.Ordinal)
-            || string.Equals(normalizedPath, prefix + ".md", StringComparison.Ordinal);
+        return string.Equals(
+                   normalizedPath,
+                   $".agentwatch/runs/{taskId}.json",
+                   StringComparison.Ordinal)
+            || string.Equals(
+                normalizedPath,
+                $".ai/runs/{taskId}.md",
+                StringComparison.Ordinal);
     }
 
     private static string Normalize(string value) => value.Replace('\\', '/').TrimStart('/');
