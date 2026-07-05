@@ -1,45 +1,85 @@
 # AgentsWatch Product Spec
 
-Last aligned: 2026-07-03  
+Last aligned: 2026-07-05  
 Status: planning/specification; capability claims governed by proof registry
 
 ## Description
 
-AgentsWatch is an AI coding-agent supervisor and token/context-waste optimizer for developers.
+AgentsWatch is a local-first evidence and control layer for AI coding-agent work.
 
-It does not replace Codex, Cursor, Claude Code, Copilot, or ChatGPT. It sits above them and helps developers run smaller, safer, more reviewable coding-agent tasks.
+It does not replace Codex, Cursor, Claude Code, Copilot, ChatGPT, or code-review products. It helps developers run smaller, safer, more reviewable tasks and independently verify what an agent changed, executed, tested, proved, skipped, or only claimed.
 
 ## Core promise
+
+Initial public-facing promise:
+
+```text
+Know what your coding agent changed, executed, tested, and missed.
+```
+
+Alternative tested wording:
+
+```text
+AgentsWatch verifies the work, not just the code.
+```
+
+Existing broader promise:
 
 ```text
 Spend fewer tokens. Merge safer AI code.
 ```
 
-Current evidence-safe positioning:
+The broader phrase remains valid as a direction, but the first market experiment should lead with evidence and completion integrity rather than token savings.
+
+## Evidence-safe positioning
 
 ```text
-AgentsWatch is designed to reduce avoidable context, repeated work, scope creep, and evidence mistakes through prompt splitting, scope limits, git evidence, compact handoffs, learning, discovery routing, and proof gates.
+AgentsWatch is designed to reduce avoidable context, repeated work, scope creep, and evidence mistakes through prompt splitting, scope limits, git/command/CI evidence, compact handoffs, compatibility-aware adapters, learning, discovery routing, and proof gates.
 ```
 
-Candidate expanded positioning from July 2026 community research:
+Candidate long-term internal positioning:
 
 ```text
-The local control plane for coding agents: observe, bound, resume, coordinate, and verify work across tools.
+The local control and evidence plane for coding agents: observe, bound, resume, coordinate, and verify work across tools.
 ```
 
-The phrase `control plane` is a positioning hypothesis. It must be tested with users before becoming the main public tagline.
+The phrase `control plane` remains an internal/market hypothesis. It should not be the first public tagline until users recognize and value the category.
+
+See `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md`.
+
+## First market-facing product
+
+Recommended first product experiment:
+
+```text
+AgentsWatch PR Evidence + Trust Ledger
+```
+
+It should answer:
+
+```text
+What did the agent claim?
+What was independently observed?
+Which commands and tests ran?
+For which commit did they run?
+What changed outside declared scope?
+What remains unverified or stale?
+What should a human review next?
+```
+
+The first implementation should prefer independent evidence from git, commands, artifacts, and CI over another model-generated review opinion.
 
 ## Efficiency hypothesis
 
 The previous `30-50%` target remains a product hypothesis, not a proven public result.
 
-A numerical token/time/cost claim may be used only after the paired benchmark, quality guardrail, sample-size, and independent review requirements in `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md` are satisfied.
+A numerical token/time/cost claim may be used only after paired benchmark, quality guardrail, sample-size, and independent review requirements in `BENCHMARK_AND_DOGFOOD_METHODOLOGY.md` are satisfied.
 
 Until then, do not present `30-50%`, `70%+`, or any other percentage as measured product performance.
 
 ## Problem
 
-AI coding agents often waste context and create risk because they:
+AI coding agents often create trust and workflow debt because they:
 
 - inspect too many files;
 - repeat searches and failed commands;
@@ -48,41 +88,49 @@ AI coding agents often waste context and create risk because they:
 - mix investigation, implementation, tests, docs, and review in one run;
 - continue after the prompt should stop;
 - edit unrelated files;
-- claim tests or validation without evidence;
-- rely on long chat history instead of handoff summaries;
+- claim tests, commands, or validation without matching evidence;
+- bind evidence to an older commit than the current change;
+- present inference, partial checks, or tautological validation as proof;
+- rely on long chat history instead of durable handoff summaries;
 - lose decisions during compaction, account changes, limits, or provider switching;
 - consume quotas or cost without clear attribution;
 - run parallel workers in the wrong workspace or with overlapping ownership;
 - duplicate repository rules across vendor-specific files;
 - notice useful out-of-scope issues but fail to preserve and route them;
-- describe planned functionality as already implemented.
+- describe planned functionality as already implemented;
+- increase code-production volume faster than teams can review it.
 
-Community and research evidence is summarized in `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`.
+Community and market evidence is summarized in:
+
+- `AI_CODING_AGENT_COMMUNITY_RESEARCH_2026_07.md`;
+- `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md`.
 
 ## Target users
 
-Primary:
+### Primary initial users
 
-- solo developers using coding agents heavily;
-- developers working across .NET, React, Flutter, Python, Node, or mixed repos;
-- power users with usage limits or high AI spend;
+- solo developers and tech leads using coding agents heavily;
+- developers reviewing agent-authored changes;
+- small teams with increasing AI-assisted PR volume;
 - developers switching between two or more coding-agent tools;
 - developers who want reviewable AI-agent history and truthful capability evidence.
 
-Later:
+### Later users
 
-- small teams reviewing AI-assisted pull requests;
 - maintainers receiving agent-assisted contributions;
-- teams running multiple agents in worktrees;
+- teams running multiple agents in worktrees or cloud branches;
 - security/platform teams defining repository-specific permissions;
 - managers who want policy, cost, risk, and evidence visibility.
 
 ## Product layers
 
-1. Local CLI — first product, using git, markdown, shell commands, config, and local event imports.
-2. Local dashboard — optional after CLI value is proven.
-3. Team/GitHub edition — review packets, policy packs, multi-agent evidence, and audit export.
-4. SaaS edition — later only after local use, privacy, and evidence are proven.
+1. Local CLI — first product, using git, markdown, shell commands, config, and explicit local evidence imports.
+2. GitHub Action/PR Evidence workflow — first distributed team integration after local value is proven.
+3. Local dashboard/service — optional after sufficient local history and live-event value exist.
+4. Team/GitHub App edition — review packets, policy packs, multi-agent evidence, and audit export.
+5. SaaS/Team Server edition — later only after local use, privacy, payment, and evidence are proven.
+
+See `PRODUCT_FORM_FACTORS_INSTALLATION_AND_DELIVERY_PLAN.md`.
 
 ## Strategic product lanes
 
@@ -98,109 +146,213 @@ Current foundation:
 
 ### Lane B — Evidence and trust
 
-Planned progression:
+Highest-priority progression:
 
 - git/run evidence;
 - claims-vs-actual checks;
-- Agent Flight Recorder;
+- commit-bound build/test/CI evidence;
+- PR Evidence Packet;
 - claim-to-evidence Trust Ledger;
-- replayable run timeline;
-- proof bundle integration.
+- imported Flight Recorder timeline;
+- proof bundle integration;
+- live event recording only after compatibility and privacy gates.
+
+Required status vocabulary:
+
+```text
+SUPPORTED
+PARTIALLY_SUPPORTED
+CONTRADICTED
+MISSING_EVIDENCE
+STALE_EVIDENCE
+NOT_OBSERVED
+NOT_VERIFIABLE
+SKIPPED
+```
 
 ### Lane C — Context portability
 
-Planned progression:
+Second-priority progression:
 
 - handoff summary;
 - context snapshot;
 - fresh-session resume pack;
-- rules compiler and drift detector;
+- versioned decisions and unresolved risks;
 - provider-specific export;
+- explicit represented/shortened/dropped/unsupported loss report;
 - context-loss comparison.
 
-### Lane D — Waste and loop control
+### Lane D — Rules portability
+
+Adoption-wedge progression:
+
+- canonical rules source;
+- rules lint;
+- target compilation;
+- drift detection;
+- target-loss report;
+- managed-policy conflict detection.
+
+Target result vocabulary:
+
+```text
+EXACT
+EQUIVALENT
+WEAKER
+ADVISORY_ONLY
+UNSUPPORTED
+CONFLICT_WITH_MANAGED_POLICY
+```
+
+### Lane E — Waste and loop control
 
 Planned progression:
 
 - command profiler;
 - token/context waste report;
 - offline repeated-action analysis;
-- budget ledger;
-- checkpoint/stop recommendation;
+- wall-clock and observable-work ledger;
+- provider usage import where available;
+- budget/checkpoint recommendation;
 - optional live loop guard after dogfood.
 
-### Lane E — Safety and permissions
+Do not convert unknown quota percentages into exact token or currency claims.
 
-Planned progression:
+### Lane F — Safety and permissions
+
+Later progression:
 
 - deterministic risk/policy findings;
 - sensitive-path rules;
 - policy dry-run/explain;
+- effective-permission report;
 - approval bundles;
 - optional execution broker after security review.
 
-### Lane F — Parallel-agent coordination
+Do not call advisory or incomplete interception a firewall.
 
-Planned progression:
+### Lane G — Parallel-agent coordination
 
-- worktree/ownership planner;
+Later progression:
+
+- workspace identity and ownership diagnostics;
+- worktree/branch planner;
 - worker bootstrap packs;
+- heartbeat, handoff, stale-state, and duplicate-work checks;
 - shared structured status/findings;
 - integration readiness;
 - no automatic merge/deploy.
 
-### Lane G — Review debt reduction
+Do not begin with a full autonomous orchestrator.
 
-Planned progression:
+### Lane H — Review debt reduction
+
+Initial/team progression:
 
 - diff-only review prompt;
-- claims-vs-diff/test evidence;
-- local PR reviewer packet;
-- optional GitHub adapter;
+- claims-vs-diff/test/CI evidence;
+- local PR Evidence Packet;
+- reviewer order by risk and missing proof;
+- GitHub Action;
+- optional GitHub App;
 - maintainer/OSS policy profile.
 
-## Opportunity priority
+Do not compete primarily as a generic AI bug reviewer.
 
-Community-derived ranking is maintained in `POPULAR_FEATURE_OPPORTUNITY_MAP_2026_07.md`.
+## Revised opportunity priority
 
-Highest-priority hypotheses:
+Current product priority based on external problem evidence and strategic fit:
 
-1. Agent Flight Recorder and Trust Ledger;
-2. Context and Memory Portability;
-3. Cost and Loop Guard;
-4. Agent Rules Compiler and Drift Detector;
-5. Policy Firewall;
-6. Multi-Agent Worktree Coordinator;
-7. AI PR Review Debt Reducer;
-8. Agent Regression Canary.
+1. PR Evidence Packet, completion integrity, and Trust Ledger;
+2. commit-bound claims-vs-actual validation;
+3. Context Snapshot/Resume;
+4. Rules Compiler and target-loss/drift report;
+5. offline Loop/Waste Analyzer;
+6. runtime compatibility detect/explain;
+7. import-only Flight Recorder timeline;
+8. Policy Dry Run/Explain;
+9. GitHub Action and team evidence automation;
+10. multi-agent diagnostics/ownership planner;
+11. Regression Canary;
+12. live enforcement and full coordination only after proof.
 
-These remain L1 specified capabilities until implementation and proof exist.
+All items remain governed by `FEATURE_CAPABILITY_REGISTRY.md` maturity.
+
+## Competitive boundary
+
+AgentsWatch should not lead with:
+
+```text
+An AI reviewer that finds more bugs than every competing reviewer.
+```
+
+The initial differentiation is:
+
+- verification of the work, not only review of final code;
+- independent git/command/artifact/CI evidence;
+- commit matching;
+- declared scope versus actual changes;
+- explicit unknown/not-observed status;
+- cross-tool compatibility and fallback;
+- local ownership and data minimization.
+
+Static analyzers and external AI reviewers may later be evidence inputs, not the product identity.
+
+## First market validation experiment
+
+Run a manual-assisted study on 30 real AI-assisted PRs.
+
+For every PR generate:
+
+1. declared task and scope;
+2. changed files and out-of-scope changes;
+3. agent completion claims;
+4. observed commands;
+5. build/test/CI evidence;
+6. evidence-to-commit match;
+7. unsupported, stale, or contradicted claims;
+8. remaining risks;
+9. reviewer action list.
+
+Directional advance criteria:
+
+```text
+At least 30% of reports change a real review action.
+At least 50% of test users request or perform repeat use.
+At least 3 teams request automated GitHub/CI execution.
+At least 2 teams accept a paid or explicitly budgeted pilot.
+```
+
+These are internal product thresholds, not industry benchmarks.
 
 ## Adoption and monetization hypothesis
 
 ### Free/open wedge
 
-- rule compiler/drift detector;
+- Rules Compiler and target-loss/drift report;
 - basic context snapshot/export;
-- basic evidence timeline viewer;
-- local workspace doctor.
+- basic local PR/run evidence report;
+- local workspace doctor;
+- public-repository GitHub Action allowance later.
 
 ### Pro solo value
 
-- Cost and Loop Guard;
-- advanced session rescue;
-- Trust Ledger verification;
-- regression canaries and comparisons.
+- advanced Context Resume;
+- Trust Ledger history and comparison;
+- offline Loop/Waste Analyzer;
+- supported premium adapters where justified;
+- regression canaries later.
 
 ### Team value
 
-- Policy Firewall;
-- signed/tamper-evident evidence later;
-- PR Review Debt Reducer;
-- multi-agent worktree coordination;
-- shared policy and audit export.
+- private-repository PR Evidence automation;
+- shared policy/rules packs;
+- team audit/history;
+- organization compatibility reports;
+- multi-agent diagnostics;
+- signed/tamper-evident evidence later.
 
-Pricing and packaging remain hypotheses until usage and willingness-to-pay interviews exist.
+Pricing and packaging remain hypotheses until repeated usage and willingness-to-pay evidence exist.
 
 ## Capability truth
 
@@ -210,11 +362,11 @@ The authoritative capability/maturity state lives in:
 - `FEATURE_EVIDENCE_TRACEABILITY_MATRIX.md`;
 - commit-bound CI/proof bundles.
 
-Roadmaps, community research, and this spec describe direction. They do not prove runtime support or popularity.
+Roadmaps, external research, and this spec describe direction. They do not prove runtime support, usefulness, popularity, or market size.
 
 ## MVP feature list
 
-MVP 1 direction:
+### Core MVP 1 direction
 
 - `.ai` folder generator;
 - prompt optimizer;
@@ -225,27 +377,29 @@ MVP 1 direction:
 - markdown run report;
 - changelog generator.
 
-MVP 2 direction:
+### Core MVP 2 direction
 
 - acceptance-criteria checker;
 - claimed-vs-actual diff checker;
 - validation runner;
 - handoff summary generator;
-- token waste report;
+- token/context waste report;
 - diff-only review prompt generator;
 - command profiler / fast validation advisor;
 - mistake learning;
 - discovery capture/reconciliation;
 - capability proof and release evidence.
 
-Community opportunity incubator, after the existing run/evidence spine:
+### Evidence-first market prototype after the core spine
 
-- event import and Flight Recorder timeline;
-- context snapshot and rules compiler;
-- offline loop analysis;
-- policy dry-run;
-- worktree ownership planner;
-- local PR review packet.
+- local PR Evidence Packet;
+- Trust Ledger claim classification;
+- commit-bound validation evidence;
+- Context Snapshot/Resume;
+- Rules Compiler and target-loss report;
+- offline Loop/Waste Analyzer;
+- compatibility report;
+- event/session import timeline.
 
 The registry distinguishes which items are specified, implemented, tested, CI-verified, dogfood-verified, or release-verified.
 
@@ -256,13 +410,14 @@ No registry row = no supported feature claim.
 No executed evidence = no verified claim.
 No commit match = no proof for this version.
 Community discussion = problem signal, not market validation.
+Adjacent paid products = budget signal, not willingness to buy AgentsWatch.
 ```
 
 Use `PROOF_AND_VERIFICATION_STRATEGY.md` for L0-L6 maturity and `PROOF_BUNDLE_SPEC.md` for CI/release evidence.
 
 ## Community opportunity gate
 
-Before implementing AW-CAP-028 through AW-CAP-036:
+Before broad implementation of advanced capabilities:
 
 1. interview at least five target users for the opportunity;
 2. collect at least three real examples;
@@ -272,7 +427,7 @@ Before implementing AW-CAP-028 through AW-CAP-036:
 6. prove privacy boundaries;
 7. avoid live enforcement until offline analysis is useful and low-noise.
 
-See `COMMUNITY_OPPORTUNITY_EPICS_AND_ACCEPTANCE.md`.
+For the first market-facing PR Evidence product, use the stricter 30-PR experiment in `MARKET_PROBLEM_VALIDATION_SYNTHESIS_2026_07.md`.
 
 ## Command profiler principle
 
@@ -305,7 +460,7 @@ Commercial protection must follow these truths:
 - user source, prompts, diffs, validation output, reports, discoveries, event journals, and run history stay local by default;
 - license calls must be visible and must not upload repository content;
 - expiration must never encrypt/delete/corrupt user-owned data;
-- licensing runtime work starts only after CLI MVP and dogfood proof.
+- licensing runtime work starts only after CLI MVP, repeat use, and willingness-to-pay proof.
 
 See:
 
@@ -318,6 +473,7 @@ Do not start with:
 
 - another autonomous coding agent;
 - a foundation model;
+- a generic AI bug reviewer as the main product;
 - a full IDE;
 - SaaS or billing;
 - runtime DRM before CLI value is proven;
@@ -326,6 +482,8 @@ Do not start with:
 - deep IDE integration before local CLI evidence;
 - automatic unrelated code editing;
 - perfect token or provider billing reconstruction;
+- broad policy/firewall claims without enforcement proof;
+- full multi-agent orchestration;
 - claims of complete prompt-injection/security prevention;
 - unsupported numerical savings or popularity claims;
 - uploading source, full logs, proof artifacts containing private content, or run history by default.
