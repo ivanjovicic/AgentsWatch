@@ -228,7 +228,6 @@ internal static class StartCommand
         var manifest = RunManifest.Start(
             options.TaskId,
             options.Title,
-            repositoryRoot,
             snapshot,
             options.AllowedPaths,
             DateTimeOffset.UtcNow);
@@ -330,15 +329,6 @@ internal static class FinishCommand
         if (manifest.Status == RunLifecycleStatus.Completed)
         {
             Console.Error.WriteLine($"Run '{taskId}' is already completed. Existing evidence will not be rewritten by finish.");
-            return 3;
-        }
-
-        if (!string.Equals(
-                Path.GetFullPath(manifest.RepositoryRoot),
-                Path.GetFullPath(repositoryRoot),
-                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
-        {
-            Console.Error.WriteLine("The run manifest belongs to a different repository root.");
             return 3;
         }
 
