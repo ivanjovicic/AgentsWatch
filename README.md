@@ -1,59 +1,125 @@
 # AgentsWatch
 
-AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
+AgentsWatch is a local-first, vendor-neutral control and evidence plane for AI coding agents.
 
-It helps developers run smaller, safer, cheaper AI coding tasks by splitting broad prompts, limiting scope, tracking git diffs, recording validation evidence, profiling expensive commands, logging post-prompt lessons, and generating compact handoff summaries.
+It sits above Codex, Cursor, Claude Code, Copilot, Devin, OpenHands, and similar tools. External agents execute coding work; AgentsWatch converts roadmap intent into bounded run contracts, verifies what actually changed, and learns which execution path works best for the repository.
 
 ## Core promise
 
 ```text
-Spend fewer tokens. Merge safer AI code.
+Turn roadmap intent into verified change — across any coding agent.
 ```
 
-Practical target:
+Supporting promise:
 
 ```text
-Reduce AI coding-agent token waste by 30-50% on typical multi-file tasks by splitting prompts, limiting scope, tracking diffs, learning from run logs, and using compact handoff summaries.
+Spend fewer tokens. Prove every change. Do not repeat avoidable mistakes.
 ```
 
-Use higher savings claims only for oversized repo-analysis prompts.
+Token and cost savings are product targets to measure through dogfood evidence, not published claims yet.
 
-## MVP scope
+## Differentiated product loop
 
-Start with a local CLI. Do not start with SaaS, billing, cloud sync, deep IDE integration, automatic code editing, or runtime DRM/license enforcement.
+```text
+Roadmap item or prompt
+  -> bounded run contract
+  -> external coding agent
+  -> Agent Run Receipt
+  -> claims/diff/validation evidence gate
+  -> scope and roadmap drift result
+  -> learning and next route
+```
 
-Initial commands:
+The first product is not another coding agent, cloud sandbox, scheduler, or visual workflow engine.
+
+See:
+
+- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
+- `docs/PRODUCT_SPEC.md`
+- `docs/MVP_ROADMAP.md`
+- `docs/prompt_queues/agentwatch_differentiation.md`
+
+## Current runtime
+
+Implemented commands:
 
 ```bash
 agentswatch init
 agentswatch optimize <prompt-file-or-text>
-agentswatch task split <prompt-file>
-agentswatch start <task-id>
-agentswatch finish <task-id>
-agentswatch report
-agentswatch handoff
-agentswatch review-diff <commit-or-range>
-agentswatch validate
 agentswatch status
 ```
 
-Planned command profiler commands:
+The repository is still in planning/skeleton stage. Runtime work must remain validation-first.
+
+## Planned differentiated commands
+
+Run contract and receipt:
 
 ```bash
-agentswatch run -- <command>
-agentswatch validate --suggest
-agentswatch validate --profile
+agentswatch start <task-id>
+agentswatch finish <task-id>
+agentswatch contract check <file>
+agentswatch contract build <roadmap-item-or-prompt>
+agentswatch receipt create <run-id>
+agentswatch receipt check <run-id>
 ```
 
-Mistake-learning commands planned after the core run/report spine:
+Evidence and drift:
 
 ```bash
+agentswatch evidence check <run-id>
+agentswatch drift check <run-id>
+agentswatch handoff <run-id>
+```
+
+Validation economy and learning:
+
+```bash
+agentswatch validate --suggest
+agentswatch validate --profile
 agentswatch mistakes list
 agentswatch mistakes check <run-log>
 agentswatch rollup mistakes --last 5
-agentswatch lint evidence
-agentswatch lint learning
 ```
+
+Roadmap and routing later:
+
+```bash
+agentswatch roadmap check
+agentswatch roadmap next
+agentswatch roadmap review
+agentswatch route suggest
+```
+
+## Signature capabilities
+
+### Roadmap Contract Compiler
+
+Turns vague roadmap items into machine-checkable intent, acceptance criteria, dependencies, owned paths, avoid paths, permission mode, validation and stop rules.
+
+### Agent Run Receipt
+
+Produces a compact vendor-neutral record of what an agent was asked to do, what it changed, what it validated, what it claimed, what was missed and what should happen next.
+
+### Evidence and Drift Gate
+
+Compares:
+
+```text
+roadmap intent
+vs acceptance criteria
+vs agent claims
+vs actual diff
+vs validation evidence
+```
+
+### Counterfactual Learning
+
+Proposes the smaller prompt, narrower context, cheaper route and validation sequence that should have been used after failed, expensive or drifting runs.
+
+### Project-Local Empirical Router
+
+Later recommends the cheapest sufficient model/tool using comparable outcomes from this repository, with confidence, reasons and an `unknown` result when evidence is insufficient.
 
 ## Post-prompt logging rule
 
@@ -71,6 +137,8 @@ See:
 ## Supervised autopilot rule
 
 AgentsWatch may sequence prompts, but should not run uncontrolled continuous autopilot in MVP.
+
+External tools execute. AgentsWatch contracts, verifies and learns.
 
 See:
 
@@ -90,27 +158,14 @@ See:
 - `docs/AGENT_PERMISSION_MODEL.md`
 - `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
 
-## Commercial trial rule — post-MVP
-
-AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
-
-The product must not pretend that files or generated outputs used locally can be made impossible to copy. Commercial protection should use compiled/signed packages, server-signed feature entitlements, OS-protected local license state, visible periodic lease refresh, and optional server-side execution only for the highest-value premium logic.
-
-License checks must not upload repository source code, prompts, diffs, validation output, reports, command logs, or run history.
-
-See:
-
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
-
 ## Bootstrap warning
 
-The initial skeleton was created through GitHub file writes, so the next work must be validation-first:
+The next runtime work must be:
 
 1. run `AW-VAL-001` build validation;
 2. run `AW-VAL-002` CLI smoke validation;
 3. review validation evidence;
-4. only then continue runtime feature work.
+4. only then implement the Agent Run Receipt spine.
 
 See:
 
@@ -137,47 +192,52 @@ docs/
 ## Development principles
 
 - Local-first CLI before dashboard or SaaS.
-- Git, markdown, and file-system behavior before LLM/API integrations.
-- Universal repo behavior before language-specific adapters.
-- Token budget and scope limiter for every non-trivial task.
-- Investigation-only first for uncertain bugs.
-- Diff-only review after implementation commits.
-- Compact handoff summaries instead of long chat history.
-- Compact command summaries instead of full terminal logs.
+- Evidence before autonomy.
+- Cross-vendor contracts before deep vendor integration.
+- External agents execute; AgentsWatch supervises and verifies.
+- Git, markdown and file-system evidence before cloud services.
+- Compact receipts instead of full chat history.
+- Compact command profiles instead of full terminal logs.
+- Deterministic findings before opaque scores.
+- Explainable routing before automatic routing.
 - One learning note after every agent run.
 - Risky actions require explicit approval gates.
-- Supervised prompt sequencing before continuous autopilot.
-- Licensing design may be documented early, but runtime enforcement starts only after CLI MVP and dogfood evidence.
+- No dashboard until at least 30 useful dogfood receipts exist.
 
-## Current status
+## De-prioritized
 
-Planning and skeleton stage. See:
+AgentsWatch should not initially build:
 
+- proprietary coding-agent runtime;
+- cloud workspaces;
+- generic background-agent manager;
+- generic schedules or playbooks;
+- visual workflow canvas;
+- full session archive;
+- CI/CD, incident or production orchestration;
+- automatic merge/release;
+- integration marketplace;
+- exact token accounting without provider data.
+
+## Commercial trial rule — post-MVP
+
+AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
+
+License checks must not upload repository source code, prompts, diffs, validation output, receipts, command logs or learning history.
+
+See:
+
+- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
+- `docs/prompt_queues/agentwatch_trial_licensing.md`
+
+## Current strategy documents
+
+- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
 - `docs/PRODUCT_SPEC.md`
-- `docs/CLI_SPEC.md`
-- `docs/CLI_LEARNING_ADDENDUM.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
 - `docs/FEATURE_SELECTION_SPEC.md`
-- `docs/MISTAKE_LEARNING_SPEC.md`
-- `docs/MISTAKE_LEARNING_ROADMAP_ADDENDUM.md`
-- `docs/TEST_STRATEGY.md`
-- `docs/ARCHITECTURE.md`
-- `docs/SECURITY_AND_PRIVACY.md`
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/PROMPT_OPTIMIZATION_PLAYBOOK.md`
-- `docs/COMMAND_PROFILER_FAST_VALIDATION_ADVISOR.md`
+- `docs/ROADMAP_DRIVEN_AGENT_OS.md`
 - `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
 - `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/AGENT_RISK_BOUNDARIES.md`
-- `docs/AGENT_PERMISSION_MODEL.md`
-- `docs/BUILD_VALIDATION_PLAN.md`
-- `docs/BOOTSTRAP_NEXT_STEPS.md`
-- `docs/prompt_queues/bootstrap_validation.md`
-- `docs/prompt_queues/agentwatch_mvp.md`
-- `docs/prompt_queues/agentwatch_foundation_followups.md`
-- `docs/prompt_queues/agentwatch_feature_selection.md`
-- `docs/prompt_queues/agentwatch_learning_followups.md`
-- `docs/prompt_queues/agentwatch_testing.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
-- `docs/samples/README.md`
+- `docs/prompt_queues/agentwatch_differentiation.md`
