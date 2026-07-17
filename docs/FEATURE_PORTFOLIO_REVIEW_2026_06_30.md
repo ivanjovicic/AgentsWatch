@@ -1,78 +1,130 @@
-# AgentsWatch Feature Portfolio Review — 2026-06-30
+# AgentsWatch Feature Portfolio Review — 2026-07-17
 
-Status: product/tooling scope audit  
-Source: migrated from `ivanjovicic/Mathlearning-Mobile-App/docs/AGENTWATCH_FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
+Status: competitive scope audit
 
 ## Executive verdict
 
-AgentsWatch has a strong and useful product direction, but the MVP is at risk of becoming too broad if CLI, dashboard, adapters, validation, SaaS, and PR integration are built too early.
+The original local-first direction remains correct, but the market has moved.
 
-The right first product remains:
+Parallel agents, background execution, schedules, playbooks, knowledge, session analysis, approvals, run history, PR automation, cloud sandboxes and visual engineering workflows are already offered by established products.
+
+AgentsWatch should not compete on those generic capabilities.
+
+The differentiated first product is:
 
 ```text
-local-first CLI + git/diff/run report + prompt optimization + handoff + validation evidence
+local CLI
++ roadmap/run contract
++ vendor-neutral Agent Run Receipt
++ claims/diff/validation evidence gate
++ scope and roadmap drift detection
++ compact project-local learning
 ```
 
-## Enough for MVP
+## Keep and elevate
 
-Keep these first:
+These are now core rather than optional convenience features:
 
-- local `.ai` init and templates;
 - task/run lifecycle;
-- git status/diff tracker;
-- markdown run report;
-- handoff summary;
-- prompt optimizer and splitter;
-- diff-only review prompt;
-- basic risk scoring;
-- validation command suggestions;
-- local privacy/no-telemetry guarantees.
+- roadmap or prompt contract;
+- git start/end evidence;
+- Agent Run Receipt;
+- validation evidence or blocked reason;
+- claims-vs-diff-vs-validation checks;
+- Scope Drift Score;
+- explainable Evidence Score;
+- compact handoff and next prompt;
+- local privacy/no telemetry.
 
-## Useful but phase 2
+## Differentiate after the core spine
 
-Add after build/smoke validation and first dogfood reports:
+Add after the receipt and evidence gate work:
 
-- mistake ledger and mistake checks;
-- evidence lint;
-- command profiler / fast validation advisor;
-- language adapter refinements;
-- claimed-vs-actual checks.
+- roadmap status updated from actual receipt evidence;
+- validation economy and avoidable-work estimates;
+- counterfactual prompt/context/validation recommendations;
+- mistake rules with evidence count, confidence and expiry;
+- cross-agent normalized history;
+- project-local empirical model/tool router;
+- roadmap progress confidence.
 
-## Too much for MVP
+## Parity features: integrate, do not rebuild
 
-Do not start early with:
+Treat these as adapters or future integrations:
 
-- SaaS;
-- billing;
-- cloud sync;
-- hosted dashboards;
+- agent execution;
+- parallel/background agents;
+- cloud workspaces;
+- schedules and recurring automations;
+- full session timelines;
+- generic playbooks and knowledge bases;
+- GitHub issue-to-PR automation;
+- generic code review;
+- visual workflow orchestration;
+- CI/CD, release, incident and infrastructure automation.
+
+## Remove from early product scope
+
+Do not prioritize:
+
+- visual dashboard before receipt dogfood;
+- SaaS/billing/cloud sync;
 - team policy engine;
-- automatic code editing;
-- deep IDE extension;
 - remote mistake database;
-- exact token accounting without provider data.
+- integration marketplace;
+- automatic code editing;
+- autonomous merge/release;
+- exact token accounting without provider data;
+- proprietary agent runtime;
+- deep IDE extension.
 
-## Scope decision
+## Strongest market-gap hypotheses
 
-AgentsWatch should prove value locally before dashboard/team/cloud work.
+Validate these rather than assuming them:
 
-Recommended next product gates:
+1. Cross-vendor local Agent Run Receipt.
+2. Roadmap Contract Compiler with fail-closed completeness checks.
+3. Claims-vs-diff-vs-validation evidence gate.
+4. Roadmap and owned-path drift detection.
+5. Counterfactual learning with scoped, expiring rules.
+6. Repository-local model/tool routing based on comparable outcomes.
+7. Validation Economy that measures avoidable command and context work.
 
-1. `AW-VAL-001` restore/build/test validation.
+## Product gates
+
+1. `AW-VAL-001` restore/build/test.
 2. `AW-VAL-002` CLI smoke validation.
-3. `AW-SCOPE-001` lock MVP scope and non-goals.
-4. `AW-LIFECYCLE-001` task/run lifecycle contract.
-5. `AW-PRIVACY-001` local privacy contract.
-6. Only then continue runtime implementation.
+3. Run lifecycle.
+4. Agent Run Receipt.
+5. Evidence lint.
+6. Contract compiler.
+7. Evidence and drift gate.
+8. Validation economy.
+9. Counterfactual learning.
+10. Empirical router.
+11. Thin adapters/MCP.
+12. Dashboard only after at least 30 useful receipts.
 
-## Dogfood source
+## Dogfood requirement
 
-MathLearning remains a good dogfood repo for:
+Use AgentsWatch and MathLearning to collect comparable runs.
 
-- missing run-log detection;
-- prompt splitting;
-- evidence lint;
-- mistake-learning loop;
-- token/context waste reporting.
+Do not claim differentiation through token savings alone. Measure:
 
-But AgentsWatch product specs and implementation prompts should live in this repo.
+- scope drift;
+- evidence completeness;
+- validation breadth and duration;
+- retries;
+- repeated mistakes;
+- whether accepted learning rules improve later comparable runs;
+- whether model/tool recommendations become useful with enough evidence.
+
+## Decision
+
+AgentsWatch should become the evidence and learning layer between roadmap intent and external agent execution, not another agent platform.
+
+See:
+
+- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
+- `docs/PRODUCT_SPEC.md`
+- `docs/MVP_ROADMAP.md`
