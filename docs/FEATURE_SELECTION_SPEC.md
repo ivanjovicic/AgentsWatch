@@ -1,180 +1,117 @@
 # AgentsWatch Feature Selection Spec
 
-Last aligned: 2026-06-30  
-Status: planning/specification  
-Source: migrated from `ivanjovicic/Mathlearning-Mobile-App/docs/AGENTWATCH_FEATURE_SELECTION_SPEC.md`
+Last aligned: 2026-07-17  
+Status: planning/specification
 
 ## Purpose
 
-AgentsWatch should not apply every feature to every repository.
-
-The user must be able to choose which AgentsWatch capabilities are enabled for a repo, and AgentsWatch must add only the local files, prompts, templates, lint checks, and commands needed for those selected capabilities.
+AgentsWatch capabilities must be modular, but feature selection should reinforce the differentiated product loop rather than grow into a generic agent platform.
 
 Core principle:
 
 ```text
-Select features -> write config -> apply only selected local artifacts -> keep disabled features inert.
+Select only the control, evidence and learning capabilities needed by this repository.
 ```
 
-MVP safety principle:
+Safety principle:
 
 ```text
-Local-first by default. No telemetry. No cloud upload. No dashboard/team/cloud feature unless explicitly supported in a later phase.
+Local-first. No telemetry. No source upload. Risky execution remains outside AgentsWatch unless explicitly integrated later.
 ```
 
-## Why this matters
+## Differentiated feature packages
 
-Different users and repositories need different levels of supervision.
+`core` is required. The first useful profile should include the complete receipt/evidence spine rather than isolated convenience features.
 
-Examples:
-
-- a small solo repo may need only reports and handoffs;
-- a high-risk production repo may need evidence lint and mistake learning;
-- a learning app may need strict validation and run logs;
-- a later team setup may need PR reports, but that is not MVP.
-
-AgentsWatch should be modular from the start so the first install does not feel heavy or invasive.
-
-## Feature packages
-
-Feature packages are composable. `core` is the only required package.
-
-| Feature | Default MVP state | Requires | Purpose |
+| Feature | Default | Requires | Purpose |
 |---|---:|---|---|
-| `core` | on | none | `.ai` structure, config, tasks, runs, status. |
-| `reports` | on | `core` | run report, changed files, validation evidence. |
-| `handoff` | on for solo/dev | `reports` | compact next-agent handoff summaries. |
-| `review` | on for solo/dev | `reports` | diff-only review prompt generation. |
-| `risk` | on | `reports` | heuristic risk scoring. |
-| `validation` | suggested | `core` | validation command suggestions; execution is opt-in. |
-| `adapters` | auto-detect | `validation` | Flutter/.NET/React/Python/Node detection presets. |
-| `learning` | off/minimal, on/strict | `reports` | mistake ledger, mistake cards, rollups. |
-| `lint` | off/minimal, on/strict | `reports` | evidence and learning lint gates. |
-| `metrics` | optional | `reports` | proxy token-waste metrics, not exact token accounting. |
-| `dogfood` | off by default | `reports`, `handoff` | dogfood report templates and prompts. |
-| `dashboard` | future-only | CLI dogfood evidence | local UI after CLI MVP proves value. |
-| `team` | future-only | dashboard/privacy review | PR/team reports after local evidence. |
-| `cloud` | future-only opt-in | explicit future consent | cloud sync; never default. |
+| `core` | on | none | Config, local folders, project detection and status. |
+| `lifecycle` | on | `core` | Task/run start, finish and status transitions. |
+| `contract` | on | `core` | Bounded run contracts from prompts, issues or roadmap items. |
+| `receipt` | on | `lifecycle` | Vendor-neutral Agent Run Receipt. |
+| `git-evidence` | on | `lifecycle` | Start/end snapshots, changed files and ownership evidence. |
+| `validation-evidence` | on | `receipt` | Record validation result or blocked reason. Execution remains opt-in. |
+| `evidence-gate` | on | `receipt`, `git-evidence`, `validation-evidence` | Claims-vs-diff-vs-validation checks and Evidence Score. |
+| `drift` | on | `contract`, `git-evidence` | Scope and roadmap drift findings. |
+| `handoff` | on | `receipt` | Compact next-agent handoff and next prompt. |
+| `learning` | suggested | `receipt`, `evidence-gate` | Learning events, mistake patterns and do-not-repeat rules. |
+| `validation-economy` | suggested | `validation-evidence`, `adapters` | Targeted validation, command profiling and avoidable-work estimates. |
+| `roadmap` | suggested | `contract`, `receipt`, `drift` | Roadmap checks, queue generation and evidence-based status updates. |
+| `router` | later/local | `receipt`, `learning`, `metrics` | Project-local model/tool recommendation with confidence. |
+| `metrics` | optional | `receipt` | Explainable proxy metrics and provider usage import when available. |
+| `adapters` | auto-detect | `core` | Stack-specific risk, evidence and validation suggestions. |
+| `connectors` | future opt-in | stable internal contracts | Thin integrations with external agent products. |
+| `dashboard` | future-only | dogfood evidence | Local visualization after enough receipts exist. |
+| `team` | future-only | dashboard/privacy review | Shared policies and signed evidence export. |
+| `cloud` | future-only opt-in | explicit consent | Optional metadata services; never source upload by default. |
 
-Rules:
+## Dependency rules
 
 - `core` cannot be disabled.
-- `reports` requires `core`.
-- `handoff`, `review`, `risk`, `learning`, `lint`, and `metrics` require `reports`.
-- `adapters` requires `validation`.
-- `lint` can run without `learning`, but learning lint checks are disabled unless `learning` is enabled.
-- `metrics` must use proxy metrics unless provider token data exists.
-- `dashboard`, `team`, and `cloud` must never be enabled by default.
+- `lifecycle`, `contract`, `receipt`, `git-evidence`, `validation-evidence`, `evidence-gate`, `drift`, and `handoff` form the recommended MVP spine.
+- `learning` must not run without receipt and evidence inputs.
+- `router` must not produce a recommendation when comparable history is insufficient.
+- `validation-economy` may suggest commands but execution is opt-in.
+- `connectors`, `dashboard`, `team`, and `cloud` are never default MVP features.
+- Disabled features must remain inert and must not create artifacts.
 
-## Suggested repo profiles
+## Profiles
 
-Profiles are presets. Users can override features after selecting a profile.
-
-| Profile | Enabled features | Use case |
+| Profile | Features | Use case |
 |---|---|---|
-| `minimal` | `core`, `reports` | lightweight run evidence only. |
-| `solo` | `core`, `reports`, `handoff`, `review`, `risk`, `metrics` | solo developer using AI agents. |
-| `solo-dev` | `core`, `reports`, `handoff`, `review`, `risk`, `validation`, `adapters`, `metrics` | active local development. |
-| `strict-local` | `core`, `reports`, `handoff`, `review`, `risk`, `validation`, `adapters`, `learning`, `lint`, `metrics`, `dogfood` | high-evidence local workflow; good for MathLearning dogfood. |
-| `reviewer` | `core`, `reports`, `review`, `risk`, `lint` | review-focused use. |
-| `adapter-dev` | `core`, `reports`, `validation`, `adapters`, `risk` | improving stack detection and validation commands. |
-| `repo-audit` | `core`, `reports`, `handoff`, `review`, `risk`, `metrics` | one-off audit without heavy learning/lint setup. |
+| `receipt-only` | `core`, `lifecycle`, `receipt`, `git-evidence`, `validation-evidence`, `handoff` | Minimal trustworthy run record. |
+| `verified-local` | receipt-only + `contract`, `evidence-gate`, `drift`, `adapters` | Recommended first product. |
+| `roadmap-local` | verified-local + `roadmap`, `learning` | Roadmap-driven supervised execution. |
+| `economy-local` | verified-local + `learning`, `validation-economy`, `metrics` | Reduce validation and context waste. |
+| `strict-local` | roadmap-local + `validation-economy`, `metrics` | High-evidence dogfood and production repositories. |
+| `router-lab` | strict-local + `router` | Experimental cross-agent comparison after enough runs. |
 
-No profile enables `dashboard`, `team`, or `cloud` in MVP.
+No profile enables `connectors`, `dashboard`, `team`, or `cloud` by default.
 
-## CLI behavior
+## CLI direction
 
-### Init with explicit features
-
-```bash
-agentswatch init --features core,reports,handoff,review,risk
-```
-
-Expected behavior:
-
-- validate feature names;
-- expand dependencies;
-- write selected features to config;
-- create only required local files/templates;
-- summarize enabled, skipped, dependency-added, and future-only features;
-- never enable cloud/team/dashboard by accident.
-
-### Init with profile
+### Initialize a profile
 
 ```bash
-agentswatch init --profile strict-local
+agentswatch init --profile verified-local
 ```
 
-Expected behavior:
+Expected:
 
-- resolve profile to features;
-- write profile and resolved features to config;
-- allow explicit override when supported;
-- show final feature set before writing when `--dry-run` is used.
+- resolve dependencies;
+- preview writes with `--dry-run`;
+- create only selected local artifacts;
+- preserve existing user files;
+- show disabled and future-only capabilities.
 
-### Profile plus feature overrides
-
-Preferred MVP behavior:
-
-```bash
-agentswatch init --profile solo-dev --enable learning,lint --disable adapters
-```
-
-If implementation does not support profile + overrides yet, it should reject the mixed input with a clear error instead of guessing.
-
-### Enable feature later
-
-Preferred command group:
-
-```bash
-agentswatch features enable learning
-agentswatch features enable lint
-```
-
-Expected behavior:
-
-- validate dependencies;
-- create only missing files/templates;
-- preserve user-edited files;
-- update config;
-- show what changed;
-- suggest `--dry-run` if the user wants a preview.
-
-### Disable feature later
-
-```bash
-agentswatch features disable learning
-```
-
-Expected behavior:
-
-- update config;
-- do not delete user data by default;
-- stop running feature commands/lints by default;
-- preserve existing files unless user explicitly asks to remove generated artifacts;
-- warn if another enabled feature depends on the disabled feature.
-
-### Inspect feature state
+### Feature inspection
 
 ```bash
 agentswatch features list
 agentswatch features status
 ```
 
-Expected behavior:
+Show:
 
-- show enabled features;
-- show disabled features;
-- show future-only unavailable features;
-- show dependency warnings;
-- show where each enabled feature stores local artifacts.
+- enabled features;
+- dependency additions;
+- local artifact paths;
+- unavailable/future features;
+- missing dogfood prerequisites.
+
+### Enable later
+
+```bash
+agentswatch features enable learning
+agentswatch features enable validation-economy
+```
+
+Enabling a feature must not silently execute validation, upload data, or modify external services.
 
 ## Config shape
 
-Example:
-
 ```yaml
-schemaVersion: 1
+schemaVersion: 2
 project:
   name: MathLearning Mobile
   profile: strict-local
@@ -183,130 +120,114 @@ project:
 
 features:
   core: true
-  reports: true
+  lifecycle: true
+  contract: true
+  receipt: true
+  git-evidence: true
+  validation-evidence: true
+  evidence-gate: true
+  drift: true
   handoff: true
-  review: true
-  risk: true
-  validation: true
-  adapters: true
   learning: true
-  lint: true
-  metrics: false
-  dogfood: true
+  validation-economy: true
+  roadmap: true
+  router: false
+  metrics: true
+  adapters: true
+  connectors: false
   dashboard: false
   team: false
   cloud: false
 
 featureOptions:
-  validation:
+  validation-evidence:
     executeByDefault: false
   learning:
-    ledgerPath: docs/ai/learning/MISTAKE_LEDGER.md
+    minimumEvidenceCountForRule: 2
+    requireHumanAcceptance: true
+    defaultExpiryRuns: 30
+  router:
+    minimumComparableRuns: 5
+    allowUnknownResult: true
   metrics:
-    exactProviderTokens: false
+    exactProviderUsageOnlyWhenAvailable: true
 ```
-
-Rules:
-
-- disabled features must not run checks;
-- disabled features must not create new artifacts during normal commands;
-- feature dependencies must be validated;
-- unknown feature names are config errors;
-- future config versions need migration rules;
-- `validation.executeByDefault` must default to `false`;
-- `cloud`, `team`, and `dashboard` cannot be enabled by profile defaults.
 
 ## Artifact mapping
 
-Each feature package needs a deterministic manifest.
-
-| Feature | Local artifacts |
+| Feature | Artifacts |
 |---|---|
-| `core` | `.ai/config.yml`, `.ai/tasks/`, `.ai/runs/`, `.ai/STATUS.md` |
-| `reports` | run report templates, report output folder |
-| `handoff` | handoff template/prompt |
-| `review` | diff-only review prompt template |
-| `risk` | risk rules/config block |
-| `validation` | validation command config/presets |
-| `adapters` | adapter detection config/presets |
-| `learning` | `.ai/learning/MISTAKE_LEDGER.md`, mistake card template, rollup template |
-| `lint` | lint rules config and evidence/learning lint command access |
-| `metrics` | proxy metrics config/report section |
-| `dogfood` | dogfood report template |
+| `core` | `.ai/config.yml`, `.ai/STATUS.md` |
+| `lifecycle` | `.ai/tasks/`, `.ai/runs/` |
+| `contract` | `.ai/contracts/` |
+| `receipt` | `.ai/runs/<run-id>-receipt.md` |
+| `git-evidence` | receipt sections or JSON sidecars later |
+| `validation-evidence` | compact validation sections |
+| `evidence-gate` | evidence findings and score explanation |
+| `drift` | scope/roadmap drift findings |
+| `handoff` | `.ai/runs/<run-id>-handoff.md` |
+| `learning` | `.ai/learning/LESSONS.md`, `MISTAKE_PATTERNS.md`, `DO_NOT_REPEAT.md` |
+| `validation-economy` | compact command profiles and validation recommendations |
+| `roadmap` | `.ai/roadmap/`, `.ai/queue/` |
+| `router` | `.agentwatch/router-evidence.jsonl` later |
+| `metrics` | receipt metrics and local rollups |
 
-Do not create dashboard/team/cloud artifacts in MVP.
-
-## Feature-gated commands
-
-Commands must check feature state before running.
+## Feature-gated command direction
 
 | Command | Required feature |
 |---|---|
-| `agentswatch report` | `reports` |
+| `agentswatch start/finish` | `lifecycle` |
+| `agentswatch contract check/build` | `contract` |
+| `agentswatch receipt create/check` | `receipt` |
+| `agentswatch evidence check` | `evidence-gate` |
+| `agentswatch drift check` | `drift` |
 | `agentswatch handoff` | `handoff` |
-| `agentswatch review-diff` | `review` |
-| `agentswatch validate` | `validation` |
-| `agentswatch mistakes list/check/add` | `learning` |
-| `agentswatch lint evidence` | `lint` |
-| `agentswatch lint learning` | `lint`, and `learning` for learning-specific checks |
-| `agentswatch metrics` | `metrics` |
+| `agentswatch mistakes list/check/rollup` | `learning` |
+| `agentswatch validate --suggest/--profile` | `validation-economy` |
+| `agentswatch roadmap check/next/review` | `roadmap` |
+| `agentswatch route suggest` | `router` |
 
-If a feature is disabled, the CLI should return a clear user error and suggest the enable command.
+## Features deliberately excluded as packages
 
-## Safety rules
+Do not add first-class MVP packages for:
 
-- Feature selection is local-only.
-- No feature enables telemetry by default.
-- No feature uploads source code, prompts, diffs, run logs, or mistake ledgers by default.
-- `cloud` is not an MVP feature and must require explicit future opt-in.
-- Disabling a feature never deletes user data by default.
-- `--dry-run` must show planned writes and config changes without changing files.
-- Enabling a feature must preserve user-edited files.
-- If dependency resolution would enable many features, show a summary before writing.
+- agent execution runtime;
+- cloud sandbox;
+- generic scheduling;
+- generic playbook/knowledge library;
+- full session archive;
+- visual workflow canvas;
+- production deployment orchestration;
+- automatic merge/release;
+- incident management;
+- integration marketplace.
+
+External products already cover these areas. AgentsWatch should add thin adapters only after its internal receipt and evidence contracts are stable.
 
 ## Required tests when implemented
 
-Feature selection needs tests for:
+At minimum:
 
-1. explicit feature list;
-2. profile resolution;
-3. profile plus override behavior;
-4. dependency expansion;
-5. invalid feature name;
-6. conflict handling;
-7. future-only feature rejection;
-8. `core` cannot be disabled;
-9. enable feature later;
-10. disable feature later;
-11. disabled feature does not run;
-12. feature-gated command produces clear user error;
-13. init creates only selected artifacts;
-14. dry-run writes nothing;
-15. user-edited files are preserved;
-16. cloud/team/dashboard are never enabled by default;
-17. feature manifest rejects outside-repo paths;
-18. disabled feature data is preserved.
-
-## Non-goals
-
-Do not implement now:
-
-- SaaS profile;
-- cloud sync profile;
-- team policy profile;
-- dashboard defaults;
-- marketplace/plugin feature packs;
-- automatic feature choice based on uploading repo data;
-- deleting user data when disabling a feature.
+1. profile resolution and dependency expansion;
+2. dry-run writes nothing;
+3. disabled features remain inert;
+4. local artifacts stay inside repository root;
+5. future-only features are rejected;
+6. validation execution defaults to false;
+7. receipt/evidence spine cannot be configured inconsistently;
+8. learning rules require sufficient evidence and acceptance;
+9. router returns unknown with insufficient comparable runs;
+10. disabling features preserves user data;
+11. no profile enables cloud/team/dashboard/connectors automatically.
 
 ## MVP decision
 
-Feature selection should be implemented before broad usage, but after the basic CLI skeleton and config schema exist.
+Implement the `verified-local` profile first.
 
-Recommended prompt order:
+The next profile should be `roadmap-local` only after the Agent Run Receipt and evidence gate are trustworthy.
 
-```text
-AW-SCOPE-001 -> AW-LIFECYCLE-001 -> AW-PRIVACY-001 -> AW-CONFIG-001 -> AW-FEATURES-001 -> AW-FEATURES-002 -> AW-001/AW-002 implementation
-```
+See:
 
-The first implementation can support profiles and config without implementing every optional feature command immediately.
+- `docs/PRODUCT_SPEC.md`
+- `docs/MVP_ROADMAP.md`
+- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
