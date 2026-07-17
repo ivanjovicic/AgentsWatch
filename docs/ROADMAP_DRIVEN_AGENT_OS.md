@@ -1,57 +1,48 @@
 # Roadmap-Driven Agent OS
 
-Last aligned: 2026-06-30  
+Last aligned: 2026-07-17  
 Status: product/architecture plan; docs-only
 
 ## Vision
 
-AgentsWatch can become a roadmap-oriented agent operating system.
+AgentsWatch is a roadmap-oriented control and evidence layer for external coding agents.
 
-The user writes or imports a roadmap. AgentsWatch turns that roadmap into epics, acceptance criteria, prompt queues, validation plans, execution evidence, and self-correction loops.
+The user writes or imports a roadmap. AgentsWatch does not directly become the coding agent. It compiles each roadmap item into a bounded run contract, routes it to an external agent, verifies the result, and updates roadmap status from evidence.
 
 Core idea:
 
 ```text
-Roadmap is the source of truth. Agents execute only through scoped, validated, evidence-producing prompts.
+Roadmap is the source of intent.
+Agent Run Receipts are the source of execution truth.
 ```
 
 ## Product promise
 
 ```text
-Turn a roadmap into safe agent execution without losing control of scope, cost, or evidence.
+Turn roadmap intent into verified change without losing control of scope, cost, risk, or evidence.
 ```
 
-AgentsWatch should not replace coding agents. It should supervise them by deciding:
-
-- what should be done next;
-- what should not be done yet;
-- which prompt should be generated;
-- which model/tool is appropriate;
-- which files are owned or avoided;
-- which validation command proves the work;
-- whether the run should stop, split, retry, or escalate.
-
-## Roadmap-to-execution pipeline
+## Differentiated pipeline
 
 ```text
-Roadmap
-  -> Epics
-  -> Milestones
-  -> Work items
-  -> Prompt queue
-  -> Agent run
-  -> Validation evidence
-  -> Run report
-  -> Handoff
-  -> Self-review
+Roadmap item
+  -> Contract Completeness Check
+  -> Bounded Run Contract
+  -> Model/tool route recommendation
+  -> External coding agent
+  -> Agent Run Receipt
+  -> Claims/diff/validation gate
+  -> Scope and roadmap drift findings
+  -> Counterfactual learning
   -> Roadmap status update
+  -> Next route
 ```
 
-Each stage must produce compact evidence, not long chat history.
+Every stage must produce compact, local evidence rather than depend on full chat history.
 
-## Roadmap file shape
+## Roadmap storage
 
-MVP should support markdown first:
+Markdown first:
 
 ```text
 .ai/roadmap/ROADMAP.md
@@ -59,166 +50,267 @@ MVP should support markdown first:
 .ai/roadmap/MILESTONES.md
 .ai/roadmap/DECISIONS.md
 .ai/roadmap/RISKS.md
+.ai/queue/AUTOPILOT_QUEUE.md
 ```
 
-Optional JSON later:
+Machine-readable sidecars later:
 
 ```text
 .agentwatch/roadmap.json
+.agentwatch/contracts/<contract-id>.json
+.agentwatch/runs/<run-id>.json
 ```
 
 ## Roadmap item contract
 
-Every roadmap item should have:
+Every executable item must include:
 
 ```text
-ID:
-Title:
-Why:
-Status:
-Priority:
-Gate:
-Owner:
-Run mode:
-Token budget:
-Acceptance criteria:
-Owned paths:
-Avoid paths:
-Validation:
-Risks:
-Next prompt:
+ID
+Title
+Why / intent
+Status
+Priority
+Dependencies
+Gate
+Owner
+Permission mode
+Run mode
+Token budget
+Acceptance criteria
+Owned paths
+Avoid paths
+Validation contract
+Risk rules
+Stop rules
+Expected evidence
 ```
 
-If these fields are missing, AgentsWatch should generate an investigation/planning prompt, not implementation.
+If required fields are missing, AgentsWatch generates an investigation/planning prompt, not an implementation prompt.
 
-## Execution rules
+## Contract completeness
 
-Roadmap-driven execution must follow these rules:
+The contract checker should answer:
 
-- do not implement directly from vague roadmap text;
-- generate an investigation or planning prompt first when scope is uncertain;
-- split broad roadmap items into one-mode prompts;
-- never skip Gate 0 or validation gates;
-- never run dashboard/SaaS/cloud work before roadmap gates allow it;
-- never claim completion without validation evidence or blocked reason;
-- never paste full logs into prompts or reports;
-- use command profile summaries instead of terminal log dumps.
+- Is the requested outcome measurable?
+- Are dependencies and gates known?
+- Are owned and avoid paths explicit enough?
+- Is the permission mode appropriate?
+- Is validation named?
+- Is the expected evidence sufficient to prove completion?
+- Does the item combine multiple run modes?
+- Does the item require a human product or risk decision?
 
-## Agent self-supervision loop
-
-After each run, AgentsWatch should ask:
+Output:
 
 ```text
-Did the prompt stay in scope?
-Were only owned files changed?
-Was validation run or honestly blocked?
-Were tests missed?
-Did the agent inspect too many files?
-Did the agent run broad commands unnecessarily?
-Should the next step be retry, split, review, or stop?
+Complete
+NeedsPlanning
+NeedsApproval
+Blocked
 ```
 
-The answer updates:
+## Agent Run Receipt
 
-- run report;
-- handoff summary;
-- roadmap status;
-- risk register;
-- next prompt.
-
-## Model/tool selection
-
-AgentsWatch should recommend model/tool classes, not hard-code vendors.
-
-| Work type | Recommended capability | Budget |
-|---|---|---|
-| Roadmap parsing | strong reasoning, broad summarization | medium |
-| Prompt splitting | strong instruction following | low/medium |
-| One-file implementation | fast coding model | low |
-| Multi-file refactor | strong coding + reasoning | medium/high |
-| Debug/root cause | strong reasoning + code search | medium |
-| Diff-only review | precise code reviewer | low |
-| Validation/log triage | compact summarizer | low |
-| Architecture planning | strongest reasoning model | high |
-
-Selection rule:
+Each run must produce a vendor-neutral receipt containing:
 
 ```text
-Use the cheapest model that can satisfy the risk level and evidence requirement.
+roadmap/contract id
+prompt id
+agent/model/tool
+permission mode
+run mode
+start/end git evidence
+files inspected when available
+files changed
+commands and compact profiles
+validation evidence
+agent claims
+missed work
+risk findings
+scope drift
+learning note
+next prompt
 ```
 
-Escalate only when:
+The receipt must remain useful without access to the original agent session.
 
-- root cause is unknown after scoped investigation;
-- code crosses multiple subsystems;
-- security/auth/data-loss risk appears;
-- validation fails twice for non-obvious reasons;
-- roadmap item has ambiguous acceptance criteria.
+## Evidence and drift gate
+
+After a run, compare:
+
+```text
+roadmap intent
+vs acceptance criteria
+vs agent claims
+vs changed files
+vs validation evidence
+```
+
+Detect:
+
+- claimed work without supporting files;
+- required deliverables missing;
+- changed files outside owned paths;
+- skipped dependency or approval gates;
+- broad validation unrelated to the diff;
+- roadmap items marked Done without evidence.
+
+The score summarizes findings but never replaces them.
+
+## Roadmap status rules
+
+Suggested statuses:
+
+```text
+Planned
+Ready
+Running
+NeedsEvidence
+NeedsReview
+NeedsApproval
+Blocked
+Failed
+Done
+Skipped
+```
+
+Only receipt evidence may move runtime work to `Done`.
+
+An agent's final statement alone is not sufficient.
+
+## Model/tool route recommendation
+
+AgentsWatch recommends capability classes first:
+
+| Work type | Initial route |
+|---|---|
+| Roadmap planning | strong reasoning |
+| One-file implementation | fast coding model |
+| Multi-file refactor | strong coding + reasoning |
+| Root-cause investigation | reasoning + code search |
+| Diff review | precise reviewer |
+| Validation triage | compact low-cost summarizer |
+| Security boundary review | cautious read-only reviewer |
+
+Initial rule:
+
+```text
+Use the cheapest route that satisfies the risk and evidence requirements.
+```
+
+Later, replace generic routing with project-local empirical evidence from comparable receipts.
+
+If evidence is insufficient, return `unknown` and a safe fallback.
+
+## Counterfactual learning
+
+After failed, expensive, or drifting runs, answer:
+
+```text
+What smaller prompt should have been used?
+What files were actually needed?
+What model/tool class may have been sufficient?
+What validation sequence should have been used?
+What specific mistake should not be repeated?
+```
+
+Accepted rules must have:
+
+- evidence count;
+- repository/task scope;
+- confidence;
+- created/last-used run;
+- expiry or deprecation behavior;
+- human acceptance for high-impact rules.
+
+Do not create permanent rules from one ambiguous run.
+
+## Validation economy
+
+Roadmap execution should use command-profile evidence to:
+
+- recommend targeted validation before broad suites;
+- detect repeated commands;
+- estimate avoidable command time;
+- compact error output;
+- create an investigation prompt after repeated failure;
+- prevent full logs from entering future prompts.
 
 ## Safety gates
 
-Roadmap-driven automation must stop for human review when:
+Stop for human review when:
 
-- auth/security/secrets are involved;
-- migrations or data-loss risks are involved;
-- billing/SaaS/cloud/network behavior is involved;
+- auth, security or secrets are involved;
+- migrations or data-loss risk are involved;
+- billing, cloud, deployment or production behavior changes;
 - public API contracts change;
-- generated prompts would exceed context budget;
-- an agent wants to inspect whole repo;
-- an agent wants to execute full suite/CI without justification.
+- owned paths cannot be determined;
+- context budget would require a whole-repo scan;
+- an agent requests destructive commands or autonomous merge/release.
 
-## MVP scope
+## Supervised execution levels
 
-MVP should be docs/CLI-first:
+```text
+Level 0 — generate next prompt only
+Level 1 — generate prompt, route suggestion and evidence checklist
+Level 2 — use an official opt-in connector
+Level 3 — continuous autopilot
+```
 
-1. Roadmap import/check command design.
-2. Roadmap item linting.
-3. Roadmap-to-epic prompt generation.
-4. Epic-to-prompt queue generation.
-5. Next prompt selector.
-6. Run report updates roadmap item status.
-7. Self-review prompt after each run.
+Level 3 remains blocked until contracts, receipts, evidence gates, risk rules, rollback and stop behavior are proven.
 
-Do not start with autonomous background execution.
-Do not start with SaaS.
-Do not start with deep IDE integration.
+## Integration principle
 
-## Proposed commands
+```text
+External product executes.
+AgentsWatch contracts, verifies and learns.
+```
+
+Preferred integration order:
+
+1. MCP tools.
+2. Codex skill/plugin.
+3. Cursor preflight/postflight adapter.
+4. GitHub check or agent app.
+5. Superplane preflight/postflight component.
+6. Devin and OpenHands receipt import.
+
+Do not build another coding-agent runtime, cloud sandbox, visual workflow canvas, generic scheduler, or full-session archive.
+
+## MVP commands
 
 ```bash
 agentswatch roadmap check
-agentswatch roadmap split <roadmap-file>
-agentswatch roadmap next
-agentswatch roadmap prompt <item-id>
-agentswatch roadmap status
+agentswatch contract check <file>
+agentswatch contract build <roadmap-item-or-prompt>
+agentswatch start <task-id>
+agentswatch finish <task-id>
+agentswatch receipt create <run-id>
+agentswatch receipt check <run-id>
+agentswatch evidence check <run-id>
+agentswatch drift check <run-id>
 agentswatch roadmap review
+agentswatch roadmap next
 ```
 
-All commands should be local-first and markdown-first.
+## Proof requirement
 
-## Prompt set
+Before adding a dashboard or empirical router, collect at least 30 useful comparable receipts from AgentsWatch and MathLearning dogfood runs.
 
-Use these prompt files:
+Measure:
 
-```text
-docs/prompts/ROAD-001-roadmap-to-execution-plan.md
-docs/prompts/ROAD-002-roadmap-item-to-prompt-queue.md
-docs/prompts/ROAD-003-roadmap-run-self-review.md
-```
+- contract completeness;
+- scope drift;
+- evidence completeness;
+- retries;
+- validation breadth/duration;
+- repeated mistakes;
+- whether accepted learning rules improve later comparable runs.
 
-## Fit with AW-011
+See:
 
-AW-011 command profiling becomes one feedback signal for roadmap execution:
-
-- if full validation is slow, recommend targeted validation next time;
-- if a command fails repeatedly, create an investigation prompt;
-- if logs are large, summarize locally before agent review;
-- if command strings contain secret-looking values, redact or refuse before storing.
-
-## Privacy/storage rule
-
-Roadmap data, prompt queues, command profiles, and run reports are local-first.
-
-If command profiling stores command text, it must store a redacted display command and either redact or refuse secret-looking raw command strings before persistence.
-
-Command history JSONL belongs to the JSON sidecar phase, not markdown-only Phase 1.
+- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
+- `docs/PRODUCT_SPEC.md`
+- `docs/MVP_ROADMAP.md`
+- `docs/prompt_queues/agentwatch_differentiation.md`
