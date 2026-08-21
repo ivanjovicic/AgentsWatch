@@ -2,7 +2,7 @@
 
 Last aligned: 2026-08-21  
 Target repo: `ivanjovicic/AgentsWatch`  
-Status: future-only strategic queue; no implementation row is currently claimable
+Status: future-only strategic queue; no row is execution-ready or currently claimable
 
 Purpose: preserve the long-term Observe -> Control -> Verify -> Learn expansion without allowing it to outrun the local Agent Run Receipt MVP.
 
@@ -20,6 +20,8 @@ Purpose: preserve the long-term Observe -> Control -> Verify -> Learn expansion 
 
 - Gate 0 validation remains first priority.
 - Do not select this queue as the next runtime work while the current MVP/evidence spine is incomplete.
+- Every row below is a blocked strategic placeholder, not a lint-complete executable prompt contract.
+- Meeting an activation gate does not automatically make a row Ready: promotion must create a dedicated prompt file that passes the repo prompt lint and includes repository, queue, run mode, token budget, scope limiter, owned/avoid paths, validation, stop rules, expected evidence, relevant prior mistakes, and handoff rules where applicable.
 - Gateway is an optional future module, not a standalone pivot.
 - Do not implement hosted multi-tenancy, billing, SSO/SCIM, on-prem, or Gateway runtime from this queue without the explicit activation gate being met.
 - A docs-only feasibility prompt may refine strategy but must not claim runtime completion.
@@ -44,16 +46,16 @@ Detailed thresholds and caveats live in `../AGENT_TRUST_PLATFORM_EXPANSION_2026_
 
 | ID | Status | Run mode | Purpose |
 |---|---|---|---|
-| AW-TRUST-001 | Blocked — requires Gate A | docs/spec | Define deterministic local Policy Engine contracts from proven receipt data. |
-| AW-TRUST-002 | Blocked — requires AW-TRUST-001 + Gate B | implementation | Implement minimal local path/validation/command policy checks. |
-| AW-TRUST-003 | Blocked — requires comparable real runs | docs/spec | Define verified-task analytics and confidence rules. |
-| AW-TEAM-001 | Blocked — requires Gate C | investigation-only | Validate Team Server problem, privacy boundary, and minimal shared metadata. |
-| AW-TEAM-002 | Blocked — requires AW-TEAM-001 decision | docs/spec | Define Team Server API/data isolation contracts without implementation. |
-| AW-GATEWAY-001 | Blocked — requires Gate D | investigation-only | Run Gateway feasibility spike and build-vs-integrate decision. |
-| AW-GATEWAY-002 | Blocked — requires AW-GATEWAY-001 go decision | docs/spec | Define Gateway threat model, BYOK, tenant isolation, retention, and provider adapter contracts. |
-| AW-GATEWAY-003 | Blocked — requires AW-GATEWAY-002 + explicit runtime approval | implementation | Implement smallest OpenAI-compatible/provider-proxy spike with metadata-only audit. |
-| AW-GATEWAY-004 | Blocked — requires validated Gateway use | implementation | Add cost budgets, provider/model policy, retry/fallback and PII/secret actions. |
-| AW-ENTERPRISE-001 | Blocked — requires Gate E | investigation-only | Validate enterprise identity/private deployment/compliance-support requirements with a design partner. |
+| AW-TRUST-001 | Blocked placeholder — requires Gate A + promotion | docs/spec | Define deterministic local Policy Engine contracts from proven receipt data. |
+| AW-TRUST-002 | Blocked placeholder — requires AW-TRUST-001 + Gate B + promotion | implementation | Implement minimal local path/validation/command policy checks. |
+| AW-TRUST-003 | Blocked placeholder — requires comparable real runs + promotion | docs/spec | Define verified-task analytics and confidence rules. |
+| AW-TEAM-001 | Blocked placeholder — requires Gate C + promotion | investigation-only | Validate Team Server problem, privacy boundary, and minimal shared metadata. |
+| AW-TEAM-002 | Blocked placeholder — requires AW-TEAM-001 decision + promotion | docs/spec | Define Team Server API/data isolation contracts without implementation. |
+| AW-GATEWAY-001 | Blocked placeholder — requires Gate D + promotion | investigation-only | Run Gateway feasibility spike and build-vs-integrate decision. |
+| AW-GATEWAY-002 | Blocked placeholder — requires AW-GATEWAY-001 go decision + promotion | docs/spec | Define Gateway threat model, BYOK, tenant isolation, retention, and provider adapter contracts. |
+| AW-GATEWAY-003 | Blocked placeholder — requires AW-GATEWAY-002 + explicit runtime approval + promotion | implementation | Implement smallest OpenAI-compatible/provider-proxy spike with metadata-only audit. |
+| AW-GATEWAY-004 | Blocked placeholder — requires validated Gateway use + promotion | implementation | Add cost budgets, provider/model policy, retry/fallback and PII/secret actions. |
+| AW-ENTERPRISE-001 | Blocked placeholder — requires Gate E + promotion | investigation-only | Validate enterprise identity/private deployment/compliance-support requirements with a design partner. |
 
 ---
 
