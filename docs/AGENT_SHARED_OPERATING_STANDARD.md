@@ -1,8 +1,8 @@
 # Shared Agent Operating Standard
 
-Last aligned: 2026-07-01  
+Last aligned: 2026-08-21  
 Scope: `ivanjovicic/AgentsWatch`  
-Role: local-first AI coding-agent supervisor and prompt/token optimizer
+Role: local-first, vendor-neutral trust/control/evidence layer for AI coding agents; token/context economy is a measured optimization goal
 
 This document aligns AgentsWatch with the MathLearning Flutter and MathLearning backend agent standards.
 
@@ -127,6 +127,8 @@ A docs-only audit is not runtime proof.
 ## AgentsWatch-specific rule
 
 Gate 0 validation comes before feature work. Until restore/build/test/CLI smoke evidence is current, feature prompts remain blocked unless docs-only and explicitly not runtime-complete.
+
+The trust-platform strategy in `docs/AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md` is planning, not an implementation authorization. The future queue `docs/prompt_queues/agent_trust_platform_expansion.md` must remain outside normal prompt selection until the canonical router and the corresponding activation gate both allow a row. Gateway interest must not outrun the Agent Run Receipt/evidence/verification MVP.
 
 ## Mechanical evidence validation
 
