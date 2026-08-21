@@ -1,12 +1,12 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-07-01
+Last aligned: 2026-08-21
 
 ## Start here
 
 | Document | Use for |
 |---|---|
-| `../README.md` | Project overview and current status. |
+| `../README.md` | Project overview, current status, and strategic direction. |
 | `../AGENTS.md` | Agent rules for AI-assisted work. |
 | `AGENT_SHARED_OPERATING_STANDARD.md` | Shared cross-repo rules for prompt shape, token budget, evidence, score caps, mistake learning, validation honesty, and docs-only truth. |
 | `AGENT_RUN_LOG_ENFORCEMENT.md` | Hard gate: no complete run log / classified mistakes means no high-confidence Done. |
@@ -22,11 +22,11 @@ Last aligned: 2026-07-01
 | `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Token/context economy blueprint: context packs, repo maps, cache-aware prompts, stale-context guard, dogfood metrics. |
 | `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Industry research synthesis plus prior-conversation backfill: prompt caching, repo maps, path-scoped rules, state ownership, feature profiles, stale context, context budgets, and cost-per-solved-task. |
 | `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Backfilled token-saving patterns from earlier conversations: skill docs, state ownership, queue lifecycle, feature-profile gating, batch compaction, and zero-waste playbooks. |
-| `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
+| `PRODUCT_SPEC.md` | Canonical product positioning, users, MVP wedge, trust/control expansion boundaries, and non-goals. |
+| `AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md` | Strategic Observe/Control/Verify expansion, Policy Engine, Team Server, optional Gateway, activation gates, security/privacy, metrics, and monetization hypotheses. |
 | `CLI_SPEC.md` | CLI commands, config shape, adapters, outputs. |
 | `MVP_ROADMAP.md` | MVP phases and priority order. |
-| `ULTRA_ROADMAP.md` | Full strategy from bootstrap to SaaS. |
-| `ROADMAP_INDEX.md` | Roadmap entry point. |
+| `ULTRA_ROADMAP.md` | Full strategy from bootstrap through optional Gateway and enterprise controls. |
 
 ## Bootstrap and validation
 
@@ -78,6 +78,7 @@ Last aligned: 2026-07-01
 | `TARGET_ARCHITECTURE.md` | Future-proof target architecture for CLI, dashboard, team/PR workflow, and SaaS. |
 | `ARCHITECTURE_DECISIONS.md` | Active ADRs and architectural tradeoffs. |
 | `MODULE_BOUNDARIES.md` | Dependency direction, module ownership, extraction order, and stop rules. |
+| `AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md` | Future trust/control module sequence and Gateway/Team activation boundaries; strategy only until gates are met. |
 
 ## Product contracts
 
@@ -100,7 +101,8 @@ Last aligned: 2026-07-01
 | `MVP_EPICS_AND_ACCEPTANCE.md` | Implementation epics and acceptance criteria. |
 | `ISSUE_BACKLOG.md` | Issue-ready backlog for GitHub issues/PRs/agent tasks. |
 | `USER_PERSONAS_AND_JOBS.md` | Target users and jobs to be done. |
-| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning, free/pro/team hypotheses, evidence rules. |
+| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Trust-layer positioning, free/pro/team/enterprise hypotheses, evidence rules. |
+| `AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md` | Long-term product/business architecture: local Policy Engine, Team Server, optional Gateway, verified-task analytics, pricing hypotheses, and explicit non-goals. |
 | `RELEASE_AND_PACKAGING_PLAN.md` | Local tool packaging, release stages, version plan. |
 | `EXAMPLES_CATALOG.md` | Planned examples and example quality rules. |
 | `INTEGRATION_STRATEGY.md` | Local-first integration order before GitHub/SaaS/LLM integration. |
@@ -131,6 +133,11 @@ Last aligned: 2026-07-01
 | `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
 | `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
 | `prompt_queues/productization.md` | Productization prompts after Gate 0. |
+| `prompt_queues/agent_trust_platform_expansion.md` | Future-only trust/policy/team/Gateway prompts. All implementation rows remain blocked until their explicit strategy gates are met. |
+
+## Broken-reference note
+
+The previous index referenced `ROADMAP_INDEX.md`, but no such file exists in the repository. The stale reference was removed on 2026-08-21 rather than creating a redundant roadmap index.
 
 ## Rule
 

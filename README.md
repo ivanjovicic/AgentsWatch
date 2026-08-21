@@ -1,16 +1,22 @@
 # AgentsWatch
 
-AgentsWatch is a local-first, vendor-neutral control and evidence plane for AI coding agents.
+AgentsWatch is a local-first, vendor-neutral trust, control, and evidence plane for AI coding agents.
 
 It sits above Codex, Cursor, Claude Code, Copilot, Devin, OpenHands, and similar tools. External agents execute coding work; AgentsWatch converts roadmap intent into bounded run contracts, verifies what actually changed, and learns which execution path works best for the repository.
 
 ## Core promise
 
 ```text
-Turn roadmap intent into verified change — across any coding agent.
+Control what AI agents can do. Verify what they actually did.
 ```
 
 Supporting promise:
+
+```text
+Turn roadmap intent into verified change — across any coding agent.
+```
+
+Additional value target:
 
 ```text
 Spend fewer tokens. Prove every change. Do not repeat avoidable mistakes.
@@ -30,11 +36,12 @@ Roadmap item or prompt
   -> learning and next route
 ```
 
-The first product is not another coding agent, cloud sandbox, scheduler, or visual workflow engine.
+The first product is not another coding agent, cloud sandbox, scheduler, visual workflow engine, or generic LLM gateway.
 
 See:
 
 - `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
+- `docs/AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md`
 - `docs/PRODUCT_SPEC.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/prompt_queues/agentwatch_differentiation.md`
@@ -121,6 +128,25 @@ Proposes the smaller prompt, narrower context, cheaper route and validation sequ
 
 Later recommends the cheapest sufficient model/tool using comparable outcomes from this repository, with confidence, reasons and an `unknown` result when evidence is insufficient.
 
+## Long-term trust platform direction
+
+The strategic expansion is:
+
+```text
+Contract -> Observe -> Control -> Verify -> Learn -> better next contract
+```
+
+After the core receipt/evidence loop is proven, AgentsWatch may add:
+
+1. deterministic local policies for allowed paths, required validation, risky commands and budgets;
+2. Team Server features for shared receipts, policies and verified-task analytics;
+3. an optional AgentsWatch Gateway for provider/model policy, cost metadata, budgets, rate limits, PII/secret controls and routing/fallback;
+4. enterprise/private deployment only after paying design-partner demand.
+
+The Gateway is not a standalone product pivot and is not current MVP scope. AgentsWatch should measure engineering outcomes such as Verified Task Rate, False Done Rate, Scope Drift Rate and cost per verified task rather than becoming a generic request/token dashboard.
+
+See `docs/AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md`.
+
 ## Post-prompt logging rule
 
 Every agent run should leave compact evidence and one learning note.
@@ -203,6 +229,8 @@ docs/
 - One learning note after every agent run.
 - Risky actions require explicit approval gates.
 - No dashboard until at least 30 useful dogfood receipts exist.
+- Local deterministic policy before hosted governance.
+- Gateway only after real user demand or measured verified-outcome value.
 
 ## De-prioritized
 
@@ -217,27 +245,8 @@ AgentsWatch should not initially build:
 - CI/CD, incident or production orchestration;
 - automatic merge/release;
 - integration marketplace;
-- exact token accounting without provider data.
-
-## Commercial trial rule — post-MVP
-
-AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
-
-License checks must not upload repository source code, prompts, diffs, validation output, receipts, command logs or learning history.
-
-See:
-
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
-
-## Current strategy documents
-
-- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
-- `docs/PRODUCT_SPEC.md`
-- `docs/MVP_ROADMAP.md`
-- `docs/FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
-- `docs/FEATURE_SELECTION_SPEC.md`
-- `docs/ROADMAP_DRIVEN_AGENT_OS.md`
-- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
-- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/prompt_queues/agentwatch_differentiation.md`
+- exact token accounting without provider data;
+- generic LLM observability dashboard;
+- hosted multi-tenant Gateway;
+- billing, SAML/SCIM, on-prem or Kubernetes before roadmap gates;
+- AI Act compliance claims.

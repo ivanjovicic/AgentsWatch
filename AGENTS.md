@@ -1,6 +1,6 @@
 # AgentsWatch Agent Rulebook
 
-AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
+AgentsWatch is a local-first, vendor-neutral trust, control, and evidence layer for AI coding agents, with token/context economy as a measured optimization goal.
 
 ## Source of truth
 
@@ -35,6 +35,9 @@ If documents disagree, current code/tests and committed `.ai/runs` evidence win 
 - Keep prompts small and split broad work.
 - Markdown report contracts come before SQLite/dashboard work.
 - No hidden telemetry or network calls in MVP.
+- The strategic trust-platform expansion in `docs/AGENT_TRUST_PLATFORM_EXPANSION_2026_08_21.md` does not authorize runtime expansion by itself.
+- `docs/prompt_queues/agent_trust_platform_expansion.md` is future-only: Policy Engine, Team Server, Gateway, and enterprise rows remain blocked until both the canonical router and their explicit activation gates allow them.
+- AgentsWatch must not pivot into a generic LLM gateway or observability dashboard; verification of engineering outcomes remains the product center of gravity.
 
 ## Token economy rule
 
