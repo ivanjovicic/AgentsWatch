@@ -1,8 +1,8 @@
 # AgentsWatch
 
-AgentsWatch is a local-first, vendor-neutral control and evidence plane for AI coding agents.
+AgentsWatch is a local-first, vendor-neutral verification and evidence layer for AI coding agents.
 
-It sits above Codex, Cursor, Claude Code, Copilot, Devin, OpenHands, and similar tools. External agents execute coding work; AgentsWatch converts roadmap intent into bounded run contracts, verifies what actually changed, and learns which execution path works best for the repository.
+External agents such as Codex, Claude Code, Cursor, Copilot, Devin, OpenHands, and similar tools execute coding work. AgentsWatch does not replace them. It turns roadmap intent into a machine-checkable run contract, records what actually changed, verifies claims against git and validation evidence, and produces a vendor-neutral run receipt.
 
 ## Core promise
 
@@ -13,35 +13,64 @@ Turn roadmap intent into verified change — across any coding agent.
 Supporting promise:
 
 ```text
-Spend fewer tokens. Prove every change. Do not repeat avoidable mistakes.
+Trust the diff, not the agent summary.
 ```
 
-Token and cost savings are product targets to measure through dogfood evidence, not published claims yet.
+Token, time, and cost efficiency remain useful secondary metrics. They are not the primary product wedge and no savings percentage should be published without dogfood evidence.
 
-## Differentiated product loop
+## Product loop
 
 ```text
-Roadmap item or prompt
-  -> bounded run contract
+Roadmap item / issue / prompt
+  -> Run Contract
   -> external coding agent
+  -> start/end repository evidence
   -> Agent Run Receipt
-  -> claims/diff/validation evidence gate
-  -> scope and roadmap drift result
+  -> claims/diff/validation gate
+  -> scope and acceptance-criteria findings
+  -> Done / NeedsEvidence / NeedsReview / NeedsApproval / Blocked
   -> learning and next route
 ```
 
-The first product is not another coding agent, cloud sandbox, scheduler, or visual workflow engine.
+## What AgentsWatch is not
 
-See:
+AgentsWatch is not another:
 
-- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
-- `docs/PRODUCT_SPEC.md`
-- `docs/MVP_ROADMAP.md`
-- `docs/prompt_queues/agentwatch_differentiation.md`
+- coding-agent runtime;
+- cloud sandbox;
+- multi-agent session manager;
+- generic scheduler;
+- visual workflow engine;
+- generic token/cost dashboard;
+- full chat/session archive;
+- CI/CD or release orchestrator.
+
+Those capabilities are increasingly provided by agent vendors and engineering platforms. AgentsWatch should integrate with them and specialize in independent, reviewable verification.
+
+## MVP wedge
+
+The first credible product is deliberately narrow:
+
+```text
+Task -> Contract -> Agent -> Verified Receipt
+```
+
+MVP capabilities:
+
+1. local workspace initialization;
+2. canonical machine-readable `RunContract v1`;
+3. run start baseline with pre-existing dirty-worktree attribution;
+4. run finish delta;
+5. canonical `RunReceipt v1` plus Markdown projection;
+6. validation evidence capture;
+7. claims-vs-diff checks;
+8. scope drift checks;
+9. explainable evidence findings and status;
+10. compact handoff and one learning note.
 
 ## Current runtime
 
-Implemented commands:
+Implemented today:
 
 ```bash
 agentswatch init
@@ -49,132 +78,65 @@ agentswatch optimize <prompt-file-or-text>
 agentswatch status
 ```
 
-The repository is still in planning/skeleton stage. Runtime work must remain validation-first.
+The current repository is still a skeleton/prototype. The core contract -> run -> receipt -> verification spine is not implemented yet.
 
-## Planned differentiated commands
+The latest known GitHub CI evidence shows:
 
-Run contract and receipt:
+- restore: pass;
+- build: pass;
+- tests: fail in `GitStatusParserTests` because the current parser trims the fixed-width git porcelain prefix before slicing the path.
 
-```bash
-agentswatch start <task-id>
-agentswatch finish <task-id>
-agentswatch contract check <file>
-agentswatch contract build <roadmap-item-or-prompt>
-agentswatch receipt create <run-id>
-agentswatch receipt check <run-id>
-```
+The first implementation prompt must fix and harden git status parsing, rerun the complete build/test gate, then run CLI smoke validation before feature expansion.
 
-Evidence and drift:
+See:
 
-```bash
-agentswatch evidence check <run-id>
-agentswatch drift check <run-id>
-agentswatch handoff <run-id>
-```
+- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+- `docs/prompt_queues/verification_mvp_2026_08_25.md`
 
-Validation economy and learning:
+## Canonical local artifacts
 
-```bash
-agentswatch validate --suggest
-agentswatch validate --profile
-agentswatch mistakes list
-agentswatch mistakes check <run-log>
-agentswatch rollup mistakes --last 5
-```
-
-Roadmap and routing later:
-
-```bash
-agentswatch roadmap check
-agentswatch roadmap next
-agentswatch roadmap review
-agentswatch route suggest
-```
-
-## Signature capabilities
-
-### Roadmap Contract Compiler
-
-Turns vague roadmap items into machine-checkable intent, acceptance criteria, dependencies, owned paths, avoid paths, permission mode, validation and stop rules.
-
-### Agent Run Receipt
-
-Produces a compact vendor-neutral record of what an agent was asked to do, what it changed, what it validated, what it claimed, what was missed and what should happen next.
-
-### Evidence and Drift Gate
-
-Compares:
+Machine-readable data is canonical from MVP start:
 
 ```text
-roadmap intent
-vs acceptance criteria
-vs agent claims
-vs actual diff
-vs validation evidence
+.agentwatch/
+  contracts/<contract-id>.json
+  runs/<run-id>.json
 ```
 
-### Counterfactual Learning
+Human-readable projections and handoffs remain git-friendly Markdown:
 
-Proposes the smaller prompt, narrower context, cheaper route and validation sequence that should have been used after failed, expensive or drifting runs.
+```text
+.ai/
+  runs/<run-id>.md
+  handoffs/<run-id>.md
+```
 
-### Project-Local Empirical Router
+Rule:
 
-Later recommends the cheapest sufficient model/tool using comparable outcomes from this repository, with confidence, reasons and an `unknown` result when evidence is insufficient.
+```text
+JSON = source of truth
+Markdown = human-readable projection
+```
 
-## Post-prompt logging rule
+Do not require downstream verification logic to parse free-form Markdown.
 
-Every agent run should leave compact evidence and one learning note.
+## Architecture direction
 
-See:
+AgentsWatch remains a local-first modular monolith:
 
-- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
-- `docs/MISTAKE_LEARNING_SPEC.md`
-- `docs/CLI_LEARNING_ADDENDUM.md`
-- `docs/prompts/LOG-001-post-prompt-run-log.md`
-- `docs/prompts/LOG-002-mistake-pattern-review.md`
-- `docs/prompts/LOG-003-flutter-agent-run-review.md`
+```text
+CLI / future MCP
+      |
+Application use cases
+      |
+Contract | Run | Evidence | Learning
+      |
+Domain models
+      |
+Git | Local storage | Validation/stack adapters
+```
 
-## Supervised autopilot rule
-
-AgentsWatch may sequence prompts, but should not run uncontrolled continuous autopilot in MVP.
-
-External tools execute. AgentsWatch contracts, verifies and learns.
-
-See:
-
-- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/prompts/AUTO-001-design-supervised-autopilot-queue.md`
-- `docs/prompts/AUTO-002-generate-tool-prompt-envelope.md`
-- `docs/prompts/AUTO-003-review-queued-agent-run.md`
-- `docs/prompts/AUTO-004-manual-assisted-queue-runbook.md`
-
-## Agent safety rule
-
-Agents may suggest risky actions, but must not execute them without an explicit approval gate.
-
-See:
-
-- `docs/AGENT_RISK_BOUNDARIES.md`
-- `docs/AGENT_PERMISSION_MODEL.md`
-- `docs/prompts/SEC-001-agent-risk-boundary-audit.md`
-
-## Bootstrap warning
-
-The next runtime work must be:
-
-1. run `AW-VAL-001` build validation;
-2. run `AW-VAL-002` CLI smoke validation;
-3. review validation evidence;
-4. only then implement the Agent Run Receipt spine.
-
-See:
-
-- `docs/BUILD_VALIDATION_PLAN.md`
-- `docs/RISK_REGISTER.md`
-- `docs/BOOTSTRAP_NEXT_STEPS.md`
-- `docs/prompt_queues/bootstrap_validation.md`
-
-## Repository layout
+Current projects remain useful boundaries:
 
 ```text
 src/
@@ -185,59 +147,76 @@ src/
   AgentsWatch.Reports/
 tests/
   AgentsWatch.Tests/
-docs/
-.ai/templates/
 ```
 
-## Development principles
+After Gate 0, application use cases and ports should be introduced before feature growth so CLI logic does not accumulate in `Program.cs`.
 
-- Local-first CLI before dashboard or SaaS.
+## MVP integration scope
+
+Start with:
+
+- universal git behavior;
+- .NET adapter;
+- Flutter adapter.
+
+React/TypeScript, Node, Python, MCP, GitHub checks, and vendor-specific adapters come after the verification spine works in dogfood.
+
+## Dogfood gate
+
+Use AgentsWatch on AgentsWatch itself and at least one real application repository.
+
+Before building a dashboard or sophisticated empirical router, collect at least 30 useful receipts across comparable task types and measure:
+
+- contract completeness;
+- attributable changed files;
+- scope drift;
+- evidence completeness;
+- validation breadth/duration;
+- retries;
+- repeated mistakes;
+- acceptance/rejection of agent claims.
+
+## Product principles
+
+- Verification before observability breadth.
 - Evidence before autonomy.
 - Cross-vendor contracts before deep vendor integration.
-- External agents execute; AgentsWatch supervises and verifies.
-- Git, markdown and file-system evidence before cloud services.
-- Compact receipts instead of full chat history.
-- Compact command profiles instead of full terminal logs.
-- Deterministic findings before opaque scores.
-- Explainable routing before automatic routing.
-- One learning note after every agent run.
+- Canonical structured data before derived reports.
+- Git attribution before scope scoring.
+- Deterministic findings before LLM interpretation.
+- Local-first and no telemetry by default.
+- Compact evidence instead of full session capture.
+- Explainable status decisions; no opaque score may decide completion alone.
 - Risky actions require explicit approval gates.
-- No dashboard until at least 30 useful dogfood receipts exist.
+- No dashboard until receipt dogfood proves what should be visualized.
 
 ## De-prioritized
 
-AgentsWatch should not initially build:
+Do not prioritize before the verification MVP is proven:
 
-- proprietary coding-agent runtime;
+- proprietary coding-agent execution;
 - cloud workspaces;
-- generic background-agent manager;
-- generic schedules or playbooks;
+- generic parallel-agent management;
+- generic schedules/playbooks;
 - visual workflow canvas;
-- full session archive;
-- CI/CD, incident or production orchestration;
+- full conversation history;
+- generic token dashboard as the core product;
 - automatic merge/release;
-- integration marketplace;
-- exact token accounting without provider data.
+- SaaS/billing/team administration;
+- complex model routing without comparable local evidence;
+- large integration marketplace.
 
-## Commercial trial rule — post-MVP
+## Canonical strategy documents
 
-AgentsWatch may later offer a permanent free tier plus a time-limited or usage-limited Pro trial.
+Read these first:
 
-License checks must not upload repository source code, prompts, diffs, validation output, receipts, command logs or learning history.
+1. `README.md`
+2. `docs/PRODUCT_SPEC.md`
+3. `docs/MVP_ROADMAP.md`
+4. `docs/ARCHITECTURE.md`
+5. `docs/DATA_MODEL.md`
+6. `docs/COMMAND_CONTRACTS.md`
+7. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+8. `docs/prompt_queues/verification_mvp_2026_08_25.md`
 
-See:
-
-- `docs/TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `docs/prompt_queues/agentwatch_trial_licensing.md`
-
-## Current strategy documents
-
-- `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`
-- `docs/PRODUCT_SPEC.md`
-- `docs/MVP_ROADMAP.md`
-- `docs/FEATURE_PORTFOLIO_REVIEW_2026_06_30.md`
-- `docs/FEATURE_SELECTION_SPEC.md`
-- `docs/ROADMAP_DRIVEN_AGENT_OS.md`
-- `docs/AGENT_RUN_LOGGING_AND_LEARNING.md`
-- `docs/SUPERVISED_AUTOPILOT_QUEUE.md`
-- `docs/prompt_queues/agentwatch_differentiation.md`
+Historical token-economy, productization, and older queue documents remain useful research/context, but they must not override the current verification-first roadmap.
