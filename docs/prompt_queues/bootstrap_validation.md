@@ -1,44 +1,37 @@
 # AgentsWatch Bootstrap Validation Queue
 
-Last aligned: 2026-06-29  
-Target repo: `ivanjovicic/AgentsWatch`
+Last aligned: 2026-08-25  
+Status: **superseded historical queue**
 
-Purpose: reduce risk from the initial skeleton by validating build, tests, CLI smoke, and evidence before adding more runtime features.
+This file is retained for audit/history only.
 
-## Read first
+The previous `AW-VAL-001 -> AW-VAL-004` bootstrap sequence was written before current CI evidence existed. Current known evidence already shows restore/build pass and a focused GitStatusParser test failure.
 
-- `../../AGENTS.md`
-- `PROMPT_QUEUE_ROUTER.md`
-- `NEXT_PROMPT_FAST_PATH.md`
-- `../AGENT_OPERATING_SYSTEM.md`
-- `../AGENT_COMMAND_PLAYBOOK.md`
-- `../BUILD_VALIDATION_PLAN.md`
-- `../RISK_REGISTER.md`
-- `../ARCHITECTURE.md`
+## Current authority
 
-## Rules
+Use:
 
-- Do not add new product features until `AW-VAL-001` and `AW-VAL-002` are complete.
-- Fix only build/test/smoke failures in this queue.
-- If validation is blocked by local SDK/environment, record it clearly instead of changing runtime code.
-- Keep every prompt low-budget and narrow.
-- Use `NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt quickly.
+```text
+docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
+docs/prompt_queues/verification_mvp_2026_08_25.md
+```
 
-## Active prompts
+Current next work is:
 
-| ID | Status | Prompt file | Purpose |
-|---|---|---|---|
-| AW-VAL-001 | Ready now | `../prompts/AW-VAL-001-build-validation.md` | Verify restore/build/test for the skeleton. |
-| AW-VAL-002 | Ready after AW-VAL-001 | `../prompts/AW-VAL-002-cli-smoke.md` | Verify CLI help/version/optimize/status smoke behavior. |
-| AW-VAL-003 | Ready after AW-VAL-002 | `../prompts/AW-VAL-003-evidence-review.md` | Review validation evidence and decide if feature work is safe. |
-| AW-VAL-004 | Ready after AW-VAL-003 | `../prompts/AW-VAL-004-init-hardening.md` | Harden init command only after validation is known. |
+```text
+AW-VFY-001 — Git parser and CI hardening
+AW-VFY-002 — CLI smoke and Gate 0 closure
+```
 
-## Exit criteria
+Do not select the historical AW-VAL prompts merely because an older run/document references them as `Ready`.
 
-Bootstrap validation is complete when:
+## Historical mapping
 
-- restore/build/test results are recorded;
-- CLI smoke results are recorded;
-- CI or validation evidence review is recorded;
-- remaining risks are moved to `docs/RISK_REGISTER.md` or a follow-up prompt;
-- `docs/prompt_queues/agentwatch_mvp.md` can continue at `AW-002` or later.
+| Old prompt | Current handling |
+|---|---|
+| AW-VAL-001 build validation | Superseded by focused AW-VFY-001 using existing CI evidence. |
+| AW-VAL-002 CLI smoke | Replaced by AW-VFY-002. |
+| AW-VAL-003 evidence review | Gate review is incorporated into AW-VFY-002 completion evidence. |
+| AW-VAL-004 init hardening | Any still-missing init behavior belongs inside AW-VFY-002 smoke/hardening scope or a targeted follow-up if discovered. |
+
+Historical prompt files may remain unchanged as evidence of earlier planning.
