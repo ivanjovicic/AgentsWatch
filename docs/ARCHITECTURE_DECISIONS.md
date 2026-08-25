@@ -1,158 +1,136 @@
 # AgentsWatch Architecture Decisions
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-08-25  
 Status: active decisions
 
 ## ADR-001 — Local-first product
 
 Decision: AgentsWatch starts as a local CLI and must be useful without cloud accounts.
 
-Why:
+Consequences:
 
-- fastest useful MVP;
-- highest trust for source code and prompts;
-- no billing/auth/cloud complexity early;
-- easier dogfood on private repos.
+- no telemetry/network calls by default;
+- repository evidence stays local;
+- cloud/team features come only after local verification proof.
+
+## ADR-002 — Verification layer, not agent runtime
+
+Decision: external coding agents execute work; AgentsWatch contracts and verifies it.
 
 Consequences:
 
-- markdown and local files first;
-- no telemetry by default;
-- cloud sync only after explicit opt-in later.
+- no proprietary reasoning loop/cloud sandbox/session manager in MVP;
+- integrations wrap stable contract/run/receipt use cases later;
+- positioning centers on verified change, not orchestration breadth.
 
----
+## ADR-003 — Modular monolith with ports/adapters
 
-## ADR-002 — Modular monolith, not microservices
-
-Decision: use a modular monolith with clear boundaries.
-
-Why:
-
-- the product is early;
-- local CLI/dashboard need shared logic;
-- microservices add operational cost without value.
+Decision: use one local modular application with clear boundaries.
 
 Consequences:
 
-- modules must have clear dependencies;
-- future SaaS can extract services only after use cases stabilize.
+- CLI/MCP can reuse application use cases;
+- git/file/process/storage dependencies sit behind adapters where practical;
+- no microservices/message bus/hosted database for MVP.
 
----
+## ADR-004 — Structured JSON is canonical; Markdown is projection
 
-## ADR-003 — Ports and adapters
-
-Decision: domain/application logic must not depend directly on git CLI, file system, process runner, SQLite, HTTP, or GitHub APIs.
-
-Why:
-
-- testability;
-- future dashboard/API reuse;
-- safer integration expansion.
-
-Consequences:
-
-- introduce ports before deep feature growth;
-- adapters wrap external systems;
-- use cases depend on abstractions.
-
----
-
-## ADR-004 — Markdown reports first
-
-Decision: markdown reports are the first source of user-facing evidence.
+Decision: RunContract, active-run baseline, RunDelta/RunReceipt are machine-readable JSON from the verification MVP start.
 
 Why:
 
-- easy to read;
-- git-friendly;
-- no database needed;
-- trustworthy for solo users.
+- evidence/drift/claims logic requires deterministic structured data;
+- future MCP/GitHub integrations must not parse free-form Markdown;
+- schema versioning is easier to validate and migrate.
 
 Consequences:
 
-- JSON/SQLite comes later;
-- markdown format must remain stable enough to map to future data model.
+- canonical paths live under `.agentwatch/`;
+- Markdown under `.ai/` is generated for humans;
+- SQLite is postponed until local-history queries justify it;
+- reports must be regenerable from canonical JSON.
 
----
+This supersedes the older `Markdown reports first, JSON later` interpretation.
 
-## ADR-005 — Deterministic heuristics before LLM analysis
+## ADR-005 — Run attribution requires a start baseline
 
-Decision: MVP risk scoring and prompt optimization should be deterministic and explainable.
-
-Why:
-
-- users need to trust why something is risky;
-- no provider key required;
-- works offline;
-- easier to test.
+Decision: raw final `git status` is not sufficient to attribute changes to an agent run.
 
 Consequences:
 
-- LLM integrations may later improve text generation, but should not be required for core value.
+- `start` captures HEAD/branch and staged/unstaged/untracked state/fingerprints;
+- `finish` computes start-to-end delta;
+- pre-existing unchanged dirty files are excluded from attributable changes;
+- pre-existing files changed further are surfaced with context;
+- ambiguous attribution remains explicit.
 
----
+## ADR-006 — Lossless git porcelain parsing
 
-## ADR-006 — CLI is an interface, not the application core
-
-Decision: CLI should parse commands and call application use cases.
-
-Why:
-
-- later local API/dashboard should reuse logic;
-- avoids large `Program.cs` becoming untestable.
+Decision: git status parsing must use a machine-safe porcelain contract, preferably NUL-delimited where appropriate.
 
 Consequences:
 
-- extract use cases after Gate 0;
-- keep console rendering separate from domain decisions.
+- do not trim fixed-width prefixes before parsing;
+- tests cover rename, spaces, staged/unstaged, delete, untracked;
+- git parsing is an evidence primitive, not UI-string parsing.
 
----
+## ADR-007 — Deterministic verification before LLM analysis
 
-## ADR-007 — Adapters suggest validation by default
-
-Decision: language adapters suggest validation commands but should not execute them unless explicitly requested.
-
-Why:
-
-- avoids surprising user commands;
-- safer across different stacks;
-- works for read-only/report-only workflows.
+Decision: core Contract/Evidence/Scope/Claims checks work offline without provider keys.
 
 Consequences:
 
-- `validate` command should be explicit;
-- reports can show suggested vs actually run validation.
+- deterministic rule IDs and evidence references;
+- `unknown` is valid;
+- LLM semantic analysis may later be advisory, never the sole verification truth.
 
----
+## ADR-008 — CLI is an interface, not application core
 
-## ADR-008 — Dashboard only after dogfood evidence
-
-Decision: do not build dashboard until CLI reports are useful and reused.
-
-Why:
-
-- dashboard can distract from core value;
-- markdown reports must prove value first;
-- dogfood data should shape dashboard UX.
+Decision: CLI parses/renders and calls reusable application use cases.
 
 Consequences:
 
-- dashboard is blocked by validation gates;
-- local API/storage design should prepare for it without implementing it early.
+- avoid growing `Program.cs` with domain logic;
+- future MCP/local API use the same RunContract/RunReceipt semantics;
+- use-case tests can run without console parsing.
 
----
+## ADR-009 — Adapters suggest validation by default
 
-## ADR-009 — SaaS only after local trust
-
-Decision: SaaS/team features come after local CLI/dashboard proves regular usage.
-
-Why:
-
-- avoids premature billing/auth/cloud work;
-- source/privacy trust matters;
-- token-saving claim must be evidenced first.
+Decision: stack adapters suggest validation; execution is explicit.
 
 Consequences:
 
-- cloud architecture remains a future extension;
-- local product must stand alone.
+- no surprising broad commands;
+- structured imported/manual/CI validation evidence can exist without a command runner;
+- command profiler/runner is a later optimization layer.
+
+## ADR-010 — Universal git, .NET, Flutter first
+
+Decision: focus initial verification support on universal git plus .NET and Flutter.
+
+Consequences:
+
+- existing React/Node/Python detection may remain but does not block MVP gates;
+- adapter breadth is subordinate to correct attribution/receipts.
+
+## ADR-011 — Dashboard and SaaS only after dogfood proof
+
+Decision: do not build aggregate UI/team/cloud product before repeated local receipts prove value.
+
+Gate:
+
+- target at least 30 useful dogfood receipts;
+- real unsupported claim catch;
+- real scope-drift catch;
+- real missing-evidence block;
+- no known silent false-attribution issue in covered cases.
+
+## ADR-012 — Learning/routing depend on trusted receipts
+
+Decision: sophisticated mistake learning, token economy, and empirical model routing come after attribution/evidence are reliable.
+
+Consequences:
+
+- do not optimize noisy/untrusted data;
+- route recommendations require comparable repository-local evidence;
+- insufficient evidence returns `unknown`.
