@@ -1,45 +1,70 @@
 # AgentsWatch Bootstrap Next Steps
 
-Last aligned: 2026-06-29
+Last aligned: 2026-08-25
 
-## Current status
+## Current evidence
 
-The repository has an initial .NET CLI skeleton, docs, tests, and CI workflow. The skeleton was created through GitHub file writes and must be validated before new runtime feature work.
+The skeleton is partially validated by GitHub Actions on `main`.
+
+Latest known evidence:
+
+```text
+restore: PASS
+build: PASS (0 warnings, 0 errors)
+test: FAIL
+```
+
+Known failing test:
+
+```text
+AgentsWatch.Tests.GitStatusParserTests.Parse_ParsesModifiedAndUntrackedFiles
+```
+
+Known root cause:
+
+- `git status --short` relies on fixed porcelain columns;
+- `GitStatusParser.Parse` uses `StringSplitOptions.TrimEntries`;
+- the leading status-column space is removed before `line[3..]` path slicing;
+- ` M README.md` becomes `M README.md`, then path parsing returns `EADME.md`.
+
+This means Gate 0 is not an unknown build-validation problem anymore. It is a known parser/test failure plus remaining CLI smoke validation.
 
 ## Required next order
 
-Run in this order:
+1. `AW-VFY-001` — fix and harden git porcelain parsing; rerun restore/build/test.
+2. `AW-VFY-002` — run CLI smoke and close Gate 0 if clean.
+3. `AW-VFY-003` — implement RunContract v1.
+4. continue the canonical verification queue.
 
-1. `AW-VAL-001` — build validation.
-2. `AW-VAL-002` — CLI smoke validation.
-3. `AW-VAL-003` — validation evidence review.
-4. `AW-VAL-004` — init command hardening.
-5. Continue with `AW-002+` from `docs/prompt_queues/agentwatch_mvp.md`.
+Queue:
 
-## Temporary block
+`docs/prompt_queues/verification_mvp_2026_08_25.md`
 
-Treat these MVP prompts as blocked until build and CLI smoke evidence exists:
+## Gate 0 definition of done
 
-- `AW-002`;
-- `AW-003`;
-- `AW-004`;
-- `AW-005`;
-- `AW-006`;
-- `AW-007`;
-- `AW-008`;
-- `AW-009`;
-- `AW-010`.
+Gate 0 closes only when:
 
-## Why
+- restore passes;
+- build passes;
+- tests pass;
+- CLI help/version/init/optimize/status smoke is recorded;
+- init writes only expected local files;
+- non-git/status behavior is either proven or explicitly queued as a blocker.
 
-The first risk is not product design. The first risk is whether the generated solution, project references, tests, CLI command dispatch, and CI workflow are valid.
+## Do not do before Gate 0 closes
 
-## Minimal next prompt
+Do not implement:
 
-```text
-Use docs/prompts/AW-VAL-001-build-validation.md.
-Do not add features.
-Run restore/build/test.
-Fix only build or test failures.
-Return validation evidence and remaining risk.
-```
+- RunContract runtime commands;
+- start/finish lifecycle;
+- receipts;
+- evidence/drift/claims gates;
+- MCP/dashboard/SaaS.
+
+Docs-only alignment is already allowed and should use the verification-first canonical documents.
+
+## Obsolete bootstrap instruction
+
+The previous generic instruction to run `AW-VAL-001` as if no build evidence existed is superseded by `AW-VFY-001`.
+
+Historical AW-VAL prompt files may remain for audit/history, but the prompt router must not select them as the current next task.
