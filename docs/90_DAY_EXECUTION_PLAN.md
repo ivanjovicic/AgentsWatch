@@ -1,204 +1,174 @@
 # AgentsWatch 90-Day Execution Plan
 
-Last aligned: 2026-06-29  
+Last aligned: 2026-08-25  
 Status: tactical execution plan
 
-## Goal
+## 90-day goal
 
-In 90 days, AgentsWatch should be a useful local CLI for solo developers, with enough dogfood evidence to decide whether a dashboard or paid product is worth building.
+In 90 days, AgentsWatch should be a trustworthy local CLI that can take a bounded task contract, record one external coding-agent run, attribute the actual repository changes, verify evidence/scope/common claims, and produce a reusable run receipt.
 
-## Workstream map
+The purpose of the 90-day period is to prove the verification loop, not to maximize feature count.
+
+## Primary outcome
+
+```text
+Task -> Contract -> Start baseline -> Agent -> Finish delta -> Receipt -> Verification
+```
+
+## Workstreams
 
 | Workstream | Goal |
 |---|---|
-| Bootstrap | Validate solution, tests, CLI smoke, CI. |
-| CLI Core | Commands, config, init, status, start/finish/report. |
-| Prompt Optimizer | Risk, split, budget, scope, handoff, review prompts. |
-| Git Evidence | Snapshots, diff stats, changed files, risk signals. |
-| Adapters | .NET, Flutter, React/TypeScript, Python validation suggestions. |
-| Dogfood | Use AgentsWatch on AgentsWatch and MathLearning. |
-| Product | Positioning, examples, landing page copy, pricing hypothesis. |
+| Gate 0 | Make CI green and prove CLI smoke. |
+| Contract | Define/lint canonical RunContract v1. |
+| Attribution | Correctly isolate run changes from pre-existing dirty work. |
+| Receipt | Persist canonical RunReceipt v1 and Markdown projection. |
+| Verification | Evidence, scope drift and common claims checks. |
+| Adapters | Universal git first, then .NET and Flutter validation hints. |
+| Dogfood | Collect 30 useful receipts and measure real catches/false positives. |
+| Packaging | Keep global-tool install and local workflow simple. |
 
----
-
-## Weeks 1-2 — Stabilize skeleton
-
-Objectives:
-
-- validate build/test;
-- fix solution/project issues;
-- run CLI smoke;
-- stabilize `init`, `status`, and `optimize` basics.
+## Weeks 1–2 — Close Gate 0 and establish contracts
 
 Tasks:
 
-- complete `AW-VAL-001`;
-- complete `AW-VAL-002`;
-- complete `AW-VAL-003`;
-- complete `AW-VAL-004`;
-- add tests for init no-overwrite behavior;
-- add tests for git parser edge cases.
+- fix/harden git porcelain parsing;
+- add parser edge-case tests;
+- rerun restore/build/test;
+- run CLI smoke in temporary directories/repos;
+- update Gate 0 evidence;
+- implement `RunContract v1` model/schema/storage/lint.
 
 Exit criteria:
 
 - CI green;
-- CLI help/version works;
-- `agentswatch init` works in temp directory;
-- `agentswatch optimize` returns risk/split output;
-- risk register updated.
+- CLI smoke proven;
+- valid/invalid contract fixtures tested;
+- `.agentwatch/contracts/<id>.json` is stable and canonical.
 
----
-
-## Weeks 3-4 — Local CLI MVP
-
-Objectives:
-
-- make the CLI useful without dashboard;
-- generate markdown outputs;
-- dogfood on at least one repo.
+## Weeks 3–4 — Start-run baseline
 
 Tasks:
 
-- implement `task split`;
-- implement `start` and `finish` run snapshots;
-- implement markdown run report;
-- implement AI changelog update;
-- implement handoff summary output;
-- write docs for manual workflow.
+- extract application use cases/ports from CLI where needed;
+- implement `agentswatch start`;
+- record branch/HEAD/staged/unstaged/untracked baseline;
+- add atomic active-run persistence;
+- handle clean/dirty repositories;
+- refuse overlapping active run by default;
+- add attribution-oriented tests.
 
 Exit criteria:
 
-- raw prompt can become markdown tasks;
-- a run can be started and finished;
-- report is written under `.ai/runs/`;
-- handoff is written and usable in next prompt.
+- a dirty repository can start safely;
+- pre-existing files are clearly recorded;
+- no source contents are unnecessarily persisted;
+- start state can drive a later delta comparison.
 
----
-
-## Weeks 5-6 — Token optimizer v1
-
-Objectives:
-
-- improve prompt risk scoring;
-- generate higher-quality split prompts;
-- produce useful token waste reports.
+## Weeks 5–6 — Finish-run attribution and receipt
 
 Tasks:
 
-- expand prompt risk patterns;
-- add budget enforcement warnings;
-- add scope limiter generator;
-- add investigation-only prompt generator;
-- add implementation prompt generator;
-- add test prompt generator;
-- add diff-only review prompt generator;
-- add token waste report fields.
+- implement `agentswatch finish`;
+- compute attributable delta;
+- handle pre-existing unchanged and changed-further files;
+- represent attribution ambiguity;
+- support add/delete/rename/untracked cases;
+- implement `RunReceipt v1`;
+- generate Markdown report from JSON receipt;
+- generate compact handoff.
 
 Exit criteria:
 
-- high-risk broad prompts are split automatically;
-- output prompts include run mode, budget, scope, stop rules, validation;
-- waste report shows files inspected/changed and broad commands avoided.
+- tests prove no false attribution for a pre-existing dirty file;
+- tests prove attributable edits are captured;
+- receipt survives without chat history;
+- Markdown can be regenerated from JSON.
 
----
-
-## Weeks 7-8 — Git evidence and risk scoring
-
-Objectives:
-
-- make run reports trustworthy;
-- detect common AI-agent claim mismatches.
+## Weeks 7–8 — Evidence and Scope gates
 
 Tasks:
 
-- parse modified/added/deleted/renamed/untracked files;
-- classify changed files by stack and risk;
-- add claimed-vs-actual diff heuristic;
-- detect tests changed/not changed;
-- detect high-risk categories;
-- generate review checklist per run.
+- add validation evidence model/import path;
+- implement `evidence check`;
+- enforce mandatory validation requirements;
+- implement `drift check`;
+- test owned/avoid paths cross-platform;
+- add decision reasons and audit-friendly override design if needed.
 
 Exit criteria:
 
-- report flags missing tests when runtime changed;
-- report flags backend/frontend/docs claim mismatch;
-- report lists high-risk file categories and reasons.
+- missing mandatory validation prevents `Done`;
+- scope drift identifies exact paths/rules;
+- pre-existing unchanged dirty files do not create drift;
+- unknown/ambiguous states remain explicit.
 
----
-
-## Weeks 9-10 — Language adapters
-
-Objectives:
-
-- support common developer stacks with validation suggestions.
+## Weeks 9–10 — Claims verification and adapter hardening
 
 Tasks:
 
-- harden .NET detection;
-- harden Flutter detection;
-- add React/TypeScript detection;
-- add Python detection;
-- add Node detection;
-- map changed files to likely validation commands;
-- avoid broad validation unless configured.
+- implement initial structured claim types;
+- verify `TestsAdded`, `DocsOnly`, `BackendUnchanged`, `MigrationAdded`, `ValidationPassed`, `NoUnrelatedChanges`;
+- harden universal git adapter;
+- refine .NET and Flutter validation suggestions;
+- avoid broad automatic validation.
 
 Exit criteria:
 
-- AgentsWatch gives useful validation suggestions for .NET, Flutter, React, Python, and Node repos;
-- commands are suggestions by default, not unsafe automatic execution.
+- at least one synthetic unsupported claim is caught per claim family;
+- claim failures explain the exact supporting/missing evidence;
+- verification works without any LLM provider key.
 
----
-
-## Weeks 11-12 — Dogfood and packaging
-
-Objectives:
-
-- use AgentsWatch for real work;
-- package it for easier local use;
-- decide dashboard/no-dashboard.
+## Weeks 11–12 — Dogfood and product proof
 
 Tasks:
 
-- dogfood on AgentsWatch repo;
-- dogfood on MathLearning Flutter repo;
-- dogfood on a .NET backend repo;
-- add `dotnet pack` validation;
-- test local global tool install;
-- write examples in `examples/`;
-- write landing-page copy draft.
+- dogfood AgentsWatch on itself;
+- dogfood on at least one .NET repo;
+- dogfood on at least one Flutter repo;
+- collect toward 30 useful receipts;
+- record false positives/false negatives/ambiguities;
+- measure setup friction and handoff usefulness;
+- test global tool packaging/install;
+- decide next phase from evidence.
 
 Exit criteria:
 
-- at least 5 real run reports exist;
-- handoff summaries were reused;
-- rough estimate of token waste reduction is documented;
-- local tool install works;
-- decision made: continue CLI or start local dashboard.
+- 30 useful receipts or a documented reason why the workflow is not sticky enough to reach that number;
+- at least one real unsupported-claim catch;
+- at least one real scope-drift catch;
+- at least one real missing-evidence block;
+- no known silent false attribution in covered cases;
+- decision recorded for MCP/GitHub check/dashboard priorities.
 
----
+## Success criteria
 
-## 90-day success criteria
+AgentsWatch is successful at day 90 if:
 
-AgentsWatch is successful if, by day 90:
-
-- CLI is installable locally;
-- `init`, `optimize`, `task split`, `start`, `finish`, `report`, `handoff`, and `review-diff` are useful;
-- two real repos were dogfooded;
-- run reports catch at least one missed-test or scope-creep issue;
-- handoff summaries reduce repeated context in follow-up runs;
-- dashboard decision is based on evidence, not excitement.
-
----
+- the CLI is installable locally;
+- Contract -> Start -> Finish -> Receipt -> Verify works end to end;
+- dirty-worktree attribution is covered by tests and dogfood;
+- receipts are useful without full session history;
+- verification catches real agent mistakes or missing evidence;
+- dogfood users can understand every status decision;
+- the next investment decision is based on receipts, not feature enthusiasm.
 
 ## Do not do in first 90 days
 
 - SaaS;
-- billing;
-- cloud sync;
-- OAuth;
-- GitHub App;
-- team permissions;
-- enterprise policy engine;
-- deep IDE plugin;
-- automatic code editing;
-- opaque AI scoring.
+- billing/OAuth;
+- hosted dashboard;
+- generic agent runtime;
+- cloud workspaces;
+- visual orchestration;
+- generic token/cost dashboard as the main product;
+- complex empirical router;
+- automatic merge/release/deploy;
+- broad integration marketplace;
+- deep vendor-specific session capture before the vendor-neutral receipt model is stable.
+
+## Queue
+
+Execution is governed by:
+
+`docs/prompt_queues/verification_mvp_2026_08_25.md`
