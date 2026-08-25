@@ -1,314 +1,346 @@
 # AgentsWatch MVP Roadmap
 
-Last aligned: 2026-07-17  
-Status: planning/specification
+Last aligned: 2026-08-25  
+Status: active execution roadmap
 
 ## Strategy
 
-Do not compete with Codex, Cursor, Devin, OpenHands, GitHub agents, or Superplane on agent execution, cloud sandboxes, generic scheduling, visual workflows, or parallel sessions.
+AgentsWatch should not compete on coding-agent execution, cloud sandboxes, generic orchestration, session management, scheduling, or generic cost dashboards.
 
-Build the missing control/evidence layer:
+The MVP wedge is:
 
 ```text
-Roadmap item
-  -> bounded run contract
+Task / roadmap intent
+  -> machine-readable Run Contract
   -> external coding agent
+  -> attributable repository delta
   -> Agent Run Receipt
-  -> evidence/drift gate
-  -> learning and next route
+  -> claims/diff/validation verification
+  -> auditable run status
 ```
 
-First product:
+## Gate 0 — close the known skeleton failure
 
-```text
-AgentsWatch CLI — local roadmap-to-verified-change control plane for coding agents.
-```
+Latest known GitHub CI evidence on `main`:
 
-## Gate 0 — prove the current skeleton
+- restore: pass;
+- build: pass;
+- test: fail;
+- failing test: `GitStatusParserTests.Parse_ParsesModifiedAndUntrackedFiles`;
+- root cause: `TrimEntries` removes the leading porcelain status column before fixed-position parsing, causing `README.md` to become `EADME.md`.
 
-Must complete before new runtime features:
+Required work:
 
-1. `AW-VAL-001` restore/build/test validation.
-2. `AW-VAL-002` CLI smoke validation.
-3. Resolve bootstrap failures.
-4. Confirm local-only file behavior.
-5. Record first valid run report.
+1. harden git status parsing using a robust porcelain contract, preferably `git status --porcelain=v1 -z` or equivalent lossless parsing;
+2. add edge-case tests for staged/unstaged, added, deleted, renamed, untracked, spaces and unusual paths;
+3. rerun restore/build/test;
+4. run CLI smoke for `help`, `version`, `init`, `optimize`, and `status` in temporary repositories/directories;
+5. record evidence and close Gate 0 only when the full gate passes.
 
 Definition of done:
 
 - solution builds;
-- tests pass or have honest blocked evidence;
-- `init`, `optimize`, and `status` work in a temporary repo;
-- no files are written outside expected local paths.
+- all tests pass;
+- CLI smoke passes or any environment block is explicitly documented;
+- local writes remain under expected `.ai` / `.agentwatch` paths.
 
-## Phase 1 — Run spine and Agent Run Receipt
+## Phase 1 — RunContract v1
 
-Goal: produce a trustworthy, vendor-neutral receipt for one external agent run.
+Goal: create a deterministic execution contract before implementing the run lifecycle.
 
-Priority order:
-
-1. Task/run lifecycle: `start`, `finish`, `status`.
-2. Git start/end snapshots.
-3. Run contract file.
-4. Changed-file and scope evidence.
-5. Validation evidence capture.
-6. Agent Run Receipt generation.
-7. Compact handoff and next prompt.
-8. Evidence lint for required receipt fields.
-
-Minimum receipt:
+Required fields:
 
 ```text
-run id
-roadmap/prompt id
-agent/model/tool
-permission mode
-run mode
-owned/avoid paths
-start/end commit
-files inspected if available
-files changed
-validation
-claims
+schemaVersion
+contractId
+taskId
+intent
+acceptanceCriteria
+ownedPaths
+avoidPaths
+permissionMode
+runMode
+validationContract
+stopRules
+expectedEvidence
+```
+
+Requirements:
+
+- JSON is canonical;
+- schema/version is explicit;
+- contract can be linted without an LLM;
+- incomplete implementation contracts fail with actionable findings;
+- Markdown may be generated for humans but is not the source of truth.
+
+Definition of done:
+
+- valid/invalid contract fixtures exist;
+- contract lint has deterministic tests;
+- storage path is stable: `.agentwatch/contracts/<contract-id>.json`.
+
+## Phase 2 — Start-run attribution baseline
+
+Goal: know what existed before the agent touched the repository.
+
+`agentswatch start <task-id-or-contract-id>` must capture:
+
+- run id;
+- contract id;
+- timestamp;
+- branch;
+- HEAD SHA;
+- staged state/fingerprint;
+- unstaged state/fingerprint;
+- untracked-file set;
+- clean/dirty state;
+- optional agent/tool/model metadata.
+
+Rules:
+
+- pre-existing dirty work is allowed but must be explicitly recorded;
+- a second active run is refused by default;
+- the baseline is machine-readable;
+- no source contents are persisted unless specifically required by a future opt-in feature.
+
+Definition of done:
+
+- start state is reproducible enough to compare with finish state;
+- tests cover clean and dirty repositories;
+- existing user changes are not silently treated as agent changes.
+
+## Phase 3 — Finish-run attributable delta
+
+Goal: compute what changed during this run rather than reporting raw end-of-run status.
+
+Required behavior:
+
+- load the recorded start baseline;
+- capture end repository state;
+- compute attributable changed files and statuses;
+- distinguish pre-existing unchanged dirty files from files changed further during the run;
+- handle adds/deletes/renames/untracked files;
+- preserve ambiguity as an explicit finding instead of guessing.
+
+Definition of done:
+
+- tests prove a pre-existing dirty file is not falsely attributed;
+- tests prove a pre-existing dirty file changed further during the run is surfaced appropriately;
+- finish fails clearly if no matching active run exists.
+
+## Phase 4 — RunReceipt v1
+
+Goal: create a vendor-neutral record of one run.
+
+Canonical JSON receipt:
+
+```text
+schemaVersion
+runId
+contractId
+taskId
+agent/tool/model if known
+start/end timestamps
+start/end repository metadata
+attributable changed files
+validation evidence
+agent claims
+acceptance findings
+scope findings
+risk findings
+status
 missed work
-risk
 learning note
 next prompt
 ```
 
-Definition of done:
-
-- works with a manually pasted Codex/Cursor/Claude final response;
-- works on Flutter and .NET dogfood repos;
-- generates a useful receipt without full chat history;
-- does not mark runtime work `Done` without validation or blocked reason.
-
-## Phase 2 — Roadmap Contract Compiler
-
-Goal: turn vague roadmap items into safe executable contracts.
-
-Features:
-
-1. `agentswatch roadmap check`.
-2. Contract completeness checker.
-3. Acceptance-criteria normalizer.
-4. Dependency and gate checker.
-5. Owned/avoid path resolver with manual confirmation.
-6. Permission mode and risk classification.
-7. Run-mode and token-budget recommendation.
-8. Next minimal prompt generator.
-
-Definition of done:
-
-- incomplete items create investigation/planning prompts;
-- implementation prompts require acceptance criteria, validation and stop rules;
-- broad items are split into one-mode queue items;
-- generated contracts are deterministic enough to lint.
-
-## Phase 3 — Evidence and Drift Gate
-
-Goal: verify actual work instead of trusting the agent summary.
-
-Features:
-
-1. Claims-vs-diff checker.
-2. Claims-vs-validation checker.
-3. Roadmap acceptance-criteria coverage.
-4. Scope Drift Score.
-5. Evidence Score with explainable reasons.
-6. Dependency violation detection.
-7. `Done`, `NeedsEvidence`, `NeedsReview`, `NeedsApproval`, `Blocked` decisions.
-8. Roadmap status update from receipt evidence.
-
-Example findings:
+Outputs:
 
 ```text
-Claim: tests added
-Actual: no test file changed
-Result: NeedsEvidence
-```
-
-```text
-Owned paths: lib/features/profile/**
-Actual change: lib/auth/session_provider.dart
-Result: Scope drift
+.agentwatch/runs/<run-id>.json
+.ai/runs/<run-id>.md
+.ai/handoffs/<run-id>.md
 ```
 
 Definition of done:
 
-- common claims are checked against file patterns and validation;
-- score explanations list supporting and missing evidence;
+- JSON is canonical and Markdown is generated from structured data;
+- receipt is useful without full chat history;
+- no validation claim is synthesized without evidence.
+
+## Phase 5 — Validation evidence and Evidence Gate
+
+Goal: prevent `Done` when required evidence is missing.
+
+Initial deterministic checks:
+
+- required validation evidence exists;
+- validation exit/status is known;
+- required evidence fields are present;
+- acceptance criteria can be marked `supported`, `unsupported`, or `unknown`;
+- risky/blocked cases are surfaced explicitly.
+
+Statuses:
+
+```text
+Done
+NeedsEvidence
+NeedsReview
+NeedsApproval
+Blocked
+Failed
+```
+
+Definition of done:
+
+- `Done` is impossible when mandatory validation is missing;
+- every non-Done result lists reasons;
+- user override requires an auditable reason.
+
+## Phase 6 — Scope Drift
+
+Goal: compare attributable run changes with contract scope.
+
+Checks:
+
+- changed files outside `ownedPaths`;
+- changed files matching `avoidPaths`;
+- unexpected test/config/migration/security changes;
+- pre-existing dirty files excluded from drift unless attributable delta exists.
+
+Definition of done:
+
+- findings identify exact paths and rule/reason;
 - no opaque score decides status by itself;
-- users can override with an auditable reason.
+- common glob/path edge cases are tested cross-platform.
 
-## Phase 4 — Validation Economy
+## Phase 7 — Claims vs Diff vs Validation
 
-Goal: reduce repeated commands, broad validation and large logs.
+Goal: independently verify common agent statements.
 
-Features:
-
-1. Command Profiler / Fast Validation Advisor.
-2. Targeted validation ladder by changed files and adapter.
-3. Repeated-command detection.
-4. Avoidable command-time estimate.
-5. Compact error signatures.
-6. Output size/context proxy.
-7. Investigation prompt after repeated failure.
-
-Definition of done:
-
-- recommends targeted validation before broad validation;
-- avoids full output in receipts;
-- records why a broader command is justified;
-- learns repo-specific validation rules from accepted evidence.
-
-## Phase 5 — Counterfactual Learning
-
-Goal: turn failed or expensive runs into specific better future behavior.
-
-Features:
-
-1. Learning events from receipts.
-2. Mistake pattern recurrence counts.
-3. Rule candidates with evidence.
-4. Confidence, scope and expiry/deprecation.
-5. Counterfactual next prompt.
-6. Counterfactual context set.
-7. Counterfactual model/tool class.
-8. Counterfactual validation ladder.
-9. Measure whether applying a rule improved a comparable later run.
-
-Definition of done:
-
-- rules are specific, scoped and reviewable;
-- stale or contradicted rules can expire;
-- generic advice is rejected;
-- future preflight uses only accepted relevant rules.
-
-## Phase 6 — Cross-agent history and empirical router
-
-Goal: recommend the cheapest sufficient route using evidence from this repository.
-
-Features:
-
-1. Normalize runs across manual, Codex, Cursor, Claude, Copilot, Devin and OpenHands sources.
-2. Task-type classification.
-3. Comparable-run grouping.
-4. Quality/evidence outcome tracking.
-5. Retry and scope-drift tracking.
-6. Provider token/cost import when available.
-7. Model/tool route recommendation.
-8. Confidence and fallback explanation.
-
-Definition of done:
-
-- recommendation never relies on one run;
-- users can inspect supporting runs;
-- insufficient evidence returns `unknown`, not a guess;
-- routing remains vendor-neutral.
-
-## Phase 7 — Thin integrations
-
-Only after the internal contract and receipt model are stable.
-
-Preferred order:
-
-1. MCP server for preflight, receipt, evidence and route tools.
-2. Codex skill/plugin.
-3. Cursor background-agent adapter.
-4. GitHub check/agent app.
-5. Superplane preflight/postflight component.
-6. OpenHands and Devin import adapters.
-
-Integration rule:
+Start with deterministic claim classes:
 
 ```text
-External product executes. AgentsWatch contracts, verifies and learns.
+tests added
+docs only
+backend unchanged
+migration added
+validation passed
+no unrelated files changed
 ```
 
-## Phase 8 — Local dashboard
+Definition of done:
 
-Only after at least 30 dogfood receipts.
+- unsupported claims create `NeedsEvidence` or `NeedsReview` findings as appropriate;
+- claim extraction can initially be explicit/manual/structured;
+- provider/LLM claim extraction is optional later and cannot replace deterministic verification.
 
-Pages:
+## Phase 8 — Dogfood proof
 
-- roadmap confidence;
-- run receipts;
-- evidence and drift findings;
-- validation economy;
-- mistake patterns;
-- agent/model comparisons;
-- router confidence;
-- settings and privacy.
+Goal: prove usefulness before expanding the product.
 
-Do not build a visual workflow canvas.
+Use AgentsWatch on:
 
-## Later team edition
+- AgentsWatch itself;
+- at least one .NET repository;
+- at least one Flutter repository.
 
-Only after local cross-agent evidence proves useful.
-
-Possible features:
-
-- shared policy packs;
-- signed receipt export;
-- PR evidence checks;
-- team-level comparable-run analysis;
-- role-based approvals;
-- optional hosted metadata without source upload.
-
-## Explicitly de-prioritized
-
-- proprietary coding-agent runtime;
-- cloud workspaces;
-- generic parallel-agent manager;
-- generic schedules and automations;
-- generic knowledge/playbook library;
-- full conversation archive;
-- visual workflow builder;
-- production deployment orchestration;
-- broad incident/infrastructure automation;
-- hundreds of integrations;
-- automatic merge/release;
-- exact token accounting without provider data.
-
-## Dogfood proof plan
-
-Use AgentsWatch and MathLearning.
-
-Collect at least 30 comparable receipts covering:
-
-- Flutter widget change;
-- Flutter provider/state change;
-- .NET endpoint/service change;
-- test-only change;
-- docs-only change;
-- bug investigation;
-- diff-only review.
+Collect at least 30 useful receipts across comparable task types.
 
 Track:
 
 - contract completeness;
-- scope drift;
+- attribution correctness/ambiguity;
+- unsupported claims;
+- scope findings;
 - evidence completeness;
-- validation duration and breadth;
+- validation breadth/duration;
 - retries;
-- repeated mistakes;
-- accepted learning rules;
-- route recommendation accuracy when enough evidence exists.
+- accepted/rejected run results;
+- whether handoffs reduce repeated context.
 
-## Current priority order
+Success evidence must include at least:
 
-1. Gate 0 validation.
-2. Task/run lifecycle.
-3. Agent Run Receipt.
-4. Evidence lint.
-5. Roadmap Contract Compiler.
-6. Claims/diff/validation gate.
-7. Scope Drift and Evidence scores.
-8. Validation Economy.
-9. Counterfactual Learning.
-10. Cross-agent empirical router.
-11. Thin integrations.
-12. Local dashboard.
+- one real unsupported-claim catch;
+- one real scope-drift catch;
+- one missing-evidence block;
+- no observed false attribution in tested dogfood cases.
 
-See `docs/COMPETITIVE_LANDSCAPE_AND_DIFFERENTIATION_2026.md`.
+## Phase 9 — Learning and validation economy
+
+Only after receipts are trustworthy:
+
+- mistake pattern recurrence;
+- scoped do-not-repeat rules;
+- targeted validation ladders;
+- repeated/broad command detection;
+- avoidable validation estimates;
+- learning confidence and expiry/deprecation.
+
+## Phase 10 — Cross-agent history and empirical routing
+
+Only after enough comparable data:
+
+- normalize vendor metadata;
+- group comparable task types;
+- compare accepted outcomes, retries, drift and evidence quality;
+- import provider token/cost data when available;
+- recommend a route only when evidence is sufficient;
+- otherwise return `unknown`.
+
+## Phase 11 — Thin integrations
+
+Preferred order after stable internal contracts:
+
+1. MCP tools for contract/start/finish/receipt/evidence;
+2. GitHub/PR evidence check;
+3. Codex/Claude/Cursor thin adapters;
+4. additional session import adapters.
+
+External products execute. AgentsWatch verifies.
+
+## Phase 12 — Dashboard/team packaging
+
+Blocked until receipt dogfood proves recurring value.
+
+Potential local dashboard views:
+
+- run receipts;
+- unsupported claims;
+- scope drift;
+- acceptance evidence;
+- validation evidence;
+- repeated mistake patterns;
+- later agent/model comparisons.
+
+Do not build a visual workflow canvas.
+
+## Current execution order
+
+1. `AW-VFY-001` — fix/harden git parser and make CI green.
+2. `AW-VFY-002` — CLI smoke and Gate 0 closure.
+3. `AW-VFY-003` — RunContract v1 schema/lint/storage.
+4. `AW-VFY-004` — start-run dirty-worktree baseline.
+5. `AW-VFY-005` — finish-run attributable delta.
+6. `AW-VFY-006` — RunReceipt v1 JSON + Markdown projection.
+7. `AW-VFY-007` — validation evidence + Evidence Gate.
+8. `AW-VFY-008` — Scope Drift v1.
+9. `AW-VFY-009` — Claims-vs-Diff-vs-Validation v1.
+10. `AW-VFY-010` — 30-run dogfood pilot and evidence review.
+
+Canonical queue:
+
+`docs/prompt_queues/verification_mvp_2026_08_25.md`
+
+## Explicitly de-prioritized
+
+- generic agent runtime;
+- cloud workspace infrastructure;
+- visual orchestration;
+- generic scheduler;
+- generic token/cost dashboard as primary value;
+- full chat archive;
+- autonomous merge/release/deploy;
+- SaaS/billing/auth before local proof;
+- complex routing before reliable comparable receipts;
+- broad integration marketplace.
