@@ -1,137 +1,152 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-07-01
+Last aligned: 2026-08-25
 
-## Start here
+## Canonical reading path
 
-| Document | Use for |
+Do not load the full documentation tree by default.
+
+For normal product/runtime work, read in this order and stop when you have enough context:
+
+1. `../README.md` — current product definition and repository status.
+2. `../AGENTS.md` — execution and agent rules.
+3. `PRODUCT_SPEC.md` — product scope and differentiation.
+4. `MVP_ROADMAP.md` — active implementation sequence.
+5. `ARCHITECTURE.md` — verification-first architecture and attribution rule.
+6. `DATA_MODEL.md` — canonical RunContract/RunBaseline/RunDelta/RunReceipt models.
+7. `COMMAND_CONTRACTS.md` — authoritative CLI behavior.
+8. `prompt_queues/PROMPT_QUEUE_ROUTER.md` — current next work.
+9. `prompt_queues/verification_mvp_2026_08_25.md` — active verification MVP queue.
+
+If code/tests or current CI evidence disagree with planning docs, code/tests/evidence win and docs should be synchronized.
+
+## Current product truth
+
+AgentsWatch is a local-first, vendor-neutral **verification and evidence layer for AI coding agents**.
+
+Primary loop:
+
+```text
+Task -> RunContract -> Start baseline -> external agent -> Finish delta -> RunReceipt -> Evidence/Scope/Claims checks
+```
+
+Primary differentiators:
+
+- machine-checkable task/run contract;
+- dirty-worktree-safe run attribution;
+- vendor-neutral run receipt;
+- claims vs attributable diff vs validation;
+- scope drift detection;
+- evidence-based completion status.
+
+Token/context/cost optimization remains secondary and should be derived from trusted receipts later.
+
+## Active execution documents
+
+| Document | Purpose |
 |---|---|
-| `../README.md` | Project overview and current status. |
-| `../AGENTS.md` | Agent rules for AI-assisted work. |
-| `AGENT_SHARED_OPERATING_STANDARD.md` | Shared cross-repo rules for prompt shape, token budget, evidence, score caps, mistake learning, validation honesty, and docs-only truth. |
-| `AGENT_RUN_LOG_ENFORCEMENT.md` | Hard gate: no complete run log / classified mistakes means no high-confidence Done. |
-| `../.ai/RUN_LOG_TEMPLATE.md` | Copyable compact run-log template. |
-| `../.ai/runs/README.md` | Run-log naming, required evidence, and learning rules. |
-| `ai/learning/MISTAKE_LEDGER.md` | Active memory of repeated AgentsWatch agent mistakes. |
-| `DOCS_GOVERNANCE.md` | Source-of-truth, broken-reference, and docs-update rules. |
-| `DOCUMENTATION_AUDIT_2026_06_29.md` | Latest docs audit, findings, fixes, and remaining gaps. |
-| `PRODUCTIZATION_EXPANSION_2026_06_29.md` | Productization expansion evidence and remaining gaps. |
-| `AGENT_OPERATING_SYSTEM.md` | Canonical agent workflow adapted from MathLearning. |
-| `CONTEXT_INDEX.md` | Choose the smallest useful docs before an agent run. |
-| `CONTEXT_PACKS.md` | Active context-pack registry for token-saving scoped reads. |
-| `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Token/context economy blueprint: context packs, repo maps, cache-aware prompts, stale-context guard, dogfood metrics. |
-| `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Industry research synthesis plus prior-conversation backfill: prompt caching, repo maps, path-scoped rules, state ownership, feature profiles, stale context, context budgets, and cost-per-solved-task. |
-| `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Backfilled token-saving patterns from earlier conversations: skill docs, state ownership, queue lifecycle, feature-profile gating, batch compaction, and zero-waste playbooks. |
-| `PRODUCT_SPEC.md` | Product positioning, problem, users, MVP features. |
-| `CLI_SPEC.md` | CLI commands, config shape, adapters, outputs. |
-| `MVP_ROADMAP.md` | MVP phases and priority order. |
-| `ULTRA_ROADMAP.md` | Full strategy from bootstrap to SaaS. |
-| `ROADMAP_INDEX.md` | Roadmap entry point. |
+| `BOOTSTRAP_NEXT_STEPS.md` | Current known Gate 0 failure and required closure. |
+| `90_DAY_EXECUTION_PLAN.md` | Tactical 12-week verification MVP plan. |
+| `MVP_ROADMAP.md` | Product phase gates and strict priority order. |
+| `prompt_queues/PROMPT_QUEUE_ROUTER.md` | Canonical next-prompt decision. |
+| `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt only. |
+| `prompt_queues/verification_mvp_2026_08_25.md` | Active implementation queue. |
 
-## Bootstrap and validation
+## Core technical contracts
 
-| Document | Use for |
+| Document | Purpose |
 |---|---|
-| `BUILD_VALIDATION_PLAN.md` | Restore/build/test/CLI smoke order. |
-| `VALIDATION_EVIDENCE_2026_06_29.md` | Current Gate 0 evidence status. |
-| `RISK_REGISTER.md` | Bootstrap and product risks. |
-| `BOOTSTRAP_NEXT_STEPS.md` | Required next order before feature work. |
-| `PROJECT_READINESS_CHECKLIST.md` | Checklist before CLI feature expansion. |
-| `ROADMAP_VALIDATION_GATES.md` | Phase gates and stop rules. |
+| `ARCHITECTURE.md` | Logical layers, ports/adapters, attribution semantics. |
+| `ARCHITECTURE_DECISIONS.md` | Existing ADRs; apply only when consistent with newer canonical docs. |
+| `CLI_SPEC.md` | Verification-first CLI surface. |
+| `COMMAND_CONTRACTS.md` | Detailed command behavior and failure semantics. |
+| `DATA_MODEL.md` | JSON-first canonical data contracts. |
+| `ADAPTER_SPEC.md` | Universal and stack-specific detection/validation guidance. |
+| `RISK_SCORING_MODEL.md` | Historical/secondary deterministic risk heuristics. |
+| `REPORT_FORMATS.md` | Report formatting; must evolve as a projection of RunReceipt. |
 
-## Agent workflow, evidence, and learning
+## Validation and safety
 
-| Document | Use for |
-|---|---|
-| `AGENT_SHARED_OPERATING_STANDARD.md` | Shared cross-repo minimum behavior for all agents. |
-| `AGENT_RUN_LOG_ENFORCEMENT.md` | Score caps, Done-row blocker, mistake classification, final response requirements. |
-| `AGENT_RUN_EVIDENCE_STANDARD.md` | Mandatory `.ai/runs` evidence fields, waste categories, mistake-learning hooks, optimized prompt rules. |
-| `WASTE_LEARNING_LOOP.md` | Convert wasted steps into docs/rule/queue updates and new optimized prompts. |
-| `ai/learning/MISTAKE_LEDGER.md` | Known AW-MISTAKE-* patterns and prevention rules. |
-| `ai/learning/MISTAKE_CARD_TEMPLATE.md` | Template for new mistake cards. |
-| `ai/prompts/RUN_LOG_EVIDENCE_LINT_PROMPT.md` | Lint queue rows and run logs for missing evidence, score-cap, and mistake-learning gaps. |
-| `ai/prompts/AGENT_MISTAKE_ROLLUP_PROMPT.md` | Roll up recent run logs and update ledger/rules/prompts. |
-| `ai/prompts/CROSS_REPO_AGENT_STANDARD_SYNC_PROMPT.md` | Keep AgentsWatch, MathLearning backend, and Flutter rules aligned. |
-| `CONTEXT_PACKS.md` | Pack-based read scopes, state-owner filters, output modes, and scope-expansion rules. |
-| `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md` | Best-practice blueprint for reducing token/context waste without harming correctness. |
-| `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` | Research-backed strategy for token/context economy, including industry findings and prioritized implementation roadmap. |
-| `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` | Prior-conversation token-saving patterns now preserved outside always-loaded agent rules. |
-| `PROMPT_TOKEN_ECONOMY_RULEBOOK.md` | Hard anti-waste rules, budgets, limits, stop rules, forbidden prompt phrases. |
-| `PROMPT_LINT_CHECKLIST.md` | Pre-run pass/fail checklist for prompt quality and token discipline. |
-| `ZERO_WASTE_EXECUTION_PROTOCOL.md` | Mandatory execution protocol for minimal context, discovery, patching, validation, and waste checkpoints. |
-| `PROMPT_BATCH_REVIEW_POLICY.md` | Batch review after 3-5 important prompt/rule/queue/evidence commits. |
-| `AGENT_COMMAND_PLAYBOOK.md` | Shell-neutral .NET/git/CLI validation commands. |
-| `AGENT_LONG_TASK_PLAYBOOK.md` | Long-task control loop, environment blockers, evidence rules. |
-| `AGENT_PATCH_PLAYBOOK.md` | Small safe patch strategy and retry limits. |
-| `PROMPT_RULES.md` | Required prompt sections, run modes, bootstrap rules, final format. |
-| `PROMPT_QUALITY_CHECKLIST.md` | Preflight checklist before adding/running prompts. |
-| `PROMPT_EVIDENCE_TEMPLATE.md` | Done/Blocked/evidence row format. |
-| `COMPLETION_ANALYTICS.md` | Completion percentages, missed work, follow-up mapping. |
-| `CLAIMS_VS_ACTUAL_REVIEW.md` | Check final claims against actual diff and validation evidence. |
-| `MATHLEARNING_DOCS_ADAPTATION.md` | What was adapted from MathLearning and what changed. |
+Use when the selected task needs them:
 
-## Architecture
+- `BUILD_VALIDATION_PLAN.md`
+- `VALIDATION_EVIDENCE_2026_06_29.md` — historical snapshot; do not treat as current CI truth.
+- `RISK_REGISTER.md`
+- `PROJECT_READINESS_CHECKLIST.md`
+- `ROADMAP_VALIDATION_GATES.md`
+- `SECURITY_AND_PRIVACY.md`
+- `AGENT_RISK_BOUNDARIES.md`
+- `AGENT_PERMISSION_MODEL.md`
+- `TEST_MATRIX.md`
 
-| Document | Use for |
-|---|---|
-| `ARCHITECTURE.md` | Current MVP architecture snapshot. |
-| `TARGET_ARCHITECTURE.md` | Future-proof target architecture for CLI, dashboard, team/PR workflow, and SaaS. |
-| `ARCHITECTURE_DECISIONS.md` | Active ADRs and architectural tradeoffs. |
-| `MODULE_BOUNDARIES.md` | Dependency direction, module ownership, extraction order, and stop rules. |
+## Evidence / agent-development process documents
 
-## Product contracts
+These documents govern repository development evidence, not the product's canonical RunReceipt model. Read only when relevant to agent workflow maintenance:
 
-| Document | Use for |
-|---|---|
-| `COMMAND_CONTRACTS.md` | Detailed behavior contract for each CLI command. |
-| `CLI_UX_OUTPUT_SPEC.md` | Expected CLI output, labels, and test anchors. |
-| `CONFIG_REFERENCE.md` | Draft config schema and parser behavior. |
-| `REPORT_FORMATS.md` | Markdown run report, handoff, review prompt formats. |
-| `DATA_MODEL.md` | Future markdown/JSON/SQLite model. |
-| `ADAPTER_SPEC.md` | Universal, .NET, Flutter, React, Python, Node adapter scope. |
-| `RISK_SCORING_MODEL.md` | Transparent risk scoring inputs, levels, and reasons. |
-| `TOKEN_WASTE_METRICS.md` | Token waste metrics, cache/context metrics, state-owner metrics, feature-profile metrics, stale-context tracking, and safe savings claims. |
-| `PROMPT_OPTIMIZATION_PLAYBOOK.md` | Prompt risk, budget, split, handoff, diff-only review. |
+- `AGENT_SHARED_OPERATING_STANDARD.md`
+- `AGENT_RUN_LOG_ENFORCEMENT.md`
+- `AGENT_RUN_EVIDENCE_STANDARD.md`
+- `AGENT_RUN_LOGGING_AND_LEARNING.md`
+- `AGENT_OPERATING_SYSTEM.md`
+- `AGENT_COMMAND_PLAYBOOK.md`
+- `AGENT_LONG_TASK_PLAYBOOK.md`
+- `AGENT_PATCH_PLAYBOOK.md`
+- `.ai/RUN_LOG_TEMPLATE.md`
+- `.ai/runs/README.md`
+- `ai/learning/MISTAKE_LEDGER.md`
 
-## Productization and delivery
+Do not preload these all for a normal feature task.
 
-| Document | Use for |
-|---|---|
-| `MVP_EPICS_AND_ACCEPTANCE.md` | Implementation epics and acceptance criteria. |
-| `ISSUE_BACKLOG.md` | Issue-ready backlog for GitHub issues/PRs/agent tasks. |
-| `USER_PERSONAS_AND_JOBS.md` | Target users and jobs to be done. |
-| `POSITIONING_AND_PRICING_HYPOTHESES.md` | Positioning, free/pro/team hypotheses, evidence rules. |
-| `RELEASE_AND_PACKAGING_PLAN.md` | Local tool packaging, release stages, version plan. |
-| `EXAMPLES_CATALOG.md` | Planned examples and example quality rules. |
-| `INTEGRATION_STRATEGY.md` | Local-first integration order before GitHub/SaaS/LLM integration. |
-| `DOGFOOD_RUNBOOK.md` | Operational dogfood workflow and evidence template. |
+## Historical token/context economy research
 
-## Quality and safety
+Useful later for validation economy and learning, but no longer primary execution authority:
 
-| Document | Use for |
-|---|---|
-| `TEST_MATRIX.md` | Required test areas by feature. |
-| `SECURITY_AND_PRIVACY.md` | Local-first security and privacy rules. |
-| `DOGFOOD_PLAN.md` | Real-repo dogfood workflow and evidence. |
-| `../CONTRIBUTING.md` | Contributor workflow and PR checklist. |
-| `../SECURITY.md` | Security reporting policy. |
+- `PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
+- `PROMPT_TOKEN_ECONOMY_QUICK_RULES.md`
+- `ZERO_WASTE_EXECUTION_PROTOCOL.md`
+- `CONTEXT_PACKS.md`
+- `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md`
+- `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md`
+- `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md`
+- `TOKEN_WASTE_METRICS.md`
+- token-economy prompt queues under `prompt_queues/`.
 
-## Prompt queues
+Rule: do not implement token/context optimization features ahead of RunContract, attribution, RunReceipt, Evidence Gate, Scope Drift, Claims verification, and dogfood proof.
 
-| Document | Use for |
-|---|---|
-| `prompt_queues/PROMPT_QUEUE_ROUTER.md` | First stop for choosing the next prompt. |
-| `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready safest next prompt. |
-| `prompt_queues/PROMPT_SYSTEM_AUDIT_2026_06_29.md` | Prompt-system reorganization evidence. |
-| `prompt_queues/bootstrap_validation.md` | Validation-first prompts. |
-| `prompt_queues/agent_evidence_validation_followups_2026_07_01.md` | Evidence validator/workflow dogfood prompts before feature work resumes. |
-| `prompt_queues/token_economy_hardening_2026_07_01.md` | Token/context economy prompts: packs, repo maps, cache-aware skeletons, stale-context guard, dogfood measurement, CLI command contracts. |
-| `prompt_queues/token_economy_industry_followups_2026_07_01.md` | Advanced industry-backed and prior-conversation token economy prompts: context packs, config smell checks, queue token budgets, state-owner filters, feature-profile gating, cost-per-solved-task, provider cache profiles, evidence compaction. |
-| `prompt_queues/agentwatch_mvp.md` | CLI MVP implementation prompts. |
-| `prompt_queues/roadmap_execution.md` | Roadmap execution prompts. |
-| `prompt_queues/architecture_evolution.md` | Safe architecture evolution prompts after Gate 0. |
-| `prompt_queues/productization.md` | Productization prompts after Gate 0. |
+## Productization / commercial documents
 
-## Rule
+Post-MVP context only unless a task explicitly targets packaging/business:
 
-If documents disagree, use current code/tests first, then `AGENTS.md`, then `AGENT_SHARED_OPERATING_STANDARD.md`, then `.ai/RUN_LOG_TEMPLATE.md` / `.ai/runs/README.md`, then `CONTEXT_PACKS.md` for context selection, then `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md` for token-economy strategy, then `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` for backfilled prior patterns, then `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md`, then `ai/learning/MISTAKE_LEDGER.md`, then prompt queue router, then prompt token economy rulebook, then prompt batch review policy, then run evidence standard, then bootstrap validation docs, then docs governance, then agent workflow docs, then architecture docs, then product/roadmap docs.
+- `POSITIONING_AND_PRICING_HYPOTHESES.md`
+- `RELEASE_AND_PACKAGING_PLAN.md`
+- `TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
+- `PRODUCTIZATION_EXPANSION_2026_06_29.md`
+- productization/trial queues under `prompt_queues/`.
+
+No SaaS, billing, OAuth, or team platform work before local verification dogfood proves value.
+
+## Legacy queues and roadmaps
+
+Files such as:
+
+- `prompt_queues/bootstrap_validation.md`;
+- `prompt_queues/agentwatch_mvp.md`;
+- older evidence/token/productization/architecture queues;
+- `ULTRA_ROADMAP.md`;
+- historical audits;
+
+remain useful for history and ideas but are **not current next-work authority**.
+
+When they conflict with the 2026-08-25 verification queue, the newer queue wins.
+
+## Context rule
+
+For every task:
+
+```text
+router -> selected prompt -> required canonical docs -> exact code/tests
+```
+
+Expand only when evidence requires it.
+
+The documentation system should reduce context cost, not require every agent to understand the entire repository history before making a focused change.
