@@ -1,59 +1,74 @@
 # AgentsWatch Risk Register
 
-Last aligned: 2026-06-29  
-Status: active during bootstrap
+Last aligned: 2026-08-25  
+Status: active
 
 ## Current risk summary
 
-| ID | Risk | Level | Why it matters | Mitigation |
+| ID | Risk | Level | Why it matters | Mitigation / owner prompt |
 |---|---|---|---|---|
-| R-001 | Handwritten `.sln` may not build | High | Initial solution was created through GitHub contents API, not `dotnet new sln`. | Run `dotnet restore/build/test`; recreate solution locally if needed. |
-| R-002 | Project references may be wrong | High | CLI, test, git/report projects depend on correct relative paths. | Validate with `dotnet build`; fix references before adding features. |
-| R-003 | CLI smoke behavior unverified | High | `init`, `optimize`, and `status` were written without runtime execution. | Run smoke commands from `BUILD_VALIDATION_PLAN.md`. |
-| R-004 | CI workflow unverified | Medium | GitHub Actions may fail due to path, SDK, or solution issues. | Check first CI run and fix only CI/build issues. |
-| R-005 | Git parser too naive | Medium | `git status --short` parsing may not handle rename/copy paths correctly. | Add tests for deleted/renamed/copied/untracked paths. |
-| R-006 | Prompt optimizer too heuristic | Medium | Risk analyzer can over/under-classify prompts. | Keep output transparent; add tests for common prompt patterns. |
-| R-007 | `status` command assumes git repo | Medium | Running outside a git repo can fail. | Add graceful error or `--no-git` behavior in hardening pass. |
-| R-008 | Init command may need overwrite policy | Medium | Existing `.ai` files should never be overwritten accidentally. | Add tests for no-overwrite behavior and later explicit `--force`. |
-| R-009 | No packaging validation yet | Low | Tool may not pack/install as global tool yet. | Add `dotnet pack`/local tool install later, after build passes. |
-| R-010 | Dashboard/SaaS scope creep | High | Building dashboard too early delays useful CLI. | Keep dashboard prompts blocked until CLI MVP evidence exists. |
+| R-001 | Git parser corrupts porcelain paths | High / active | Current CI test fails and Git evidence is foundational. | `AW-VFY-001`: lossless porcelain parsing + edge-case tests. |
+| R-002 | CLI smoke/local-write behavior not fully proven | High / active | Gate 0 cannot close without real CLI behavior evidence. | `AW-VFY-002`: temp-repo smoke and init no-overwrite tests. |
+| R-003 | False attribution from pre-existing dirty worktree | Critical | If end-state dirtiness is mistaken for run changes, receipts, scope drift, and claims become untrustworthy. | `AW-VFY-004/005`: start baseline + attributable delta + dirty-at-start tests. |
+| R-004 | Markdown becomes accidental source of truth | High | Free-form parsing will make verification brittle and integrations incompatible. | JSON-first RunContract/RunReceipt; Markdown projection only. |
+| R-005 | Contract schema drifts between commands/integrations | High | CLI/MCP/GitHub adapters could disagree on task intent and evidence. | `AW-VFY-003`: schema version + deterministic lint + canonical storage. |
+| R-006 | Receipt claims validation that was never evidenced | Critical | Product promise fails if agent prose is treated as proof. | `AW-VFY-007`: typed validation sources/statuses; mandatory evidence gate. |
+| R-007 | Scope drift computed from raw git status | Critical | Pre-existing unrelated files would create false positives. | `AW-VFY-008` must consume RunDelta attributable changes only. |
+| R-008 | Claims checker overstates certainty | High | `tests added` / `validation passed` checks could become another heuristic summary. | `AW-VFY-009`: deterministic supported/unsupported/unknown with evidence refs. |
+| R-009 | Path/glob behavior differs by OS | Medium | Scope rules become unpredictable across Windows/Linux/macOS. | Central path normalization/matching tests in AW-VFY-008. |
+| R-010 | Branch/HEAD changes during a run confuse attribution | High | Commit/reset/checkout during agent execution may make delta ambiguous. | Record transitions; handle deterministically or mark `Ambiguous`, never guess. |
+| R-011 | Overengineering ports/storage before product proof | Medium | Architecture work can delay first verified receipt. | Introduce only minimum reusable use cases/ports needed by each prompt. |
+| R-012 | Token optimizer/observability scope distracts from verification | High | Market already has broad agent tracking/control features; weakens differentiation. | Keep token/cost/command optimization post-receipt and post-dogfood. |
+| R-013 | Dashboard/SaaS scope creep | High | UI/cloud work can mask an unproven core loop. | Block until AW-VFY-010 dogfood evidence. |
+| R-014 | Learning/router trained on noisy receipts | High | Bad attribution/evidence would produce bad recommendations. | Learning/routing only after trustworthy dogfood receipts. |
+| R-015 | Sensitive source/log data accidentally persisted | High | Local-first trust depends on minimal evidence capture. | Store fingerprints/summaries; redact secrets; no full source/chat/logs by default. |
+| R-016 | Too many stale docs/queues redirect agents to old vision | Medium | Agents may implement token-first or old AW-VAL flow. | Canonical router/queue + legacy queue markers + reduced AGENTS/DOCS_INDEX. |
 
----
+## Current gate
 
-## Required risk rule
+Before new verification runtime features:
 
-Before implementing new runtime features, complete bootstrap validation:
+1. complete `AW-VFY-001` and make full tests green;
+2. complete `AW-VFY-002` and close CLI Gate 0.
 
-1. build and test solution;
-2. run CLI smoke commands;
-3. verify CI result;
-4. update `docs/prompt_queues/agentwatch_mvp.md` or validation queue with evidence.
+Then follow only:
 
----
+`docs/prompt_queues/verification_mvp_2026_08_25.md`
 
-## Risk report format
+## Critical product invariant
+
+```text
+No trustworthy attribution -> no trustworthy receipt -> no trustworthy verification.
+```
+
+Therefore dirty-worktree attribution is a release-blocking correctness concern, not a nice-to-have enhancement.
+
+## Evidence honesty rule
+
+For any risk finding:
 
 ```text
 Risk checked:
 Evidence:
-Files inspected:
+Attribution confidence:
+Validation actually run:
 Files changed:
-Validation run:
-Remaining risk:
+Remaining ambiguity:
 Follow-up prompt:
 ```
 
----
+Do not convert unknown/ambiguous evidence into a passing result merely to close a prompt.
 
-## High-risk file categories
+## High-risk implementation areas
 
-Treat these as high risk in the MVP:
+Treat these as high risk during the MVP:
 
-- solution/project files;
-- CI workflows;
-- command dispatch in `Program.cs`;
-- git command execution;
-- file-system writes under `.ai` and `.agentwatch`;
-- future validation command runner;
-- future SQLite storage;
-- future GitHub API integration.
+- git porcelain parsing and process execution;
+- baseline/delta attribution;
+- file-system writes under `.agentwatch` / `.ai`;
+- schema serialization/versioning;
+- path/glob normalization;
+- validation evidence ingestion;
+- run decision logic;
+- command dispatch in CLI;
+- future command execution/MCP/GitHub integration.
