@@ -1,83 +1,79 @@
 # AgentsWatch Next Prompt Fast Path
 
-Last aligned: 2026-06-29
+Last aligned: 2026-08-25
 
-## Use this when you want the next prompt quickly
-
-Current safest next prompt is always:
+## Current next prompt
 
 ```text
-AW-VAL-001 — Build validation
+AW-VFY-001 — Git parser and CI hardening
 ```
 
-until restore/build/test evidence exists.
+Prompt file:
 
-## Copy-ready prompt
+```text
+docs/prompts/AW-VFY-001-git-parser-ci-hardening.md
+```
+
+Queue:
+
+```text
+docs/prompt_queues/verification_mvp_2026_08_25.md
+```
+
+## Why this is next
+
+Latest known CI evidence already proves:
+
+```text
+restore: PASS
+build: PASS
+tests: FAIL
+```
+
+The failure is known and focused: git porcelain status parsing corrupts a path because the current parser trims the leading status column before fixed-position slicing.
+
+Do not spend another broad validation-only run rediscovering the same failure.
+
+## Copy-ready instruction
 
 ```text
 Repository: ivanjovicic/AgentsWatch
-Prompt ID: AW-VAL-001
-Queue: docs/prompt_queues/bootstrap_validation.md
-Run mode: validation-only
-Token budget: low
+Prompt ID: AW-VFY-001
+Queue: docs/prompt_queues/verification_mvp_2026_08_25.md
+Run mode: implementation + validation
+Budget: low/medium
 
-Read first:
+Read:
 - AGENTS.md
-- docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
-- docs/AGENT_OPERATING_SYSTEM.md
-- docs/CONTEXT_INDEX.md
-- docs/AGENT_COMMAND_PLAYBOOK.md
-- docs/prompts/AW-VAL-001-build-validation.md
+- docs/BOOTSTRAP_NEXT_STEPS.md
+- docs/ARCHITECTURE.md (Git evidence section)
+- docs/prompts/AW-VFY-001-git-parser-ci-hardening.md
+- exact Git parser/test files named by the prompt
 
 Task:
-Run build validation for the current skeleton.
+Execute AW-VFY-001 exactly. Fix the known parser defect with a lossless machine-safe git porcelain contract, add focused edge-case tests, then run the full restore/build/test gate.
 
-Scope limiter:
-Inspect only files needed for restore/build/test failures.
-Do not add features.
-Do not refactor.
-Do not edit docs unless recording validation evidence.
+Do not add product features.
+Do not expand into Contract/Receipt work.
+Do not mark Done unless the complete test gate passes.
 
-Commands:
-dotnet restore AgentsWatch.sln
-dotnet build AgentsWatch.sln
-dotnet test AgentsWatch.sln
-
-If a command fails:
-- fix only the build/test failure;
-- rerun the failing command;
-- record evidence.
-
-Final response:
-- validation results
+Return:
+- root cause confirmation or changed finding
+- exact implementation
+- tests added/updated
+- full validation results
 - files changed
+- remaining risk
+- queue status / next prompt
 - commit SHA
-- completion percentage
-- missed work
-- follow-up prompt
-- residual risk
 ```
 
-## After AW-VAL-001 passes
+## Next after success
 
-Run:
+If AW-VFY-001 is complete and green:
 
 ```text
-AW-VAL-002 — CLI smoke validation
+AW-VFY-002 — CLI smoke and Gate 0 closure
 ```
 
-## After AW-VAL-002 passes
-
-Run:
-
-```text
-AW-VAL-003 — Validation evidence review
-```
-
-## After AW-VAL-003 passes
-
-Run:
-
-```text
-AW-VAL-004 — Init command hardening
-```
+Then follow the strict order in `verification_mvp_2026_08_25.md`.
