@@ -1,170 +1,213 @@
 # AgentsWatch Agent Rulebook
 
-AgentsWatch is a local-first AI coding-agent supervisor and token optimizer.
+AgentsWatch is a local-first, vendor-neutral verification and evidence layer for AI coding agents.
 
-## Source of truth
+## Product truth
 
-1. Current code and tests.
-2. `README.md`.
-3. `docs/AGENT_SHARED_OPERATING_STANDARD.md`.
-4. `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
-5. `.ai/RUN_LOG_TEMPLATE.md` and `.ai/runs/README.md`.
-6. `docs/ai/learning/MISTAKE_LEDGER.md`.
-7. `docs/DOCS_INDEX.md`.
-8. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
-9. `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md` when the user asks for the next prompt.
-10. `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/PROMPT_LINT_CHECKLIST.md`.
-11. `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md`.
-12. `docs/AGENT_RUN_EVIDENCE_STANDARD.md`.
-13. `docs/WASTE_LEARNING_LOOP.md`.
-14. `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-15. `docs/AGENT_OPERATING_SYSTEM.md`.
-16. `docs/CONTEXT_INDEX.md`.
-17. Bootstrap validation docs while Gate 0 is incomplete.
-18. Product contracts: `docs/CLI_SPEC.md`, `docs/COMMAND_CONTRACTS.md`, `docs/CLI_UX_OUTPUT_SPEC.md`, `docs/CONFIG_REFERENCE.md`, `docs/REPORT_FORMATS.md`, `docs/DATA_MODEL.md`, `docs/ADAPTER_SPEC.md`.
-19. Prompt queues under `docs/prompt_queues/`.
+External agents execute coding work. AgentsWatch contracts, attributes, verifies, records evidence, and learns from trusted receipts.
 
-If documents disagree, current code/tests and committed `.ai/runs` evidence win over planning notes or chat history.
+Core promise:
 
-## Product rules
+```text
+Turn roadmap intent into verified change — across any coding agent.
+```
 
-- Build local CLI first.
-- Do not start with SaaS, billing, cloud sync, or dashboard before roadmap gates allow it.
-- Universal git/markdown/file-system behavior comes before language adapters.
-- Risk scoring must stay heuristic and explainable.
-- Keep prompts small and split broad work.
-- Markdown report contracts come before SQLite/dashboard work.
+Do not turn AgentsWatch into another agent runtime, generic control plane, workflow engine, session viewer, or token dashboard.
+
+## Canonical source of truth
+
+Read the smallest relevant set. Default authority order:
+
+1. current code and tests;
+2. current CI/run evidence;
+3. `README.md`;
+4. `docs/PRODUCT_SPEC.md`;
+5. `docs/MVP_ROADMAP.md`;
+6. `docs/ARCHITECTURE.md`;
+7. `docs/DATA_MODEL.md`;
+8. `docs/COMMAND_CONTRACTS.md` / `docs/CLI_SPEC.md` for CLI work;
+9. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`;
+10. selected prompt file from the canonical active queue.
+
+Use `docs/DOCS_INDEX.md` only when you need a non-canonical specialist document.
+
+Historical token-economy, productization, old roadmap, old queue, and research documents are supporting context only. They must not override the current verification-first product/roadmap.
+
+## Current execution authority
+
+Canonical active queue:
+
+```text
+docs/prompt_queues/verification_mvp_2026_08_25.md
+```
+
+Current next prompt is determined by:
+
+```text
+docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
+```
+
+Do not select an old `AW-VAL-*`, `AW-TOKEN-*`, productization, dashboard, or architecture-expansion prompt merely because its historical file says `Ready`.
+
+## Current Gate 0 evidence
+
+Latest known CI evidence:
+
+```text
+restore: pass
+build: pass
+tests: fail in GitStatusParserTests
+```
+
+Known parser bug is documented in `docs/BOOTSTRAP_NEXT_STEPS.md`.
+
+Current priority:
+
+1. `AW-VFY-001` — git parser/CI hardening;
+2. `AW-VFY-002` — CLI smoke/Gate 0 closure;
+3. then verification MVP prompts in strict dependency order.
+
+Do not add new runtime features before Gate 0 is green.
+
+## Verification-first product rules
+
+- JSON is canonical for RunContract, active-run baseline, and RunReceipt.
+- Markdown is a generated human-readable projection.
+- Verification logic must not parse free-form Markdown as its source of truth.
+- Raw final `git status` is not equivalent to run-attributable changes.
+- `start` must preserve pre-existing staged/unstaged/untracked state.
+- `finish` must compute attributable delta and surface ambiguity rather than guess.
+- Scope and claim checks operate on attributable changes.
+- Mandatory validation missing means the run cannot be `Done`.
+- Agent prose is a claim, not evidence.
+- Deterministic checks come before LLM interpretation.
+- `unknown` and `ambiguous` are valid results.
+- No opaque score may independently decide completion.
+- Risky actions require explicit approval.
 - No hidden telemetry or network calls in MVP.
 
-## Token economy rule
+## Architecture rules
 
-Every non-trivial prompt must pass `docs/PROMPT_LINT_CHECKLIST.md` before execution.
+- Keep a modular monolith.
+- CLI is an interface, not the application core.
+- After Gate 0, introduce reusable application use cases/ports before growing `Program.cs`.
+- External dependencies such as git/process/file storage belong behind adapters/ports where practical.
+- Start with universal git behavior, then .NET and Flutter.
+- Do not introduce microservices, message buses, cloud storage, SaaS auth, or hosted infrastructure for the MVP.
 
-Use `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` and `docs/AGENT_SHARED_OPERATING_STANDARD.md` as hard authority for:
+## Prompt shape
 
-- green/yellow/red prompt classification;
-- token budgets;
-- file read/edit/search limits;
-- run mode enforcement;
-- prompt split rules;
-- stop rules;
-- final evidence requirements.
-
-Reject or rewrite prompts that fail lint.
-
-## Run evidence and learning rule
-
-Every non-trivial run must leave realistic `.ai/runs/<date>-<prompt-id>-evidence.md` evidence before it is considered complete.
-
-The agent must record:
-
-- model/client metadata or `unknown-not-exposed`;
-- elapsed/phase timing or `unknown-not-recorded`;
-- what was done;
-- what was missed;
-- files inspected;
-- files changed;
-- validation run or why it did not run;
-- where time/tokens were wasted;
-- why waste happened;
-- relevant prior mistakes read;
-- mistakes observed or `none`;
-- docs/rules updated to prevent repeat;
-- optimized prompt added or reason none was needed;
-- follow-up prompt;
-- residual risk;
-- commit SHA.
-
-For every meaningful issue, waste item, blocker, stale reference, unclear rule, or repeated failure, the agent must do at least one of:
-
-1. update an existing docs rule;
-2. add a new rule to the relevant playbook;
-3. update the prompt queue;
-4. add a new optimized prompt;
-5. update `docs/ai/learning/MISTAKE_LEDGER.md`;
-6. add or update a lint/test prompt;
-7. record why no rule or prompt update was needed.
-
-A prompt cannot be marked high-confidence `Done` unless it references a run log or explicit fallback, and the score obeys `docs/AGENT_RUN_LOG_ENFORCEMENT.md`.
-
-## Prompt batch review rule
-
-After 3-5 important prompt, queue, rule, evidence, or agent-workflow commits, run `docs/PROMPT_BATCH_REVIEW_POLICY.md` before continuing to add more prompt-system changes.
-
-Batch review must check:
-
-- broken references;
-- stale queue statuses;
-- prompts marked Ready despite blocked gates;
-- missing validation evidence;
-- contradiction between `AGENTS.md`, `DOCS_INDEX.md`, shared standard, run-log gate, router, queues, and prompt files;
-- missing follow-up prompts for discovered issues.
-
-If review finds more than three unrelated issues, add follow-up prompts instead of fixing everything in one run.
-
-## Bootstrap rule
-
-Gate 0 is not complete until restore/build/test and CLI smoke evidence exist.
-
-Until then, work must prioritize:
-
-1. `AW-VAL-001` build validation;
-2. `AW-VAL-002` CLI smoke validation;
-3. `AW-VAL-003` validation evidence review;
-4. `AW-VAL-004` init hardening.
-
-Do not add new CLI features before build/test/smoke evidence exists.
-
-## Required prompt fields
-
-Every non-trivial task must include:
+Every non-trivial implementation prompt must include:
 
 - repository;
-- prompt id;
-- queue;
+- prompt ID;
+- owning queue;
+- dependency/gate;
 - run mode;
-- token budget;
-- scope limiter;
+- token/context budget guidance;
+- exact task;
 - owned paths;
 - avoid paths;
 - stop rules;
-- validation;
+- tests/validation;
 - expected evidence;
-- relevant prior mistakes read;
-- handoff summary when split or blocked.
+- final response shape.
 
-Use investigation-only first when root cause is unknown. Use diff-only review after implementation commits.
+Prefer one implementation slice per prompt.
+
+Use investigation-only first when the root cause or contract is materially unknown.
+
+## Scope discipline
+
+Before reading many files:
+
+1. read the selected prompt;
+2. read only its canonical contract docs;
+3. inspect exact relevant code/tests;
+4. expand scope only when evidence requires it;
+5. record why scope expanded.
+
+Do not preload the full documentation tree.
+
+Specialist context documents such as token-economy research, licensing, learning, productization, or historical audits should be read only when the selected task directly requires them.
+
+## Implementation rules
+
+- make the smallest coherent safe change;
+- add targeted tests for runtime behavior;
+- preserve public schemas/paths unless the prompt explicitly changes them;
+- avoid opportunistic refactors;
+- do not mix docs/product strategy changes into a runtime feature prompt unless required for truth synchronization;
+- never claim tests/validation passed without executed evidence;
+- if blocked by environment, record the block instead of altering product behavior to bypass it.
+
+## Git evidence rules
+
+Use a lossless machine-safe porcelain contract for status parsing, preferably NUL-delimited porcelain where appropriate.
+
+Tests should cover as relevant:
+
+- staged/unstaged modification;
+- add/delete;
+- rename;
+- untracked;
+- filenames with spaces;
+- dirty-at-start attribution;
+- changed-further-after-start attribution;
+- ambiguous cases.
+
+Do not trim fixed-width git porcelain prefixes before parsing them.
+
+## Run evidence
+
+Every non-trivial implementation/validation run should leave compact evidence under `.ai/runs/` or the repository's current evidence convention.
+
+Record at minimum:
+
+- prompt/run ID;
+- what changed;
+- files changed;
+- tests/validation actually run;
+- failures/blocks;
+- missed work;
+- follow-up prompt/status;
+- commit SHA when committed.
+
+Do not paste full chat history or full terminal logs.
+
+## Learning rule
+
+Learning work is downstream of trustworthy receipts.
+
+Before the receipt/attribution/evidence spine is stable, do not spend implementation capacity on sophisticated model routing, generic token optimization, large mistake-learning engines, or dashboards.
+
+After dogfood receipts exist, learning rules must be:
+
+- scoped;
+- evidence-backed;
+- reviewable;
+- confidence-labeled;
+- expirable/deprecatable.
 
 ## Working order
 
-1. Read `docs/AGENT_SHARED_OPERATING_STANDARD.md`.
-2. Read `docs/AGENT_RUN_LOG_ENFORCEMENT.md` and choose/create the `.ai/runs` path.
-3. Read `docs/ai/learning/MISTAKE_LEDGER.md` and select relevant mistake IDs.
-4. Read `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
-5. Lint the prompt with `docs/PROMPT_LINT_CHECKLIST.md`.
-6. Apply `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md` limits.
-7. Follow `docs/ZERO_WASTE_EXECUTION_PROTOCOL.md` during execution.
-8. If the user asks for the next prompt, use `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`.
-9. Read `docs/CONTEXT_INDEX.md` and the owning queue.
-10. If Gate 0 is incomplete, select from `docs/prompt_queues/bootstrap_validation.md`.
-11. Otherwise select one Ready prompt from the owning queue.
-12. Inspect only the relevant docs/files.
-13. Make the smallest safe change.
-14. Add targeted tests when runtime behavior changes.
-15. Run narrow validation when possible.
-16. Record validation honestly.
-17. Record run evidence using `.ai/RUN_LOG_TEMPLATE.md`.
-18. Apply `docs/WASTE_LEARNING_LOOP.md` and `docs/ai/learning/MISTAKE_LEDGER.md`.
-19. If the run belongs to a 3-5 important prompt-system commit batch, apply `docs/PROMPT_BATCH_REVIEW_POLICY.md`.
-20. Mark prompt `Done`, `Blocked`, or `Needs evidence sync` with run-log path or fallback.
-21. Commit and push to `main` unless the user requests another flow.
+1. Read this file.
+2. Read `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`.
+3. Select exactly one currently claimable prompt from `verification_mvp_2026_08_25.md`.
+4. Read the prompt file and only its required canonical docs.
+5. Inspect relevant code/tests.
+6. Make the smallest safe change.
+7. Run targeted validation, then broader gate validation when required.
+8. Record evidence honestly.
+9. Update queue status/evidence references when the prompt is completed or blocked.
+10. Commit/push according to the user's requested flow.
 
-## Validation defaults
+## Default validation for current .NET skeleton
 
 ```bash
 dotnet restore AgentsWatch.sln
-dotnet build AgentsWatch.sln
-dotnet test AgentsWatch.sln
+dotnet build AgentsWatch.sln --configuration Release
+dotnet test AgentsWatch.sln --configuration Release
 ```
 
-Do not claim validation passed unless it was actually run or CI evidence is available.
+Use narrower test filters during iteration when useful, but final Gate 0 closure requires the full test gate.
