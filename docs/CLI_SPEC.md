@@ -1,162 +1,297 @@
 # AgentsWatch CLI Spec
 
-Last aligned: 2026-06-29  
-Status: planning/specification
+Last aligned: 2026-08-25  
+Status: active product contract
 
-## Recommended stack
+## Product role
 
-Start as a `.NET global tool` because it is cross-platform and fits the expected developer stack.
+The CLI is the first interface to the AgentsWatch verification layer. It must remain thin and call reusable application use cases so the same behavior can later be exposed through MCP or a local API.
 
-Suggested solution layout:
-
-```text
-AgentsWatch.sln
-src/AgentsWatch.Cli
-src/AgentsWatch.Core
-src/AgentsWatch.Git
-src/AgentsWatch.LanguageAdapters
-src/AgentsWatch.Reports
-```
-
-## CLI commands
+## Current implemented commands
 
 ```bash
 agentswatch init
 agentswatch optimize <prompt-file-or-text>
-agentswatch task new
-agentswatch task split <prompt-file>
-agentswatch next
-agentswatch start <task-id>
-agentswatch finish <task-id>
-agentswatch report
-agentswatch handoff
-agentswatch review-diff <commit-or-range>
-agentswatch validate
 agentswatch status
 ```
 
-## Command behavior
+`optimize` remains a secondary helper. New implementation work should prioritize the verification spine.
 
-### `agentswatch init`
+## Verification MVP commands
 
-Creates local files:
+```bash
+agentswatch init
+agentswatch status
+
+agentswatch contract create <task-or-file>
+agentswatch contract check <contract-file-or-id>
+
+agentswatch start <contract-id>
+agentswatch finish <run-id>
+
+agentswatch receipt show <run-id>
+agentswatch evidence check <run-id>
+agentswatch drift check <run-id>
+agentswatch claims check <run-id>
+agentswatch handoff <run-id>
+```
+
+Later, after stable receipt data:
+
+```bash
+agentswatch validate --suggest
+agentswatch run -- <command>
+agentswatch mistakes list
+agentswatch route suggest
+```
+
+## `agentswatch init`
+
+Creates local workspace without overwriting user-owned files:
 
 ```text
 .ai/
-  config.yml
-  tasks/
   runs/
+  handoffs/
   STATUS.md
   CHANGELOG_AI.md
   REVIEW_CHECKLIST.md
 .agentwatch/
-  agentswatch.db
+  contracts/
+  active-runs/
+  runs/
 ```
 
-### `agentswatch optimize`
+Existing `.ai/config.yml` may remain for local settings, but persisted verification state must use structured JSON contracts/receipts.
 
-Input: rough prompt.
+## `agentswatch contract create`
 
-Output:
+Purpose: convert a task/roadmap item/prompt into a `RunContract v1` draft.
 
-- risk level;
-- estimated waste causes;
-- token budget;
-- scope limiter;
-- suggested split;
-- generated markdown prompts.
+MVP may require deterministic flags/interactive fields instead of LLM generation where necessary.
 
-### `agentswatch start`
-
-Records:
-
-- task id;
-- optional tool/model;
-- start time;
-- git branch;
-- start commit;
-- `git status --short -uall`.
-
-### `agentswatch finish`
-
-Records:
-
-- end time;
-- changed files;
-- `git diff --stat`;
-- validation result;
-- risk score;
-- missed tests;
-- handoff summary.
-
-### `agentswatch review-diff`
-
-Generates a review prompt scoped only to changed files in the commit/range.
-
-## Config file
-
-Root file example:
-
-```yaml
-project:
-  name: Example Project
-  types:
-    - flutter
-
-paths:
-  root: .
-
-validation:
-  flutter:
-    - flutter analyze
-    - flutter test
-
-risk:
-  high:
-    - "**/Auth/**"
-    - "**/Security/**"
-    - "**/Migrations/**"
-    - "**/pubspec.yaml"
-    - "**/*Provider.dart"
-  medium:
-    - "lib/services/**"
-    - "lib/navigation/**"
-    - "lib/offline/**"
-    - "lib/widgets/ui/**"
-```
-
-## Language adapters
-
-Universal adapter first:
-
-- git status;
-- git diff;
-- changed files;
-- prompt generation;
-- risk report;
-- changelog;
-- handoff summary.
-
-Stack adapters later:
-
-- Flutter;
-- .NET;
-- React/TypeScript;
-- Python;
-- Node.
-
-## Report outputs
-
-Markdown first:
+Writes:
 
 ```text
-.ai/runs/2026-06-29-001.md
-.ai/CHANGELOG_AI.md
-.ai/STATUS.md
+.agentwatch/contracts/<contract-id>.json
 ```
 
-Optional JSON later:
+Output summarizes:
 
 ```text
-.agentwatch/runs/2026-06-29-001.json
+Contract:
+Intent:
+Acceptance criteria:
+Owned paths:
+Avoid paths:
+Validation:
+Stop rules:
+Lint result:
 ```
+
+The command must not silently invent risky owned paths or validation requirements when insufficient context exists. It may produce an incomplete draft that `contract check` rejects.
+
+## `agentswatch contract check`
+
+Purpose: deterministic lint of a RunContract.
+
+Checks at minimum:
+
+- supported schema version;
+- required identifiers;
+- non-empty intent;
+- acceptance criteria for implementation mode;
+- valid path patterns;
+- validation contract presence when required;
+- stop rules;
+- expected evidence.
+
+Exit code must be non-zero for an invalid implementation contract.
+
+## `agentswatch start <contract-id>`
+
+Purpose: capture the repository baseline before external agent execution.
+
+Writes:
+
+```text
+.agentwatch/active-runs/<run-id>.json
+```
+
+Captures:
+
+- run/contract/task IDs;
+- start timestamp;
+- branch;
+- HEAD SHA;
+- staged changes;
+- unstaged changes;
+- untracked files;
+- fingerprints/state needed for later attribution;
+- optional tool/model/agent metadata.
+
+Rules:
+
+- dirty worktree is allowed and explicitly recorded;
+- do not attribute existing dirty files to the run;
+- refuse a second active run by default;
+- do not persist full source contents unless a future explicit opt-in contract requires it.
+
+## `agentswatch finish <run-id>`
+
+Purpose: capture end state and compute attributable run delta.
+
+Required behavior:
+
+- load matching start baseline;
+- capture end repository evidence;
+- compute attributable additions/modifications/deletions/renames/untracked changes;
+- separate pre-existing unchanged dirty state;
+- surface pre-existing files changed further during the run;
+- preserve ambiguous attribution explicitly;
+- generate/update `RunReceipt v1`.
+
+Writes:
+
+```text
+.agentwatch/runs/<run-id>.json
+.ai/runs/<run-id>.md
+```
+
+The completed baseline may be removed/moved from `active-runs` only after the final receipt is safely written.
+
+## `agentswatch receipt show <run-id>`
+
+Purpose: render the canonical receipt concisely.
+
+Default output includes:
+
+```text
+Run:
+Contract:
+Agent/tool/model:
+Attributable files:
+Pre-existing/ambiguous files:
+Validation:
+Claims:
+Scope findings:
+Acceptance findings:
+Decision:
+Reasons:
+```
+
+## `agentswatch evidence check <run-id>`
+
+Purpose: run deterministic evidence and validation requirements against the receipt/contract.
+
+Must never infer `validation passed` merely from agent prose.
+
+Possible results:
+
+```text
+Done
+NeedsEvidence
+NeedsReview
+NeedsApproval
+Blocked
+Failed
+```
+
+## `agentswatch drift check <run-id>`
+
+Purpose: compare attributable changes against `ownedPaths` and `avoidPaths`.
+
+Output must list exact path and violated rule/reason.
+
+Raw pre-existing dirty files do not count as drift unless run attribution shows they changed further.
+
+## `agentswatch claims check <run-id>`
+
+Purpose: verify supported deterministic claim classes against receipt evidence.
+
+Initial classes:
+
+```text
+TestsAdded
+DocsOnly
+BackendUnchanged
+MigrationAdded
+ValidationPassed
+NoUnrelatedChanges
+```
+
+Claim extraction may initially be explicit/imported. LLM extraction is not required for MVP.
+
+## `agentswatch handoff <run-id>`
+
+Purpose: generate compact continuation context from the structured receipt.
+
+Writes:
+
+```text
+.ai/handoffs/<run-id>.md
+```
+
+Target 10–20 lines. Include:
+
+- task/decision;
+- attributable files;
+- validation summary;
+- unsupported/unknown evidence;
+- residual risk;
+- next minimal prompt.
+
+Do not copy full chat/session or terminal logs.
+
+## `agentswatch status`
+
+MVP target output:
+
+```text
+Project root:
+Detected types:
+Branch:
+Commit:
+Dirty files:
+Active run:
+Latest receipt:
+Open verification findings:
+Next safe prompt:
+```
+
+Must handle non-git directories clearly and avoid running validation by default.
+
+## `agentswatch optimize`
+
+Retain as a secondary deterministic helper for broad-prompt lint/splitting.
+
+Do not expand it ahead of Contract/Run/Receipt/Evidence work.
+
+## Validation adapters
+
+Initial product priority:
+
+1. universal git;
+2. .NET;
+3. Flutter.
+
+Suggested validation remains non-executing by default.
+
+## Canonical output rule
+
+Structured JSON is authoritative:
+
+```text
+.agentwatch/contracts/*.json
+.agentwatch/active-runs/*.json
+.agentwatch/runs/*.json
+```
+
+Markdown is a generated projection:
+
+```text
+.ai/runs/*.md
+.ai/handoffs/*.md
+```
+
+No verification command may depend on reparsing Markdown prose.
