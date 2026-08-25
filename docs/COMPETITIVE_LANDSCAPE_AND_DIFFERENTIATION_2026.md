@@ -1,227 +1,231 @@
 # Competitive Landscape and Differentiation — 2026
 
-Last reviewed: 2026-07-17  
-Status: product strategy and market-gap hypothesis
+Last reviewed: 2026-08-25  
+Status: active product strategy / market-gap hypothesis
 
 ## Executive decision
 
-AgentsWatch must not compete by becoming another coding agent, cloud sandbox, visual workflow engine, or generic multi-agent manager.
+AgentsWatch must not compete by becoming another coding agent, cloud sandbox, session manager, generic control plane, visual workflow engine, or token/cost dashboard.
 
-The product wedge is:
+Those categories are increasingly covered by coding-agent vendors and developer platforms.
+
+The differentiated wedge is:
 
 ```text
-Roadmap-to-contract compiler
+machine-checkable Run Contract
++ dirty-worktree-safe run attribution
 + vendor-neutral Agent Run Receipt
-+ evidence/drift gates
-+ project-local learning and model routing
++ claims vs attributable diff vs validation
++ scope drift and evidence-based completion
 ```
 
-Positioning:
+Preferred positioning:
 
 ```text
-AgentsWatch is the local control and evidence plane for coding agents.
-It turns roadmap items into bounded run contracts, verifies what each agent actually changed, and learns which execution path works best for this repository.
+AgentsWatch is the local verification and evidence layer for AI coding agents.
+It turns a task into a bounded contract, attributes what changed during the run,
+and verifies the result against repository and validation evidence.
+```
+
+Core promise:
+
+```text
+Turn roadmap intent into verified change — across any coding agent.
 ```
 
 ## Market reality
 
-The following capabilities are already well covered:
+Broad capabilities already well covered or rapidly commoditizing include:
 
-- parallel and background coding agents;
-- isolated cloud workspaces and worktrees;
-- scheduled agent sessions;
-- reusable skills, knowledge, playbooks, and prompt templates;
-- generic session history and token/cost tracking;
-- visual workflow orchestration;
-- manual approval steps;
-- CI/CD, infrastructure, incident, and release workflows;
-- PR creation and automatic code review;
-- generic agent APIs and SDKs.
+- agent execution and code generation;
+- parallel/background agent sessions;
+- cloud workspaces/worktrees;
+- generic agent scheduling;
+- reusable skills/playbooks/knowledge;
+- session history and traces;
+- token/cost/tool-call observability;
+- generic approvals/governance;
+- PR creation and automated review;
+- visual workflow/orchestration;
+- agent APIs/SDKs.
 
-AgentsWatch should integrate with those products rather than rebuild them.
+AgentsWatch should integrate with those capabilities rather than rebuild them.
 
-## Competitor summary
+## Strongest market-gap hypothesis
 
-| Product | Strong capabilities | Do not copy as primary wedge |
-|---|---|---|
-| Codex | Parallel agents, worktrees, skills, scheduled automations, review queue, cloud/CLI/IDE execution. | Multi-agent desktop UI, agent runtime, generic scheduling. |
-| Cursor | Background agents, remote environments, follow-up prompts, API-based agent creation, large parallel capacity. | Remote coding environment, generic background queue. |
-| GitHub Copilot agents | Issue/prompt delegation, parallel sessions, PR lifecycle, security scans, automatic reviews and agent merge. | GitHub-native issue-to-PR flow and generic PR review. |
-| Devin | Managed parallel sessions, session analysis, knowledge, playbooks, schedules, learning from prior sessions. | Generic knowledge base, playbook library, session-analysis-only learning. |
-| OpenHands | Open agent SDK, local/cloud execution, tool orchestration, context compression, security analysis, model neutrality. | Building another agent SDK, sandbox, or coding runtime. |
-| Superplane | Deterministic event graphs, approvals, run history, engineering integrations, release/incident/infra workflows. | Visual workflow canvas and broad DevOps orchestration. |
-| Cline | Self-contained tasks with full conversation, changes, commands, token usage, cost, and duration. | Full-chat task history and basic cost dashboard. |
-
-## Market-gap hypothesis
-
-The review did not identify a mainstream product that clearly combines all of the following as one local-first, vendor-neutral workflow:
-
-1. **Roadmap Contract Compiler**
-   - converts a roadmap item into a machine-checkable execution contract;
-   - requires acceptance criteria, owned paths, avoid paths, validation, risk, budget, and stop rules;
-   - refuses implementation when the contract is incomplete.
-
-2. **Agent Run Receipt**
-   - normalizes evidence from Codex, Cursor, Claude, Copilot, OpenHands, Devin, or a manual run;
-   - records prompt intent, model/tool, inspected files, changed files, commands, validation, claims, risk, and learning;
-   - remains useful without full chat history.
-
-3. **Roadmap and Scope Drift Detection**
-   - compares roadmap intent and acceptance criteria against the actual diff and validation;
-   - detects unrelated changes, missing deliverables, dependency violations, and premature completion;
-   - updates roadmap status from evidence rather than agent claims.
-
-4. **Claims-vs-Diff-vs-Validation Gate**
-   - checks whether statements such as `tests added`, `backend changed`, or `bug fixed` are supported by changed files and validation evidence;
-   - produces an explainable Evidence Score;
-   - blocks `Done` when evidence is insufficient.
-
-5. **Project-Local Empirical Router**
-   - learns which model/tool performs best for this repository and task type;
-   - optimizes for quality, scope discipline, validation efficiency, elapsed time, and available cost data;
-   - recommends the cheapest sufficient route with confidence and reasons.
-
-6. **Counterfactual Learning**
-   - does more than summarize a failed session;
-   - proposes the smaller prompt, narrower context, cheaper model, and validation sequence that should have been used;
-   - stores accepted `do not repeat` rules with confidence, evidence count, scope, and expiry.
-
-7. **Validation Economy**
-   - identifies repeated or unnecessarily broad commands;
-   - recommends the smallest useful validation ladder;
-   - measures avoidable command time and log/context volume;
-   - feeds the result back into future contracts.
-
-This is a market-gap hypothesis, not a claim that no other product can implement these ideas. It must be validated through dogfood runs and user interviews.
-
-## Defensible product loop
+The product should prove whether developers need an independent cross-vendor layer that answers:
 
 ```text
-Roadmap item
-  -> Contract completeness check
-  -> Model/tool route recommendation
-  -> Bounded prompt envelope
-  -> External agent execution
-  -> Agent Run Receipt
-  -> Claims/diff/validation verification
-  -> Drift and risk result
-  -> Counterfactual learning
-  -> Updated router evidence
-  -> Next roadmap item
+What was the agent supposed to do?
+What repository state existed before it started?
+What did this run actually change?
+Which claims are supported by the diff and validation?
+Did it leave the agreed scope?
+Is there enough evidence to call the task Done?
 ```
 
-The loop becomes more valuable as repository-local evidence accumulates.
+## Differentiators
 
-## Signature metrics
+### 1. Run Contract
 
-AgentsWatch should own a small set of explainable metrics:
+A task becomes structured intent with acceptance criteria, owned/avoid paths, validation requirements, stop rules and expected evidence.
+
+This reduces ambiguous `do whatever is needed` delegation without requiring AgentsWatch to own execution.
+
+### 2. Run attribution
+
+The product captures start-state evidence so pre-existing dirty files are not incorrectly attributed to the agent.
+
+This is a prerequisite for trustworthy local-agent verification and a stronger differentiator than a generic final-diff viewer.
+
+### 3. Agent Run Receipt
+
+One vendor-neutral structured record of:
+
+- contract;
+- agent/tool/model metadata where known;
+- start/end repository evidence;
+- attributable changes;
+- validation;
+- claims;
+- acceptance/scope findings;
+- final decision/reasons.
+
+The receipt remains useful without full chat history.
+
+### 4. Claims vs Diff vs Validation
+
+Agent final summaries are treated as claims.
+
+Initial deterministic examples:
+
+- `tests added`;
+- `validation passed`;
+- `docs only`;
+- `no unrelated changes`;
+- `migration added`.
+
+The verification layer checks those claims against attributable repository/validation evidence.
+
+### 5. Scope Drift
+
+Contract path boundaries are checked against run-attributable changes, not raw dirty worktree state.
+
+### 6. Evidence-based completion
+
+`Done` is an auditable decision, not a copy of the agent's confidence.
+
+Mandatory validation missing, unsupported claims, ambiguous attribution, or scope issues can produce explicit `NeedsEvidence`, `NeedsReview`, `NeedsApproval`, `Blocked`, or `Failed` results.
+
+### 7. Repository-local learning — later
+
+Once receipts are trustworthy, AgentsWatch can learn repeated mistake/validation patterns and later recommend cheaper sufficient execution routes.
+
+Learning is not the initial moat if the underlying receipts are noisy.
+
+## Weaker differentiation / secondary features
+
+Useful but not primary wedge:
+
+- prompt optimization;
+- token usage summaries;
+- cost dashboards;
+- command timing;
+- generic session history;
+- generic task queue;
+- broad observability traces.
+
+Build these only when they improve the verified-change loop or dogfood evidence proves demand.
+
+## Defensible loop
 
 ```text
-Contract Completeness Score
-Scope Drift Score
-Evidence Score
+Task
+  -> Contract
+  -> Start attribution baseline
+  -> external agent
+  -> Finish attributable delta
+  -> Receipt
+  -> Evidence/Scope/Claims verification
+  -> auditable decision
+  -> later learning from accepted/rejected outcomes
+```
+
+The compounding value comes from trusted repository-local receipts and outcome evidence, not from storing more raw agent chatter.
+
+## Product metrics
+
+Primary:
+
+```text
+Contract Completeness
+Attribution Ambiguity Rate
+Unsupported Claim Count
+Scope Drift Findings
+Evidence Completeness
+Acceptance-Criteria Coverage
+Manual Accept/Reject vs AgentsWatch Decision
+False Positive / False Negative rate
+```
+
+Secondary:
+
+```text
 Validation Efficiency
-Avoidable Work Estimate
+Retry Count
 Repeat Mistake Rate
-Router Confidence
-Roadmap Progress Confidence
+Token/cost data when genuinely available
 ```
 
-Rules:
+No fake precision and no published savings claim without sufficient evidence.
 
-- no fake precision;
-- show the evidence behind every score;
-- exact token/cost data only when a provider supplies it;
-- otherwise label values as estimates or proxies;
-- users can disable metrics without losing reports.
+## Product proof plan
 
-## Product principles
+Before expanding into integrations/dashboard/SaaS, collect at least 30 useful dogfood receipts across AgentsWatch, .NET and Flutter work.
 
-### Evidence before autonomy
+Required proof events:
 
-Do not add continuous autopilot before receipts, evidence gates, risk policies, and stop behavior are reliable.
+- at least one real unsupported agent claim caught;
+- at least one real scope drift caught;
+- at least one missing-evidence block;
+- dirty-at-start runs without silent false attribution;
+- receipts/handoffs useful without full chat history.
 
-### Cross-vendor before deep vendor integration
+Classify findings as true/false positive/negative or unknown/ambiguous.
 
-Define one internal run contract first. Add thin adapters later.
+## Integration strategy after proof
 
-### Repository-local learning before organization knowledge
+Depending on dogfood evidence:
 
-Learn from concrete runs in one repository before adding broad team knowledge features.
+- MCP if developers want verification in the agent loop;
+- GitHub/PR check if review/acceptance is the strongest use case;
+- validation economy if repeated broad command work is a measured problem;
+- local dashboard only if aggregate receipt views are repeatedly needed;
+- empirical routing only after comparable cross-agent outcomes exist.
 
-### Compact evidence before full session capture
+## Explicit non-goals for current MVP
 
-Store the smallest useful evidence. Do not copy full chat/session history by default.
-
-### Explainable recommendations before opaque auto-routing
-
-Every model/tool recommendation must include reasons, confidence, and a fallback.
-
-## Features to de-prioritize
-
-Do not prioritize these as differentiators:
-
-- visual workflow canvas;
 - proprietary coding-agent runtime;
-- cloud sandbox infrastructure;
-- generic background-agent queue;
+- cloud sandbox/workspace;
+- generic multi-agent manager;
 - generic scheduling;
-- generic knowledge or playbook library;
-- full conversation archive;
-- broad CI/CD and incident orchestration;
-- hundreds of integrations;
-- hosted team dashboard before local proof;
-- autonomous production deploy or merge.
+- visual workflow canvas;
+- full session/chat archive;
+- broad CI/CD/incident/release orchestration;
+- generic token/cost dashboard as the product identity;
+- automatic merge/release/deploy;
+- SaaS/billing before local proof.
 
-## Integration strategy
+## Strategy rule
 
-AgentsWatch should become usable as:
+If a proposed feature does not improve one of these:
 
-- local CLI wrapper;
-- MCP server exposing preflight, receipt, evidence, and route tools;
-- Codex skill/plugin;
-- Cursor background-agent preflight/postflight adapter;
-- GitHub agent app or PR check;
-- Superplane component for agent preflight and postflight verification;
-- OpenHands/Devin session adapter.
+```text
+contract clarity
+attribution correctness
+receipt usefulness
+verification accuracy
+scope/evidence truth
+```
 
-The external tool executes the coding task. AgentsWatch defines the contract and verifies the result.
-
-## Proof plan
-
-Dogfood on MathLearning and AgentsWatch itself.
-
-For at least 30 comparable runs, collect:
-
-- task type;
-- agent/model;
-- prompt size proxy;
-- files inspected and changed;
-- scope drift;
-- validation commands and duration;
-- evidence score;
-- retry count;
-- result accepted/rejected;
-- learning rule applied;
-- whether the rule improved the next comparable run.
-
-Success criteria for the differentiation hypothesis:
-
-- fewer repeated failures;
-- fewer unrelated files inspected or changed;
-- fewer unnecessary broad validations;
-- higher evidence completeness;
-- lower retry count;
-- useful cross-agent recommendations after enough comparable runs.
-
-Do not publish token-saving percentages until measured.
-
-## Official sources reviewed
-
-- OpenAI Codex product and Codex app documentation.
-- Cursor Background Agents and Background Agents API documentation.
-- GitHub Copilot coding-agent and agent-app documentation.
-- Devin Knowledge, Playbooks, Advanced Capabilities, MCP, and scheduling documentation.
-- OpenHands SDK, CLI, architecture, cloud, and security documentation.
-- Superplane concepts, core components, Cursor component, run history, and approvals documentation.
-- Cline task-management documentation.
+it is probably not an MVP priority.
