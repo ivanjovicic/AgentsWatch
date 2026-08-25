@@ -1,39 +1,45 @@
 # AgentsWatch Data Model
 
-Last aligned: 2026-06-30  
-Status: draft contract
+Last aligned: 2026-08-25  
+Status: active MVP contract
 
-## Purpose
+## Core rule
 
-Start with markdown files. Move to SQLite only after the CLI report model stabilizes.
+Machine-readable structured state is canonical from the verification MVP onward.
 
-This document defines the future local data model so early commands do not invent incompatible shapes.
+```text
+JSON = source of truth
+Markdown = human-readable projection
+```
 
----
+Do not make verification logic depend on parsing free-form Markdown.
 
 ## Storage phases
 
-### Phase 1 — Markdown only
+### Phase 1 — JSON + Markdown projection
 
-Use:
+Canonical machine data:
 
 ```text
-.ai/tasks/
-.ai/runs/
-.ai/generated/
-.ai/learning/LESSONS.md
-.ai/learning/MISTAKE_PATTERNS.md
-.ai/learning/DO_NOT_REPEAT.md
+.agentwatch/contracts/<contract-id>.json
+.agentwatch/active-runs/<run-id>.json
+.agentwatch/runs/<run-id>.json
+```
+
+Human-readable projection:
+
+```text
+.ai/runs/<run-id>.md
+.ai/handoffs/<run-id>.md
 .ai/STATUS.md
 .ai/CHANGELOG_AI.md
 ```
 
-### Phase 2 — JSON sidecars
+### Phase 2 — JSONL indexes / command evidence
 
-Optional machine-readable run files:
+When needed:
 
 ```text
-.agentwatch/runs/<run-id>.json
 .agentwatch/command-history.jsonl
 .agentwatch/learning-events.jsonl
 .agentwatch/mistake-patterns.json
@@ -41,285 +47,166 @@ Optional machine-readable run files:
 
 ### Phase 3 — SQLite
 
-Future local history:
+Only after schemas stabilize and queries justify it:
 
 ```text
 .agentwatch/agentswatch.db
 ```
 
----
+## Schema-version rule
 
-## Entities
-
-### Project
+Every persisted contract, baseline and receipt must contain:
 
 ```text
-ProjectId
-Name
-RootPath
-DetectedTypes
-CreatedAt
-UpdatedAt
+schemaVersion
 ```
 
-### Task
+Readers must reject unsupported future versions clearly rather than silently misparse them.
+
+## RunContract v1
+
+Minimum canonical shape:
 
 ```text
-TaskId
-Title
-RunMode
-TokenBudget
-Status
-PromptPath
-CreatedAt
-UpdatedAt
+schemaVersion
+contractId
+taskId
+intent
+acceptanceCriteria[]
+ownedPaths[]
+avoidPaths[]
+permissionMode
+runMode
+validationContract
+stopRules[]
+expectedEvidence[]
+createdAtUtc
 ```
 
-### Run
+Optional later fields:
 
 ```text
-RunId
-TaskId
-StartedAt
-FinishedAt
-Tool
-Model
-StartCommitSha
-EndCommitSha
-Branch
-RiskLevel
-Status
-```
-
-### ChangedFile
-
-```text
-RunId
-Path
-Status
-AddedLines
-DeletedLines
-RiskLevel
-RiskReasons
-```
-
-### Validation
-
-```text
-RunId
-Command
-Status
-StartedAt
-FinishedAt
-OutputSummary
-```
-
-### CommandProfile
-
-Planned for AW-011.
-
-```text
-CommandId
-RunId
-WorkingDirectory
-DetectedProjectTypes
-CommandDisplay
-CommandHash
-CommandRedactionApplied
-CommandRefusedReason
-StartedAt
-FinishedAt
-DurationMs
-ExitCode
-StdoutBytes
-StderrBytes
-Status
-FirstErrorLine
-OutputSummary
-SuggestedByAgentsWatch
-ChangedFilesBefore
-ChangedFilesAfter
+dependencies[]
+riskGates[]
+budgetGuidance
+routeSuggestion
+sourceRoadmapItem
 ```
 
 Rules:
 
-- command profiles are local-first evidence;
-- markdown reports should include compact summaries only;
-- full stdout/stderr is not part of the default data model;
-- optional raw log files, if added later, must be local-only and referenced by path only when explicitly requested;
-- secret-looking values must be redacted before `OutputSummary` is stored;
-- raw secret-looking command strings must not be persisted or displayed.
+- implementation contracts require non-empty intent and acceptance criteria;
+- `ownedPaths` / `avoidPaths` may be empty only when explicitly justified by contract type;
+- validation requirements are explicit;
+- incomplete contracts produce lint findings;
+- generated Markdown is not authoritative.
 
-Phase 2 JSONL shape:
+## RunBaseline v1
 
-```json
-{
-  "schemaVersion": 1,
-  "commandId": "2026-06-30T120000Z-dotnet-test-filter-git",
-  "runId": "optional-run-id",
-  "workingDirectory": ".",
-  "detectedProjectTypes": ["dotnet"],
-  "commandDisplay": "dotnet test --filter Git",
-  "commandHash": "sha256:<hash>",
-  "commandRedactionApplied": false,
-  "commandRefusedReason": null,
-  "startedAtUtc": "2026-06-30T12:00:00Z",
-  "finishedAtUtc": "2026-06-30T12:00:04Z",
-  "durationMs": 4012,
-  "exitCode": 0,
-  "stdoutBytes": 8200,
-  "stderrBytes": 0,
-  "status": "Pass",
-  "firstErrorLine": null,
-  "outputSummary": "Tests passed. 12 tests run.",
-  "suggestedByAgentsWatch": true,
-  "changedFilesBefore": 2,
-  "changedFilesAfter": 2
-}
-```
-
-### AgentRunLog
+Persisted by `agentswatch start` under:
 
 ```text
-RunId
-PromptId
-QueueItemId
-Tool
-Model
-PermissionMode
-RunMode
-TokenBudget
-Status
-FilesInspectedCount
-FilesChangedCount
-ValidationStatus
-CommandProfileSummary
-MistakeCategories
-MissedWork
-ScopeCreep
-TokenWasteSummary
-LearningNote
-NextPrompt
-DoNotRepeat
+.agentwatch/active-runs/<run-id>.json
+```
+
+Minimum fields:
+
+```text
+schemaVersion
+runId
+contractId
+taskId
+startedAtUtc
+branch
+headCommitSha
+worktreeState
+agent
+model
+tool
+```
+
+### WorktreeState
+
+Must preserve enough evidence to distinguish pre-existing changes from run-attributable changes.
+
+Minimum logical fields:
+
+```text
+porcelainVersion
+staged[]
+unstaged[]
+untracked[]
+stateFingerprint
+```
+
+Each tracked changed-file record should support:
+
+```text
+path
+oldPath
+status
+contentOrDiffFingerprint
+```
+
+Do not store full source-file contents merely to calculate attribution when hashes/diff fingerprints are sufficient.
+
+## RunDelta v1
+
+Produced by comparing start baseline with end repository evidence.
+
+```text
+attributableChanges[]
+preExistingUnchangedChanges[]
+preExistingChangedFurther[]
+attributionAmbiguities[]
+endBranch
+endHeadCommitSha
+```
+
+### AttributableChange
+
+```text
+path
+oldPath
+status
+addedLines?
+deletedLines?
+attribution
+attributionReason
+```
+
+Suggested attribution values:
+
+```text
+Attributable
+PreExistingUnchanged
+PreExistingChangedFurther
+Ambiguous
 ```
 
 Rules:
 
-- one compact log per agent run;
-- one learning note per completed or blocked run;
-- do not store full chat history;
-- do not store full terminal output;
-- do not store secrets.
+- raw end-of-run dirty state is never automatically equivalent to attributable changes;
+- ambiguous attribution remains explicit;
+- scope and claims checks operate on attributable changes, while ambiguities are surfaced separately.
 
-### LearningEvent
+## ValidationEvidence v1
 
 ```text
-LearningEventId
-RunId
-Category
-Message
-RuleCandidate
-AppliesToProjectTypes
-CreatedAt
-Accepted
-```
-
-Use for project-local learning such as:
-
-```text
-Next time, run flutter analyze before full flutter test for small UI-only changes.
-```
-
-### MistakePattern
-
-```text
-PatternId
-Category
-Description
-SeenCount
-LastSeenRunId
-RecommendedPromptRule
-RecommendedValidationRule
-RecommendedContextRule
-Status
+validationId
+runId
+commandDisplay
+status
+startedAtUtc?
+finishedAtUtc?
+durationMs?
+exitCode?
+outputSummary?
+firstErrorLine?
+source
 ```
 
 Status values:
-
-```text
-Candidate
-Accepted
-Ignored
-Deprecated
-```
-
-### FlutterRunSignals
-
-Optional per-run shape for Flutter projects:
-
-```text
-RunId
-TouchedWidgets
-TouchedProvidersOrState
-TouchedNavigationOrRouter
-TouchedPersistenceOrOfflineStorage
-TouchedPlatformFiles
-WidgetTestsAffected
-ValidationSuggested
-ValidationRun
-RiskNote
-```
-
-Use only when Flutter project files are detected.
-
-### RiskFinding
-
-```text
-RunId
-Level
-Category
-Message
-Path
-SuggestedFollowUp
-```
-
-### Handoff
-
-```text
-RunId
-SummaryPath
-NextPrompt
-ResidualRisk
-LearningNote
-DoNotRepeat
-```
-
----
-
-## Status values
-
-Task status:
-
-```text
-Ready
-InProgress
-Done
-Blocked
-NeedsEvidence
-NeedsHandoff
-NeedsLearningLog
-```
-
-Validation status:
-
-```text
-Pass
-Fail
-NotRun
-BlockedByEnvironment
-```
-
-Command status:
 
 ```text
 Pass
@@ -331,7 +218,149 @@ Killed
 Unknown
 ```
 
-Run status:
+Source values may include:
+
+```text
+AgentsWatchCommand
+ImportedAgentResult
+UserDeclared
+CI
+Unknown
+```
+
+Rules:
+
+- user-declared evidence is labeled as such;
+- full stdout/stderr is not stored by default;
+- secret-looking values are redacted before summaries are persisted;
+- `Pass` must not be invented from an agent prose claim without a corresponding evidence source.
+
+## AgentClaim v1
+
+```text
+claimId
+runId
+claimType
+rawText?
+source
+value
+```
+
+Initial deterministic claim types:
+
+```text
+TestsAdded
+DocsOnly
+BackendUnchanged
+MigrationAdded
+ValidationPassed
+NoUnrelatedChanges
+```
+
+Claims may initially be entered/imported structurally. LLM extraction is optional later.
+
+## Finding v1
+
+Common shape for contract/evidence/scope/claim findings:
+
+```text
+findingId
+runId?
+contractId?
+category
+severity
+status
+message
+paths[]
+evidenceRefs[]
+ruleId
+```
+
+Suggested categories:
+
+```text
+ContractIncomplete
+AttributionAmbiguous
+MissingValidation
+ValidationFailed
+ScopeOutsideOwnedPaths
+AvoidPathTouched
+UnsupportedClaim
+AcceptanceCriterionUnsupported
+RiskApprovalRequired
+```
+
+Finding status:
+
+```text
+Supported
+Unsupported
+Unknown
+NeedsReview
+```
+
+## AcceptanceCriterionResult v1
+
+```text
+criterionId
+text
+status
+evidenceRefs[]
+reason
+```
+
+Status:
+
+```text
+Supported
+Unsupported
+Unknown
+```
+
+MVP may require explicit/manual mappings where semantics cannot be verified deterministically. Unknown is preferable to fabricated certainty.
+
+## RunReceipt v1
+
+Canonical path:
+
+```text
+.agentwatch/runs/<run-id>.json
+```
+
+Minimum fields:
+
+```text
+schemaVersion
+runId
+contractId
+taskId
+startedAtUtc
+finishedAtUtc
+agent
+model
+tool
+startRepositoryState
+endRepositoryState
+runDelta
+validations[]
+claims[]
+acceptanceCriteria[]
+findings[]
+decision
+missedWork[]
+learningNote
+nextPrompt
+```
+
+### RunDecision
+
+```text
+status
+reasons[]
+override?
+```
+
+Status values:
 
 ```text
 Done
@@ -342,49 +371,90 @@ Blocked
 Failed
 ```
 
-Risk levels:
+Override, if supported later:
 
 ```text
-Low
-Medium
-High
+overriddenBy
+overrideReason
+overriddenAtUtc
 ```
 
-Mistake categories:
+Rules:
+
+- no numeric score alone upgrades status;
+- mandatory validation missing => cannot be `Done`;
+- unresolved attribution ambiguity that affects scope/acceptance should normally prevent high-confidence `Done`;
+- all non-Done decisions expose reasons.
+
+## Markdown projections
+
+Generated from structured data:
 
 ```text
-ScopeCreep
-OverRead
-OverTest
-UnderTest
-ValidationSkipped
-WrongModel
-WrongTool
-SensitivePathTouched
-LargeLogPasted
-RepeatedFailure
-MissingHandoff
-ClaimedButNotDone
-FlutterStateRisk
-FlutterNavigationRisk
-FlutterPersistenceRisk
+.ai/runs/<run-id>.md
+.ai/handoffs/<run-id>.md
 ```
 
----
+The Markdown report should include concise sections for:
+
+- contract intent;
+- attributable changes;
+- pre-existing changes/ambiguities;
+- validation;
+- claims and support status;
+- scope findings;
+- acceptance criteria;
+- decision and reasons;
+- missed work;
+- learning note;
+- next prompt.
+
+## CommandProfile — later
+
+Command profiling remains useful after the verification spine works.
+
+Potential shape:
+
+```text
+commandId
+runId
+workingDirectory
+commandDisplay
+commandHash
+startedAtUtc
+finishedAtUtc
+durationMs
+exitCode
+stdoutBytes
+stderrBytes
+status
+firstErrorLine
+outputSummary
+suggestedByAgentsWatch
+```
+
+Do not let command-profiling work block RunContract/RunReceipt/Evidence implementation.
+
+## LearningEvent — post-receipt MVP
+
+```text
+learningEventId
+runId
+category
+message
+ruleCandidate
+scope
+createdAtUtc
+accepted
+confidence
+evidenceCount
+expiresAtUtc?
+```
+
+Learning is only trustworthy after receipt attribution and evidence are trustworthy.
 
 ## Compatibility rule
 
-Every markdown report should be convertible to the future JSON/SQLite model without losing:
+Every human-readable report must be fully regenerable from the canonical JSON models without losing the core verification state.
 
-- task id;
-- run mode;
-- budget;
-- changed files;
-- validation status;
-- command profile summary if available;
-- risk findings;
-- missed work;
-- learning note;
-- do-not-repeat rule if present;
-- follow-up prompt;
-- handoff summary.
+No downstream checker may require information that exists only in Markdown prose.
