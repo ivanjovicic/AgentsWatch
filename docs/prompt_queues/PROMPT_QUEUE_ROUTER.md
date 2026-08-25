@@ -1,98 +1,113 @@
 # AgentsWatch Prompt Queue Router
 
-Last aligned: 2026-07-01
+Last aligned: 2026-08-25
 
-Use this file first when choosing the next agent prompt.
+Use this file first when choosing the next AgentsWatch task.
 
-## Current global state
+## Canonical queue
 
-Gate 0 is incomplete.
-
-That means validation-first prompts have priority over feature prompts.
-
-## Mandatory pre-run lint
-
-Before running any prompt, apply:
-
-- `docs/PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
-- `docs/PROMPT_LINT_CHECKLIST.md`
-- `docs/CONTEXT_PACKS.md`
-
-If the prompt fails lint or has no suitable pack, rewrite or split it before execution.
-
-## Fast decision tree
+Current active implementation queue:
 
 ```text
-Do we have restore/build/test evidence?
-  no  -> run AW-VAL-001
-  yes -> do we have CLI smoke evidence?
-          no  -> run AW-VAL-002
-          yes -> do we have evidence validator/workflow proof?
-                  no  -> run AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002
-                  yes -> do we have evidence review?
-                          no  -> run AW-VAL-003
-                          yes -> is init hardened?
-                                  no  -> run AW-VAL-004 or AW-002
-                                  yes -> continue MVP/productization prompts
+docs/prompt_queues/verification_mvp_2026_08_25.md
 ```
 
-## Queue priority order
+Older bootstrap, MVP, token-economy, productization, roadmap, architecture, licensing, and evidence queues are historical/supporting context unless a task is explicitly re-promoted into the canonical queue.
 
-1. `bootstrap_validation.md`
-2. `agent_evidence_validation_followups_2026_07_01.md`
-3. `token_economy_hardening_2026_07_01.md`
-4. `token_economy_industry_followups_2026_07_01.md`
-5. `agentwatch_mvp.md`
-6. `productization.md`
-7. `roadmap_execution.md`
-8. `architecture_evolution.md`
+## Current known state
+
+Latest known GitHub CI evidence on `main`:
+
+```text
+restore: PASS
+build: PASS
+tests: FAIL
+```
+
+Known failing test/root cause:
+
+```text
+GitStatusParserTests.Parse_ParsesModifiedAndUntrackedFiles
+```
+
+The parser trims the fixed-width git porcelain prefix before slicing the path, corrupting `README.md` to `EADME.md`.
+
+Therefore the current next prompt is not generic build discovery. It is the focused parser/CI hardening prompt.
 
 ## Current next prompt
 
 ```text
-AW-VAL-001 — Build validation
+AW-VFY-001 — Git parser and CI hardening
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VAL-001-build-validation.md
+docs/prompts/AW-VFY-001-git-parser-ci-hardening.md
 ```
 
-## Do not run yet
+## Strict decision tree
 
-Until AW-VAL-001 and AW-VAL-002 are complete, do not run:
+```text
+Is AW-VFY-001 full test gate green?
+  no  -> AW-VFY-001
+  yes -> Is CLI smoke/Gate 0 closed?
+          no  -> AW-VFY-002
+          yes -> Is RunContract v1 proven?
+                  no  -> AW-VFY-003
+                  yes -> Is start baseline proven?
+                          no  -> AW-VFY-004
+                          yes -> Is attributable finish delta proven?
+                                  no  -> AW-VFY-005
+                                  yes -> Is RunReceipt v1 proven?
+                                          no  -> AW-VFY-006
+                                          yes -> Is Evidence Gate proven?
+                                                  no  -> AW-VFY-007
+                                                  yes -> Is Scope Drift proven?
+                                                          no  -> AW-VFY-008
+                                                          yes -> Are initial claims checks proven?
+                                                                  no  -> AW-VFY-009
+                                                                  yes -> AW-VFY-010 dogfood proof
+```
 
-- AW-002+ feature prompts;
-- PROD-001+ productization prompts;
-- ROAD implementation prompts;
-- architecture evolution prompts;
-- dashboard/SaaS prompts.
+## Non-negotiable ordering rules
 
-Evidence validator prompts may run after AW-VAL-001/AW-VAL-002 because they validate the agent process and do not add product features.
+Do not implement before their gate:
 
-Token economy hardening prompts may run as docs-only planning after the evidence validator queue is clean. They must not implement runtime CLI behavior until Gate 0 is complete.
+- Contract features before Gate 0 closes;
+- `finish` attribution before start baseline is stable;
+- receipt verification before attribution is proven;
+- scope/claims checks on raw final git status;
+- learning/router/dashboard before trustworthy receipts/dogfood.
 
-Industry token economy follow-ups may run as docs/spec/checklist work after the first token economy queue. Runtime commands from that queue require Gate 0.
+## Product guardrails
 
-Prior-conversation backfill docs are safe to read when choosing packs, state owners, feature profiles, and queue lifecycle fields. Do not load entire old conversations; read `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md` instead.
+Do not route current work toward:
 
-## After Gate 0
+- proprietary coding-agent execution;
+- generic control-plane/session manager;
+- cloud workspace/orchestration;
+- generic token/cost dashboard as the primary product;
+- SaaS/billing/OAuth;
+- visual workflow builder;
+- automatic merge/release/deploy.
 
-Recommended order:
+## Context rule
 
-1. AW-EVIDENCE-VAL-001 / AW-EVIDENCE-VAL-002 — evidence validator and workflow proof
-2. AW-TOKEN-IND-002 — cache-aware prompt skeleton
-3. AW-TOKEN-IND-003 / AW-TOKEN-IND-004 / AW-TOKEN-IND-005 — config smell checklist, stale-context guard, queue token-budget fields
-4. AW-TOKEN-IND-011 / AW-TOKEN-IND-012 / AW-TOKEN-IND-013 — state-owner filter, feature-profile gating, queue lifecycle token report
-5. AW-VAL-004 / AW-002 — init hardening
-6. PROD-002 — init temp-directory tests
-7. PROD-001 — help output UX alignment
-8. PROD-003 — status non-git behavior
-9. AW-003 — git status/diff tracker and run reports
-10. AW-005 — prompt optimizer and task split
-11. AW-006/AW-007 — handoff and diff-only review
+Normal prompt selection should require only:
 
-## Rule
+```text
+AGENTS.md
+-> this router
+-> selected prompt file
+-> prompt's listed canonical docs
+-> exact code/tests
+```
 
-If any queue disagrees with this router, use this router while Gate 0 is incomplete.
+Do not load all historical docs or queues.
+
+## Historical queue rule
+
+If an older queue says `Ready now` but the prompt is not present/promoted in `verification_mvp_2026_08_25.md`, treat that status as superseded.
+
+The canonical queue wins until a newer dated queue explicitly replaces it.
