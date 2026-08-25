@@ -1,101 +1,104 @@
 # AgentsWatch Build Validation Plan
 
-Last aligned: 2026-06-29  
-Status: required before new runtime features
+Last aligned: 2026-08-25  
+Status: Gate 0 active
 
-## Why this exists
+## Current known evidence
 
-The initial repository skeleton was created through GitHub file writes, not through a local `dotnet new` / `dotnet build` workflow. That means the code can be structurally useful but still risky until build, restore, test, and CLI smoke commands are verified.
+Latest known CI evidence already shows:
 
-Do not add major new runtime features until this plan passes.
+```text
+restore: PASS
+build: PASS
+tests: FAIL
+```
 
----
+The current blocker is not an unknown solution/project-reference problem. It is the known Git status parser failure documented in `BOOTSTRAP_NEXT_STEPS.md`.
 
-## Validation order
+Current prompts:
 
-Run from repository root.
+```text
+AW-VFY-001 — fix/harden git parser and make full test gate green
+AW-VFY-002 — CLI smoke and close Gate 0
+```
+
+Canonical queue:
+
+`docs/prompt_queues/verification_mvp_2026_08_25.md`
+
+## Gate validation commands
+
+Run from repository root:
 
 ```bash
 dotnet restore AgentsWatch.sln
-dotnet build AgentsWatch.sln
-dotnet test AgentsWatch.sln
+dotnet build AgentsWatch.sln --configuration Release --no-restore
+dotnet test AgentsWatch.sln --configuration Release --no-build
 ```
 
-Then run CLI smoke checks:
+During parser work, targeted tests may be used first, but Gate 0 requires the full test command above.
+
+## CLI smoke after tests are green
+
+Use disposable directories/repositories and validate:
 
 ```bash
 dotnet run --project src/AgentsWatch.Cli -- --help
 dotnet run --project src/AgentsWatch.Cli -- --version
 dotnet run --project src/AgentsWatch.Cli -- optimize "Analyze the whole repo and fix everything"
+dotnet run --project src/AgentsWatch.Cli -- init
 dotnet run --project src/AgentsWatch.Cli -- status
 ```
 
-If running on PowerShell, prefer one command per line. Do not chain with `&&` unless using a shell that supports it.
+Required smoke contexts:
 
----
+- temporary empty directory for `init`;
+- repeated `init` to verify no overwrite;
+- clean temporary git repo for `status`;
+- dirty temporary git repo for `status`;
+- non-git directory for graceful status behavior.
 
-## What to fix first
+Use shell-appropriate command syntax; do not assume `&&` on PowerShell.
 
-If validation fails, fix in this order:
+## Current failure-specific validation
 
-1. solution/project reference issues;
-2. compile errors;
-3. nullable/type errors;
-4. test package or test discovery errors;
-5. CLI command parsing smoke errors;
-6. CI workflow path/version errors.
+AW-VFY-001 must add/verify cases for:
 
-Do not add new commands before `restore`, `build`, `test`, `--help`, `--version`, and `optimize` smoke checks pass.
+- staged/unstaged modifications;
+- add/delete;
+- rename;
+- untracked;
+- filenames with spaces;
+- no fixed-width prefix corruption.
 
----
+Prefer lossless machine-safe git porcelain parsing, including NUL-delimited output where appropriate.
 
-## CI validation
+## Gate 0 completion evidence
 
-GitHub Actions file:
-
-```text
-.github/workflows/ci.yml
-```
-
-Expected CI steps:
-
-1. checkout;
-2. setup .NET 8;
-3. restore;
-4. build Release;
-5. test Release.
-
-If CI fails but local passes, inspect CI logs before changing code.
-
----
-
-## Completion evidence format
-
-When this plan is completed, record:
+Record:
 
 ```text
-Validation run:
-- dotnet restore AgentsWatch.sln: pass/fail
-- dotnet build AgentsWatch.sln: pass/fail
-- dotnet test AgentsWatch.sln: pass/fail
-- CLI smoke: pass/fail
-- CI: pass/fail or not checked
-
-Fixes made:
-- <files>
-
-Residual risk:
-- <remaining issue or none>
+restore: pass/fail
+build Release: pass/fail
+full tests Release: pass/fail
+CLI help/version: pass/fail
+CLI optimize: pass/fail
+CLI init temp/no-overwrite: pass/fail
+CLI status clean/dirty/non-git: pass/fail
+CI: pass/fail
+files changed:
+remaining risk:
 ```
 
----
+## Completion rule
+
+Do not start `AW-VFY-003` RunContract runtime work until Gate 0 is green or an explicit equivalent exception is documented and accepted.
 
 ## Stop rules
 
-Stop and report instead of continuing if:
+Stop and report rather than expanding scope if:
 
-- NuGet restore fails for infrastructure/network reasons twice;
-- solution file is broken enough that recreating it with `dotnet new sln` is safer;
-- a test needs a large refactor unrelated to build validation;
-- a command failure comes from missing local SDK rather than repo code;
-- fixing validation would require changing product scope.
+- validation failure is infrastructure/environmental and reproducibly unrelated to repo code;
+- fixing a smoke failure requires a broad unrelated redesign;
+- current code differs materially from the documented parser root cause;
+- proposed fix weakens Git evidence correctness just to make a test pass.
