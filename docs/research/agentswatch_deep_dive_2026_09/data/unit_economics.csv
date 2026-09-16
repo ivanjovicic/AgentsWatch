@@ -1,0 +1,12 @@
+model,assumptions,formula,result,classification
+Reviewer time value low-volume team,"20 agent runs/week; 10 min saved/run; €70 loaded hour","20*4.33*(10/60)*70","~€1,010/month",ESTIMATE
+Reviewer time value higher-volume team,"50 agent runs/week; 8 min saved/run; €70 loaded hour","50*4.33*(8/60)*70","~€2,021/month",ESTIMATE
+€100 team plan break-even,"€70 loaded reviewer hour","100/70","1.43 reviewer hours/month saved",ESTIMATE
+€500 team plan break-even,"€70 loaded reviewer hour","500/70","7.14 reviewer hours/month saved",ESTIMATE
+€2k enterprise break-even,"€70 loaded reviewer hour","2000/70","28.6 reviewer hours/month saved before risk/audit value",ESTIMATE
+€1k MRR path,"10 teams × €99","10*99","€990 MRR",HYPOTHESIS
+€5k MRR path,"34 teams × €149","34*149","€5,066 MRR",HYPOTHESIS
+€10k MRR path,"50 teams × €199","50*199","€9,950 MRR",HYPOTHESIS
+€50k MRR path,"100 teams × €299 + 10 enterprise × €2,000","100*299+10*2000","€49,900 MRR",LOW-PROBABILITY_EARLY_SCENARIO
+Serviceable-team scenario low,"5,000 high-fit teams × €100 MRR","5000*100*12","€6M ARR theoretical",LOW-CONFIDENCE_SCENARIO
+Serviceable-team scenario high,"50,000 high-fit teams × €250 MRR","50000*250*12","€150M ARR theoretical",LOW-CONFIDENCE_SCENARIO

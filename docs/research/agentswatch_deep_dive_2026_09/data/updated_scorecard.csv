@@ -1,0 +1,24 @@
+criterion,weight,score_0_10,confidence,evidence_reason
+Problem severity,6,8.0,MEDIUM,Trust and review bottleneck grows with agent-generated change volume but paid severity is unproven
+Problem frequency,5,9.0,HIGH,Target ICP uses coding agents and review repeatedly
+Market size,6,8.5,MEDIUM,Global market large but payable independent-verification subset unknown
+Timing,7,9.5,HIGH,Agent adoption is accelerating while governance is moving rapidly
+Competition,5,3.5,HIGH,Qodo GitHub Cursor CodeRabbit Sourcegraph and security vendors overlap materially
+Differentiation,9,6.5,MEDIUM,Surviving gap is narrower run-scoped attribution evidence and portable receipt
+Distribution,9,6.5,LOW-MEDIUM,OSS CLI plus GitHub Check plausible but unproven
+Retention,7,8.5,MEDIUM,If valuable verification repeats per run or PR
+Willingness-to-pay,9,7.5,LOW-MEDIUM,Adjacent tools command meaningful prices but AgentsWatch-specific WTP is unproven
+Time to revenue,8,6.5,LOW-MEDIUM,Could reach design partners quickly but external value must pass first
+Unit economics,7,9.0,MEDIUM,Local-first deterministic core has low variable infra cost
+Gross margin,5,9.5,MEDIUM,Software economics favorable with enterprise-support caveat
+Technical risk,6,6.0,MEDIUM,Interval attribution feasible but causal attribution has unavoidable ambiguity
+Operating burden,7,8.5,MEDIUM,Lower than data businesses; integrations/support grow later
+Platform risk,7,5.0,HIGH,Market controlled by fast-moving agent and code-host vendors
+Legal risk,3,9.0,MEDIUM,Local-first lowers risk; hosted enterprise evidence adds IP/privacy/security work
+Founder fit,10,10.0,HIGH,Founder is daily coding-agent user and strong .NET/Git/backend engineer
+Solo-founder feasibility,9,9.0,HIGH,MVP/dogfood possible without large team or capital
+Moat potential,9,6.0,LOW-MEDIUM,Potential schema/reputation/integration moat; none proven today
+Global scalability,7,10.0,HIGH,Problem is global and not geographically constrained
+Bootstrap potential,8,8.5,MEDIUM,Low infra and team pricing favorable if distribution works
+VC potential,4,7.0,LOW-MEDIUM,Requires becoming a cross-vendor verification/attestation standard
+WEIGHTED_TOTAL,156,7.80,,Analytical score not probability

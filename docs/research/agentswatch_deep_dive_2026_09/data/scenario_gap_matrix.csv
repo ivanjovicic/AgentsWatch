@@ -1,0 +1,25 @@
+id,scenario,existing_tools_solve,how_existing_tools_help,remaining_gap,agentswatch_incremental_value,severity,frequency
+S01,Repository dirty before agent starts,PARTIAL,Git shows dirty state but not a durable run boundary unless intentionally captured,Which dirt predates the run,Start baseline separates pre-existing state from run-interval changes,HIGH,COMMON
+S02,Agent changes a pre-existing dirty file further,WEAK,Git can compare snapshots if someone captured them,Most workflows flatten old and new dirt,Changed-further classification plus ambiguity,HIGH,OCCASIONAL
+S03,Agent claims tests passed but ran only a subset,PARTIAL,CI or logs show commands when available,Required-vs-actual validation sufficiency,Validation contract blocks Done when required evidence is missing,HIGH,COMMON
+S04,Agent says docs only but runtime code changed,YES,Git or PR diff exposes runtime code change,Convenience/automation only,Deterministic claim check,MEDIUM,COMMON
+S05,Agent changes files outside owned scope,PARTIAL,Review/CODEOWNERS/policies may expose it,Run-specific owned/avoid contract,Scope check on run-interval delta,HIGH,COMMON
+S06,Agent creates migration but omits it from summary,YES,Diff usually exposes migration,Structured risk classification,Receipt can surface claim/risk but this is not unique,MEDIUM,OCCASIONAL
+S07,Agent claims backend unchanged,YES,Diff/path review can verify,Automated structured claim result,Convenience not moat,MEDIUM,COMMON
+S08,Tests added but do not validate acceptance criteria,WEAK,Human/Qodo review may reason about coverage,Explicit evidence-to-criterion mapping,Can return UNKNOWN instead of Done,HIGH,COMMON
+S09,Visible symptom fixed but acceptance criterion not satisfied,PARTIAL,Independent review can assess requirements,Completion policy tied to evidence,Criterion result with UNKNOWN/Unsupported,HIGH,COMMON
+S10,Two agents work sequentially on same dirty workspace,WEAK,Vendor sessions separate runs but repository state can blur,Cross-vendor repository boundary,Per-run baseline/receipt,HIGH,OCCASIONAL
+S11,Agent renames a file,YES,Git handles rename semantics,No major gap,Preserve in receipt,LOW,COMMON
+S12,Agent deletes a file,YES,Git handles delete semantics,No major gap,Preserve in receipt,LOW,COMMON
+S13,Agent creates untracked files,YES/PARTIAL,Git/Qodo/CodeRabbit can see local untracked/uncommitted state,Run-boundary timing,Interval classification adds modest value,MEDIUM,COMMON
+S14,Validation fails after agent claims completion,YES/PARTIAL,CI/logs can show failure,Completion decision from evidence,Evidence gate prevents Done,HIGH,COMMON
+S15,Agent never runs required validation,PARTIAL,Reviewer may notice; hooks can enforce commands,Normalized required-evidence policy,Missing evidence is explicit blocker,HIGH,COMMON
+S16,Security/config file changed unexpectedly,PARTIAL,Policies/SAST/PR review can catch,Contract-specific scope/risk tie,Finding tied to run delta and rule,HIGH,OCCASIONAL
+S17,Agent summary omits part of diff,YES,Git/PR diff exposes it,Structured claims comparison,Receipt can contrast claims with delta,MEDIUM,COMMON
+S18,User overrides failed or unknown verification,WEAK,Many systems allow overrides but semantics vary,Portable audit of override,Receipt stores who/why/when,MEDIUM,OCCASIONAL
+S19,Same task executed by two agent vendors,WEAK,Each vendor exposes its own session format,Comparable evidence semantics,Vendor-neutral contract/receipt,HIGH,GROWING
+S20,Enterprise audit needed without full agent chat,PARTIAL,Vendor audit/session logs exist,Compact portable evidence independent of transcript,Receipt can retain only evidence needed,HIGH,ENTERPRISE
+S21,Concurrent human/process modifies workspace,NO,Git cannot infer causal actor,Causality unknowable from snapshots alone,Return Ambiguous rather than false attribution,HIGH,OCCASIONAL
+S22,Formatter rewrites many files during run,PARTIAL,Diff shows state change but intent/actor unclear,Run interval versus actor distinction,Classify interval change and ambiguity,MEDIUM,OCCASIONAL
+S23,Partial staging means index differs from worktree,PARTIAL,Git supports this but many UIs flatten it,Lossless baseline semantics,Separate staged/unstaged evidence,HIGH,OCCASIONAL
+S24,Vendor log unavailable or retention expired,WEAK,Repository/CI may remain but session context is lost,Durable vendor-neutral evidence artifact,Repository-local receipt survives,HIGH,ENTERPRISE

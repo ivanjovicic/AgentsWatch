@@ -1,0 +1,10 @@
+criterion,current_score,maximum_defensible_90_day_score,evidence_required,experiment,time_to_evidence,risk
+Competition,3.5,5.0,High-severity scenarios remain unsolved by current native/Qodo baseline,Competitive scenario benchmark,1-3 weeks,Incumbents can close gap quickly
+Differentiation,6.5,8.5,"At least 3 decision-changing external findings and recurring high-severity gaps",AW-VFY-011 after dogfood,4-8 weeks,Gap may be too niche
+Distribution,6.5,8.0,Organic installs plus second-repo/team adoption,OSS CLI and GitHub Check after quality proof,6-12 weeks,No organic pull
+Willingness-to-pay,7.5,8.5,At least 3 concrete paid design-partner commitments,AW-VFY-012,8-12 weeks,Users expect permanent free use
+Time to revenue,6.5,8.0,First paid pilot within 90 days without unrelated SaaS scope,Design-partner pricing test,8-12 weeks,Procurement slows sale
+Technical risk,6.0,8.0,30-run dogfood with no material false attribution and low blocking noise,AW-VFY-010 strengthened,4-8 weeks,Concurrent/dirty cases remain ambiguous
+Platform risk,5.0,7.0,Core works usefully across at least 2-3 agent ecosystems with thin adapters,Cross-vendor external pilot,8-16 weeks,Vendor-native standards dominate
+Moat potential,6.0,8.0,Receipt/policy schema becomes reused across teams/tools and creates switching/interoperability value,External pilots plus open schema,3-12 months,Standard never gains adoption
+VC potential,7.0,8.5,Large enterprise policy/audit category plus scalable acquisition evidence,Larger design partners after PMF,6-18 months,Remains useful niche CLI
