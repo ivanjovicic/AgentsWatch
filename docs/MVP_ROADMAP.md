@@ -1,11 +1,11 @@
 # AgentsWatch MVP Roadmap
 
-Last aligned: 2026-08-25  
+Last aligned: 2026-09-16  
 Status: active execution roadmap
 
 ## Strategy
 
-AgentsWatch should not compete on coding-agent execution, cloud sandboxes, generic orchestration, session management, scheduling, or generic cost dashboards.
+AgentsWatch should not compete on coding-agent execution, cloud sandboxes, generic orchestration, session management, scheduling, generic cost dashboards, or generic AI-code tracking.
 
 The MVP wedge is:
 
@@ -18,6 +18,12 @@ Task / roadmap intent
   -> claims/diff/validation verification
   -> auditable run status
 ```
+
+The commercial thesis is narrower than generic observability or governance:
+
+> AgentsWatch must prove that an execution-independent, cross-vendor verifier catches useful evidence/scope/claim failures that native agent logs + Git + CI + PR review do not solve well enough.
+
+Current competitive pressure from Cursor/GitHub/Qodo and adjacent governance vendors means `AI code tracking`, session logs and generic review are not defensible product wedges by themselves.
 
 ## Gate 0 — close the known skeleton failure
 
@@ -266,9 +272,57 @@ Success evidence must include at least:
 - one missing-evidence block;
 - no observed false attribution in tested dogfood cases.
 
-## Phase 9 — Learning and validation economy
+## Phase 9 — External value gate
 
-Only after receipts are trustworthy:
+Goal: prove that the independent receipt changes behavior outside the founder's own repositories before investing in learning, routing, dashboards, SaaS, or broad integrations.
+
+Required validation:
+
+- recruit at least 10 external developers or engineering teams that use coding agents on real repositories;
+- expose them to real RunContract/RunReceipt/evidence workflows, not screenshots only;
+- test at least two agent ecosystems/vendors across the cohort;
+- record whether the receipt changes a review, merge, rework, or evidence decision;
+- compare against the user's existing baseline: Git diff + CI + PR review + native vendor logs.
+
+Pass candidate:
+
+- at least 10 external users/teams complete a real evaluation;
+- at least 3 explicitly request continued use after the evaluation period;
+- at least 3 real cases show useful evidence/scope/claim findings that the existing workflow did not surface early enough;
+- material false attribution is not observed in the tested cohort;
+- false-positive findings remain low enough that reviewers do not learn to ignore the product.
+
+Kill / narrow signal:
+
+- users consistently say native vendor logs + Git + CI + PR review solve the problem well enough;
+- external teams value the receipt only as a report, not as a decision-changing verifier;
+- cross-vendor neutrality is not valued by teams using one dominant agent stack;
+- false positives or attribution ambiguity create more review cost than the product removes.
+
+If this gate fails, do not rescue the thesis by adding dashboards, orchestration, token analytics, or more integrations.
+
+## Phase 10 — Commercial design-partner gate
+
+Goal: prove willingness to pay before building team administration or SaaS infrastructure.
+
+Pass candidate:
+
+- at least 3 external teams agree to a paid pilot, paid design-partner arrangement, or an equivalent concrete procurement commitment;
+- the payer and buying trigger are identified;
+- the paid value is tied to verification/review/governance outcomes, not generic curiosity;
+- at least one plausible pricing model is tested against real buyers.
+
+Stop / pivot signal:
+
+- teams want continued use only if permanently free;
+- buyer value exists but budget ownership cannot be found;
+- willingness to pay depends on unrelated features that would turn AgentsWatch into a generic agent platform.
+
+Team/SaaS packaging remains blocked until this gate has credible evidence.
+
+## Phase 11 — Learning and validation economy
+
+Only after receipts are trustworthy **and the external-value gate passes**:
 
 - mistake pattern recurrence;
 - scoped do-not-repeat rules;
@@ -277,9 +331,9 @@ Only after receipts are trustworthy:
 - avoidable validation estimates;
 - learning confidence and expiry/deprecation.
 
-## Phase 10 — Cross-agent history and empirical routing
+## Phase 12 — Cross-agent history and empirical routing
 
-Only after enough comparable data:
+Only after enough comparable external and dogfood data:
 
 - normalize vendor metadata;
 - group comparable task types;
@@ -288,9 +342,9 @@ Only after enough comparable data:
 - recommend a route only when evidence is sufficient;
 - otherwise return `unknown`.
 
-## Phase 11 — Thin integrations
+## Phase 13 — Thin integrations
 
-Preferred order after stable internal contracts:
+Preferred order after stable internal contracts and external-value proof:
 
 1. MCP tools for contract/start/finish/receipt/evidence;
 2. GitHub/PR evidence check;
@@ -299,11 +353,16 @@ Preferred order after stable internal contracts:
 
 External products execute. AgentsWatch verifies.
 
-## Phase 12 — Dashboard/team packaging
+Do not build an integration merely because a vendor exists; prioritize integrations that are requested by validated external users or design partners.
 
-Blocked until receipt dogfood proves recurring value.
+## Phase 14 — Dashboard/team packaging
 
-Potential local dashboard views:
+Blocked until both:
+
+- receipt dogfood proves recurring value;
+- external/commercial gates show decision-changing use and willingness to pay.
+
+Potential local/team dashboard views:
 
 - run receipts;
 - unsupported claims;
@@ -327,6 +386,8 @@ Do not build a visual workflow canvas.
 8. `AW-VFY-008` — Scope Drift v1.
 9. `AW-VFY-009` — Claims-vs-Diff-vs-Validation v1.
 10. `AW-VFY-010` — 30-run dogfood pilot and evidence review.
+11. `AW-VFY-011` — external-value validation with 10+ real external users/teams.
+12. `AW-VFY-012` — commercial design-partner validation; no SaaS expansion before evidence.
 
 Canonical queue:
 
@@ -341,6 +402,7 @@ Canonical queue:
 - generic token/cost dashboard as primary value;
 - full chat archive;
 - autonomous merge/release/deploy;
-- SaaS/billing/auth before local proof;
+- SaaS/billing/auth before local and external proof;
 - complex routing before reliable comparable receipts;
-- broad integration marketplace.
+- broad integration marketplace;
+- generic AI-code tracking as a standalone product wedge.
