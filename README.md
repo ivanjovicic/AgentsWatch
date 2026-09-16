@@ -42,10 +42,23 @@ AgentsWatch is not another:
 - generic scheduler;
 - visual workflow engine;
 - generic token/cost dashboard;
+- generic AI-code tracking dashboard;
 - full chat/session archive;
 - CI/CD or release orchestrator.
 
 Those capabilities are increasingly provided by agent vendors and engineering platforms. AgentsWatch should integrate with them and specialize in independent, reviewable verification.
+
+## Competitive boundary
+
+As of September 2026, Cursor, GitHub, Qodo and adjacent governance vendors already expose increasingly strong AI-code tracking, agent session/audit, review and governance capabilities.
+
+Therefore the defensible hypothesis is **not** "better tracking".
+
+AgentsWatch must prove that an execution-independent, cross-vendor verifier can produce decision-changing evidence that native agent logs, Git, CI and PR review do not surface consistently enough.
+
+See:
+
+`docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
 
 ## MVP wedge
 
@@ -176,11 +189,41 @@ Before building a dashboard or sophisticated empirical router, collect at least 
 - repeated mistakes;
 - acceptance/rejection of agent claims.
 
+Success evidence must include at least:
+
+- one real unsupported-claim catch;
+- one real scope-drift catch;
+- one missing-evidence block;
+- no observed false attribution in tested dogfood cases.
+
+## External-value gate
+
+Dogfood success is necessary but not sufficient.
+
+Before learning/router expansion, broad integrations, dashboards or team/SaaS packaging:
+
+- run at least 10 real external evaluations with agent-heavy developers/teams;
+- include at least two agent ecosystems/vendors across the cohort where practical;
+- compare explicitly against Git + CI + PR review + native vendor logs;
+- require real examples where the receipt changes review/rework/merge/evidence decisions;
+- require at least 3 external users/teams to request continued use.
+
+If native evidence already solves the problem well enough, narrow or stop rather than adding unrelated features.
+
+## Commercial gate
+
+Before auth/billing/team administration:
+
+- test real buyer/budget ownership;
+- obtain at least 3 paid-pilot/design-partner or equivalent concrete commercial commitments;
+- payment must be tied to verification/review/governance outcomes.
+
 ## Product principles
 
 - Verification before observability breadth.
 - Evidence before autonomy.
 - Cross-vendor contracts before deep vendor integration.
+- External value before commercial packaging.
 - Canonical structured data before derived reports.
 - Git attribution before scope scoring.
 - Deterministic findings before LLM interpretation.
@@ -188,11 +231,11 @@ Before building a dashboard or sophisticated empirical router, collect at least 
 - Compact evidence instead of full session capture.
 - Explainable status decisions; no opaque score may decide completion alone.
 - Risky actions require explicit approval gates.
-- No dashboard until receipt dogfood proves what should be visualized.
+- No dashboard until receipt dogfood and external validation prove what should be visualized.
 
 ## De-prioritized
 
-Do not prioritize before the verification MVP is proven:
+Do not prioritize before the verification MVP and external/commercial gates are proven:
 
 - proprietary coding-agent execution;
 - cloud workspaces;
@@ -201,9 +244,10 @@ Do not prioritize before the verification MVP is proven:
 - visual workflow canvas;
 - full conversation history;
 - generic token dashboard as the core product;
+- generic AI-code tracking as the core product;
 - automatic merge/release;
 - SaaS/billing/team administration;
-- complex model routing without comparable local evidence;
+- complex model routing without comparable local/external evidence;
 - large integration marketplace.
 
 ## Canonical strategy documents
@@ -216,7 +260,6 @@ Read these first:
 4. `docs/ARCHITECTURE.md`
 5. `docs/DATA_MODEL.md`
 6. `docs/COMMAND_CONTRACTS.md`
-7. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
-8. `docs/prompt_queues/verification_mvp_2026_08_25.md`
-
-Historical token-economy, productization, and older queue documents remain useful research/context, but they must not override the current verification-first roadmap.
+7. `docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
+8. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+9. `docs/prompt_queues/verification_mvp_2026_08_25.md`
