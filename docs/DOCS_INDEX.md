@@ -1,143 +1,130 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-08-25
+Last aligned: 2026-09-16
 
 ## Canonical reading path
 
 Do not load the full documentation tree by default.
 
-For normal product/runtime work, read in this order and stop when you have enough context:
+For normal product/runtime work, read in this order and stop when enough context exists:
 
 1. `../README.md` — current product definition and repository status.
 2. `../AGENTS.md` — execution and agent rules.
 3. `PRODUCT_SPEC.md` — product scope and differentiation.
-4. `MVP_ROADMAP.md` — active implementation sequence.
-5. `ARCHITECTURE.md` — verification-first architecture and attribution rule.
-6. `DATA_MODEL.md` — canonical RunContract/RunBaseline/RunDelta/RunReceipt models.
-7. `COMMAND_CONTRACTS.md` — authoritative CLI behavior.
-8. `prompt_queues/PROMPT_QUEUE_ROUTER.md` — current next work.
-9. `prompt_queues/verification_mvp_2026_08_25.md` — active verification MVP queue.
+4. `DEEP_DIVE_DECISIONS_2026_09_16.md` — latest accepted competitive/verification guardrails.
+5. `MVP_ROADMAP.md` — active implementation sequence.
+6. `ARCHITECTURE.md` — verification-first architecture.
+7. `DATA_MODEL.md` — canonical RunContract/RunBaseline/RunDelta/RunReceipt models.
+8. `COMMAND_CONTRACTS.md` — authoritative CLI behavior.
+9. `prompt_queues/PROMPT_QUEUE_ROUTER.md` — current next-work selector.
+10. `prompt_queues/verification_mvp_2026_08_25.md` — active verification queue.
 
-If code/tests or current CI evidence disagree with planning docs, code/tests/evidence win and docs should be synchronized.
+If code/tests/current CI evidence disagree with planning docs, code/tests/evidence win and docs must be synchronized.
 
 ## Current product truth
 
-AgentsWatch is a local-first, vendor-neutral **verification and evidence layer for AI coding agents**.
+AgentsWatch is a local-first, vendor-neutral **run-evidence and completion-verification layer for delegated coding-agent work**.
 
 Primary loop:
 
 ```text
-Task -> RunContract -> Start baseline -> external agent -> Finish delta -> RunReceipt -> Evidence/Scope/Claims checks
+existing task / issue / prompt
+  -> verification RunContract
+  -> pre-run repository baseline
+  -> external agent
+  -> run-interval repository delta
+  -> validation evidence
+  -> deterministic scope/claim/completion checks
+  -> portable RunReceipt
 ```
 
-Primary differentiators:
+Key wording rule:
 
-- machine-checkable task/run contract;
-- dirty-worktree-safe run attribution;
-- vendor-neutral run receipt;
-- claims vs attributable diff vs validation;
-- scope drift detection;
-- evidence-based completion status.
+`run-interval repository delta` does not automatically mean `agent-authored change`.
 
-Token/context/cost optimization remains secondary and should be derived from trusted receipts later.
+Where concurrent writers/processes make causality unknowable, record `Ambiguous` / `NeedsReview` instead of guessing.
+
+## Latest deep-dive research
+
+`research/agentswatch_deep_dive_2026_09/`
+
+Start with:
+- `00_EXECUTIVE_DECISION.md`
+- `02_COMPETITOR_CAPABILITY_MATRIX.md`
+- `03_20_SCENARIO_GAP_ANALYSIS.md`
+- `04_DIRTY_WORKTREE_ATTRIBUTION.md`
+- `06_RUN_CONTRACT_AND_RECEIPT_VALUE.md`
+- `07_BUYERS_ICP_AND_WTP.md`
+- `12_MOAT_AND_COPY_TEST.md`
+- `14_FAILURE_MODES_AND_KILL_CRITERIA.md`
+- `15_UPDATED_SCORECARD.md`
+- `16_SCORE_IMPROVEMENT_LEVERS.md`
+- `SOURCES.md`
+
+Deep-dive verdict: **CONTINUE, BUT NARROW WEDGE**. Analytical score: **7.80/10**. The score is not proof.
+
+## Accepted deep-dive guardrails
+
+See `DEEP_DIVE_DECISIONS_2026_09_16.md`.
+
+Most important decisions:
+- generic AI code review/tracking/governance is not the wedge;
+- Qodo/GitHub/Cursor/native tools are direct/adjacent baselines that external validation must beat;
+- RunContract should normalize existing task intent, not replace Jira/GitHub/Linear;
+- canonical RunReceipt stays a compact evidence artifact;
+- learning/router/next-prompt advice lives downstream, not as mandatory audit receipt data;
+- first commercial ICP is agent-heavy 5–30 developer teams;
+- open-core is the leading packaging hypothesis only after product-value gates pass.
 
 ## Active execution documents
 
 | Document | Purpose |
 |---|---|
-| `BOOTSTRAP_NEXT_STEPS.md` | Current known Gate 0 failure and required closure. |
-| `90_DAY_EXECUTION_PLAN.md` | Tactical 12-week verification MVP plan. |
-| `MVP_ROADMAP.md` | Product phase gates and strict priority order. |
+| `BOOTSTRAP_NEXT_STEPS.md` | Current Gate 0 failure and closure requirements. |
+| `90_DAY_EXECUTION_PLAN.md` | Tactical verification MVP plan. |
+| `MVP_ROADMAP.md` | Product phases and gates. |
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | Canonical next-prompt decision. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt only. |
-| `prompt_queues/verification_mvp_2026_08_25.md` | Active implementation queue. |
+| `prompt_queues/verification_mvp_2026_08_25.md` | Active queue AW-VFY-001..012. |
+
+Current next implementation task remains `AW-VFY-001` until Gate 0 CI/tests are green.
 
 ## Core technical contracts
 
 | Document | Purpose |
 |---|---|
-| `ARCHITECTURE.md` | Logical layers, ports/adapters, attribution semantics. |
-| `ARCHITECTURE_DECISIONS.md` | Existing ADRs; apply only when consistent with newer canonical docs. |
+| `ARCHITECTURE.md` | Logical layers, ports/adapters, run evidence semantics. |
+| `ARCHITECTURE_DECISIONS.md` | ADR history; newer canonical decisions win on conflict. |
 | `CLI_SPEC.md` | Verification-first CLI surface. |
 | `COMMAND_CONTRACTS.md` | Detailed command behavior and failure semantics. |
 | `DATA_MODEL.md` | JSON-first canonical data contracts. |
-| `ADAPTER_SPEC.md` | Universal and stack-specific detection/validation guidance. |
-| `RISK_SCORING_MODEL.md` | Historical/secondary deterministic risk heuristics. |
-| `REPORT_FORMATS.md` | Report formatting; must evolve as a projection of RunReceipt. |
+| `ADAPTER_SPEC.md` | Universal and stack-specific validation guidance. |
 
 ## Validation and safety
 
-Use when the selected task needs them:
-
+Use only when relevant:
 - `BUILD_VALIDATION_PLAN.md`
-- `VALIDATION_EVIDENCE_2026_06_29.md` — historical snapshot; do not treat as current CI truth.
 - `RISK_REGISTER.md`
-- `PROJECT_READINESS_CHECKLIST.md`
 - `ROADMAP_VALIDATION_GATES.md`
 - `SECURITY_AND_PRIVACY.md`
 - `AGENT_RISK_BOUNDARIES.md`
 - `AGENT_PERMISSION_MODEL.md`
 - `TEST_MATRIX.md`
 
-## Evidence / agent-development process documents
+## Historical/secondary context
 
-These documents govern repository development evidence, not the product's canonical RunReceipt model. Read only when relevant to agent workflow maintenance:
+Token/context economy, broad productization, legacy queues, `ULTRA_ROADMAP.md`, old audits and generic control-plane ideas remain historical/secondary context.
 
-- `AGENT_SHARED_OPERATING_STANDARD.md`
-- `AGENT_RUN_LOG_ENFORCEMENT.md`
-- `AGENT_RUN_EVIDENCE_STANDARD.md`
-- `AGENT_RUN_LOGGING_AND_LEARNING.md`
-- `AGENT_OPERATING_SYSTEM.md`
-- `AGENT_COMMAND_PLAYBOOK.md`
-- `AGENT_LONG_TASK_PLAYBOOK.md`
-- `AGENT_PATCH_PLAYBOOK.md`
-- `.ai/RUN_LOG_TEMPLATE.md`
-- `.ai/runs/README.md`
-- `ai/learning/MISTAKE_LEDGER.md`
+They must not override:
 
-Do not preload these all for a normal feature task.
-
-## Historical token/context economy research
-
-Useful later for validation economy and learning, but no longer primary execution authority:
-
-- `PROMPT_TOKEN_ECONOMY_RULEBOOK.md`
-- `PROMPT_TOKEN_ECONOMY_QUICK_RULES.md`
-- `ZERO_WASTE_EXECUTION_PROTOCOL.md`
-- `CONTEXT_PACKS.md`
-- `CONTEXT_TOKEN_ECONOMY_BLUEPRINT_2026_07_01.md`
-- `TOKEN_ECONOMY_INDUSTRY_RESEARCH_2026_07_01.md`
-- `TOKEN_ECONOMY_PREVIOUS_CONVERSATION_BACKFILL_2026_07_01.md`
-- `TOKEN_WASTE_METRICS.md`
-- token-economy prompt queues under `prompt_queues/`.
-
-Rule: do not implement token/context optimization features ahead of RunContract, attribution, RunReceipt, Evidence Gate, Scope Drift, Claims verification, and dogfood proof.
-
-## Productization / commercial documents
-
-Post-MVP context only unless a task explicitly targets packaging/business:
-
-- `POSITIONING_AND_PRICING_HYPOTHESES.md`
-- `RELEASE_AND_PACKAGING_PLAN.md`
-- `TRIAL_LICENSING_AND_IP_PROTECTION_PLAN.md`
-- `PRODUCTIZATION_EXPANSION_2026_06_29.md`
-- productization/trial queues under `prompt_queues/`.
-
-No SaaS, billing, OAuth, or team platform work before local verification dogfood proves value.
-
-## Legacy queues and roadmaps
-
-Files such as:
-
-- `prompt_queues/bootstrap_validation.md`;
-- `prompt_queues/agentwatch_mvp.md`;
-- older evidence/token/productization/architecture queues;
-- `ULTRA_ROADMAP.md`;
-- historical audits;
-
-remain useful for history and ideas but are **not current next-work authority**.
-
-When they conflict with the 2026-08-25 verification queue, the newer queue wins.
+```text
+README
+-> Product Spec
+-> Deep-Dive Decisions
+-> MVP Roadmap
+-> active verification queue
+-> actual code/tests/CI evidence
+```
 
 ## Context rule
 
@@ -148,5 +135,3 @@ router -> selected prompt -> required canonical docs -> exact code/tests
 ```
 
 Expand only when evidence requires it.
-
-The documentation system should reduce context cost, not require every agent to understand the entire repository history before making a focused change.
