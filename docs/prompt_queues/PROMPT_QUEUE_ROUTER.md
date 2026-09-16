@@ -1,12 +1,12 @@
 # AgentsWatch Prompt Queue Router
 
-Last aligned: 2026-08-25
+Last aligned: 2026-09-16
 
 Use this file first when choosing the next AgentsWatch task.
 
 ## Canonical queue
 
-Current active implementation queue:
+Current active implementation + validation queue:
 
 ```text
 docs/prompt_queues/verification_mvp_2026_08_25.md
@@ -67,7 +67,13 @@ Is AW-VFY-001 full test gate green?
                                                           no  -> AW-VFY-008
                                                           yes -> Are initial claims checks proven?
                                                                   no  -> AW-VFY-009
-                                                                  yes -> AW-VFY-010 dogfood proof
+                                                                  yes -> Is 30-run dogfood proof complete?
+                                                                          no  -> AW-VFY-010
+                                                                          yes -> Is external value proven?
+                                                                                  no  -> AW-VFY-011
+                                                                                  yes -> Is commercial design-partner value proven?
+                                                                                          no  -> AW-VFY-012
+                                                                                          yes -> choose post-gate investment from evidence
 ```
 
 ## Non-negotiable ordering rules
@@ -78,7 +84,9 @@ Do not implement before their gate:
 - `finish` attribution before start baseline is stable;
 - receipt verification before attribution is proven;
 - scope/claims checks on raw final git status;
-- learning/router/dashboard before trustworthy receipts/dogfood.
+- external/commercial packaging before trustworthy receipts/dogfood;
+- learning/router/dashboard/broad integrations before AW-VFY-011 external-value evidence;
+- SaaS/auth/billing/team administration before AW-VFY-012 commercial evidence.
 
 ## Product guardrails
 
@@ -88,9 +96,23 @@ Do not route current work toward:
 - generic control-plane/session manager;
 - cloud workspace/orchestration;
 - generic token/cost dashboard as the primary product;
-- SaaS/billing/OAuth;
+- generic AI-code tracking as the product wedge;
+- SaaS/billing/OAuth before commercial gate;
 - visual workflow builder;
 - automatic merge/release/deploy.
+
+Current competitive boundary:
+
+```text
+Cursor/GitHub/Qodo and adjacent vendors increasingly provide tracking, session/audit and governance surfaces.
+AgentsWatch must prove independent cross-vendor verification value, not duplicate native tracking.
+```
+
+Canonical addendum:
+
+```text
+docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md
+```
 
 ## Context rule
 
@@ -105,6 +127,8 @@ AGENTS.md
 ```
 
 Do not load all historical docs or queues.
+
+For AW-VFY-011/012, load the competitive addendum and the reviewed AW-VFY-010 evidence summary in addition to the selected prompt.
 
 ## Historical queue rule
 
