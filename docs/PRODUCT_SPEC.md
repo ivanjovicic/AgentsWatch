@@ -1,6 +1,6 @@
 # AgentsWatch Product Spec
 
-Last aligned: 2026-08-25  
+Last aligned: 2026-09-16  
 Status: planning/specification with validated skeleton gaps
 
 ## Product definition
@@ -31,7 +31,27 @@ Preferred category language:
 AI coding-agent verification and evidence layer
 ```
 
-Avoid relying on `agent control plane` as the primary category label. Broad control-plane, orchestration, scheduling, session-management, cost-tracking, and governance capabilities are increasingly native to coding-agent and developer platforms.
+Avoid relying on `agent control plane` as the primary category label. Broad control-plane, orchestration, scheduling, session-management, cost-tracking, AI-code tracking, and generic governance capabilities are increasingly native to coding-agent and developer platforms.
+
+The survivable differentiation hypothesis is narrower:
+
+> **execution-independent, cross-vendor verification of task scope, attributable repository change, validation evidence and completion claims**
+
+## Competitive boundary — 2026-09-16
+
+Current products increasingly provide:
+- AI code contribution/tracking metrics;
+- agent session logs;
+- audit events;
+- generic code review;
+- governance/policy surfaces.
+
+AgentsWatch must therefore prove value that remains useful when these capabilities are available natively.
+
+A generic session log or code-tracking dashboard is not sufficient differentiation.
+
+Canonical competitive addendum:
+`docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
 
 ## Target users
 
@@ -43,11 +63,17 @@ Primary MVP users:
 - developers who need deterministic scope and validation checks;
 - developers working across .NET and Flutter first.
 
-Later:
+Primary external-validation users after dogfood:
 
-- small teams reviewing AI-generated changes;
-- maintainers requiring evidence before accepting agent-created pull requests;
-- organizations needing auditable AI-change receipts and policy gates.
+- agent-heavy developers in small engineering teams;
+- engineering leads reviewing work produced by more than one coding-agent stack;
+- maintainers who need independent evidence before accepting agent-created changes.
+
+Later, only after external/commercial proof:
+
+- organizations needing auditable AI-change receipts and policy gates;
+- regulated engineering organizations;
+- platform/vendor integrations.
 
 ## Problems to solve
 
@@ -61,6 +87,8 @@ Execution itself is no longer the main gap. The verification gaps are:
 - different vendors expose different run/session formats;
 - completion often reflects agent confidence instead of independent evidence;
 - learning about repeated mistakes is fragmented by vendor/session.
+
+The product must additionally prove that these gaps are important **after** teams use native Git/CI/PR/vendor evidence. If existing workflows solve the problem sufficiently, AgentsWatch should narrow or stop rather than add unrelated features.
 
 ## Product pillars
 
@@ -110,6 +138,7 @@ Produce one vendor-neutral machine-readable receipt plus a Markdown projection c
 schemaVersion
 runId
 contractId
+taskId
 agent/tool/model if known
 start/end repository state
 attributable files changed
@@ -180,14 +209,14 @@ LLM interpretation may later expand claim extraction, but core verification must
 
 ### 7. Repository-local learning
 
-After the receipt/evidence loop is proven, record scoped, reviewable learning events such as:
+After the receipt/evidence loop is proven **and external value is validated**, record scoped, reviewable learning events such as:
 
 - repeated scope drift patterns;
 - repeated missing-test patterns;
 - validation sequences that were broader than necessary;
 - task types that repeatedly require retries.
 
-Learning is downstream of trustworthy receipts. Do not build a sophisticated router on untrusted run data.
+Learning is downstream of trustworthy receipts and real external value. Do not build a sophisticated router on untrusted or commercially irrelevant run data.
 
 ## Canonical data rule
 
@@ -236,6 +265,7 @@ Do not prioritize:
 - generic scheduling;
 - full conversation/session archive;
 - generic token/cost dashboard as the main product;
+- generic AI-code tracking as the main product;
 - SaaS, billing, OAuth, team administration;
 - automatic merge/release/deploy;
 - complex empirical routing before comparable receipt data exists;
@@ -246,75 +276,50 @@ Do not prioritize:
 After the verification spine is reliable:
 
 1. dogfood at least 30 useful receipts;
-2. improve validation economy from real evidence;
-3. add mistake-pattern learning with confidence/expiry;
-4. add cross-agent normalized imports;
-5. add empirical route suggestions only when comparable evidence is sufficient;
-6. expose stable contracts through MCP;
-7. add GitHub/PR checks;
-8. build a local dashboard only when receipt data proves which views matter;
-9. consider team/commercial packaging.
+2. run external-value validation with at least 10 external developers/teams;
+3. require real decision-changing findings and requests for continued use;
+4. test commercial/design-partner willingness to pay before SaaS/team packaging;
+5. improve validation economy from real evidence;
+6. add mistake-pattern learning with confidence/expiry;
+7. add cross-agent normalized imports;
+8. add empirical route suggestions only when comparable evidence is sufficient;
+9. expose stable contracts through MCP;
+10. add GitHub/PR checks when validated users request them;
+11. build a dashboard only when receipt data and external users prove which views matter;
+12. consider broader team/commercial packaging only after the commercial gate.
+
+## External-value gate
+
+The product is not validated simply because dogfood works.
+
+Pass candidate after 30-run dogfood:
+- 10+ external real evaluations;
+- at least 3 external users/teams request continued use;
+- at least 3 real evidence/scope/claim findings change a review/rework/merge decision;
+- no observed material false attribution;
+- the product adds clear value beyond Git + CI + PR review + native vendor logs.
+
+If this gate fails, narrow or stop the thesis rather than adding dashboards, orchestration or tracking features.
+
+## Commercial gate
+
+Before building SaaS/auth/billing/team administration:
+- at least 3 teams agree to a paid pilot, paid design-partner arrangement, or equivalent concrete buying commitment;
+- the payer/budget owner is known;
+- payment is for verification/review/governance value, not unrelated platform features.
 
 ## Signature metrics
 
 Primary verification metrics:
+- attribution correctness/ambiguity;
+- unsupported-claim catches;
+- scope-drift catches;
+- evidence completeness;
+- false-positive findings;
+- decision-changing findings;
+- reviewer trust/continued-use request.
 
-```text
-Contract Completeness
-Attribution Confidence
-Acceptance-Criteria Coverage
-Evidence Completeness
-Scope Drift Findings
-Unsupported Claim Count
-Run Status Confidence
-```
-
-Secondary efficiency metrics:
-
-```text
-Validation Efficiency
-Retry Count
-Avoidable Work Estimate
-Repeat Mistake Rate
-Provider cost/token data when available
-```
-
-Rules:
-
-- no fake precision;
-- every finding and score must expose its evidence/reason;
-- estimates must be labeled as estimates;
-- unknown must remain a valid result;
-- no completion status may be upgraded solely because a numeric score is high.
-
-## Privacy and safety
-
-Default behavior:
-
-- local-first;
-- no telemetry;
-- no source/prompt/diff/receipt upload;
-- no hidden network calls;
-- secret redaction before persistence;
-- compact evidence rather than full logs;
-- external integrations explicit and opt-in;
-- risky command execution requires explicit user action/approval.
-
-## Success criteria for product validation
-
-Before dashboard/SaaS work, AgentsWatch should prove on real repositories that it can:
-
-- correctly distinguish pre-existing changes from run-attributable changes;
-- catch at least one unsupported agent claim;
-- catch at least one real scope-drift case;
-- prevent `Done` when required validation evidence is missing;
-- produce receipts useful enough to inspect/reuse without full chat history;
-- support repeated dogfood use without excessive setup or context overhead.
-
-See:
-
-- `docs/MVP_ROADMAP.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DATA_MODEL.md`
-- `docs/COMMAND_CONTRACTS.md`
-- `docs/prompt_queues/verification_mvp_2026_08_25.md`
+Commercial proof metrics later:
+- paid/design-partner commitments;
+- repeat usage across real teams;
+- time/risk saved where measurable.
