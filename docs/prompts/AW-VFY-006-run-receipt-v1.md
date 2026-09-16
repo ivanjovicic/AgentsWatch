@@ -5,11 +5,12 @@ Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`
 Status: Ready after AW-VFY-005  
 Run mode: implementation  
 Budget: medium  
-Gate: attributable RunDelta proven
+Gate: run-interval delta proven
 
 ## Read only
 
 - `AGENTS.md`
+- `docs/DEEP_DIVE_DECISIONS_2026_09_16.md`
 - `docs/DATA_MODEL.md` — RunReceipt
 - `docs/ARCHITECTURE.md`
 - `docs/CLI_SPEC.md` / `docs/COMMAND_CONTRACTS.md` — finish/receipt/handoff
@@ -19,7 +20,7 @@ Gate: attributable RunDelta proven
 
 ## Task
 
-Implement canonical `RunReceipt v1` persistence and derive Markdown run report/handoff from the structured receipt.
+Implement canonical `RunReceipt v1` persistence as a compact evidence artifact and derive Markdown run report/handoff from structured data.
 
 ## Required canonical receipt fields
 
@@ -30,9 +31,7 @@ contractId
 taskId
 startedAtUtc
 finishedAtUtc
-agent
-model
-tool
+executorMetadata if known
 startRepositoryState
 endRepositoryState
 runDelta
@@ -42,29 +41,42 @@ acceptanceCriteria[]
 findings[]
 decision
 missedWork[]
-learningNote
-nextPrompt
+evidenceDigest/reference if implemented
 ```
 
-Fields may be empty/unknown where later prompts will populate them, but the schema and semantics must be explicit and stable enough for AW-VFY-007/008/009.
+Fields may be empty/unknown where later prompts will populate them, but schema semantics must be explicit enough for AW-VFY-007/008/009.
+
+Do **not** require these as canonical verification fields:
+
+```text
+learningNote
+nextPrompt
+routeSuggestion
+optimizationAdvice
+verboseSessionNarrative
+```
+
+Those belong in optional handoff/learning projections downstream of trustworthy verification evidence.
 
 ## Required outputs
 
 ```text
-.agentwatch/runs/<run-id>.json   # canonical
-.ai/runs/<run-id>.md             # generated projection
-.ai/handoffs/<run-id>.md         # compact generated projection
+.agentwatch/runs/<run-id>.json   # canonical verification evidence
+.ai/runs/<run-id>.md             # generated evidence projection
+.ai/handoffs/<run-id>.md         # compact generated handoff; may contain non-canonical next-step text
 ```
 
 ## Rules
 
-- JSON is the source of truth;
-- Markdown must be generated from the structured model, not hand-maintained as independent truth;
-- report must distinguish attributable vs pre-existing/ambiguous files;
+- JSON is the verification source of truth;
+- Markdown must be generated from structured data, not hand-maintained as independent truth;
+- report distinguishes run-interval changes, pre-existing state and ambiguity;
+- do not call run-interval evidence `agent-authored` unless executor-specific provenance proves it;
 - no validation result may be synthesized from prose;
 - full chat history/source contents/full command logs are excluded by default;
 - failed Markdown generation must not corrupt an already valid canonical receipt;
-- schema version must round-trip.
+- schema version must round-trip;
+- optional handoff learning/next-step text must not affect verification status.
 
 ## Owned paths
 
@@ -80,17 +92,19 @@ Fields may be empty/unknown where later prompts will populate them, but the sche
 - scope/claims verification logic;
 - SQLite;
 - dashboard/MCP;
-- LLM summarization.
+- LLM summarization;
+- routing/learning system.
 
 ## Required tests
 
 - receipt JSON round trip;
 - schema version behavior;
-- attributable/pre-existing/ambiguous change projection;
+- run-interval/pre-existing/ambiguous change projection;
 - Markdown generated from receipt;
 - handoff generated from receipt;
 - no validation claim when validation list is empty;
-- unknown agent/model/tool handled cleanly;
+- unknown executor/model/tool handled cleanly;
+- learning/nextPrompt not required for canonical receipt validity;
 - write ordering/failure safety where practical.
 
 ## Validation
@@ -109,8 +123,8 @@ contract -> start -> edit -> finish -> receipt show -> inspect JSON/Markdown
 ## Expected evidence
 
 - final RunReceipt v1 schema;
-- example canonical JSON shape (compact/redacted);
-- report/handoff sections;
+- compact/redacted example canonical JSON;
+- report/handoff sections and canonical-vs-projection boundary;
 - end-to-end smoke result;
 - full test result;
 - fields intentionally left for evidence/scope/claims prompts.
