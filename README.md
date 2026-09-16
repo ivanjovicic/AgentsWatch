@@ -1,85 +1,90 @@
 # AgentsWatch
 
-AgentsWatch is a local-first, vendor-neutral verification and evidence layer for AI coding agents.
+AgentsWatch is a local-first, vendor-neutral **run-evidence and completion-verification layer for delegated coding-agent work**.
 
-External agents such as Codex, Claude Code, Cursor, Copilot, Devin, OpenHands, and similar tools execute coding work. AgentsWatch does not replace them. It turns roadmap intent into a machine-checkable run contract, records what actually changed, verifies claims against git and validation evidence, and produces a vendor-neutral run receipt.
+External agents such as Codex, Claude Code, Cursor, Copilot, Devin and OpenHands execute coding work. AgentsWatch does not replace them and does not try to become another generic AI code reviewer.
+
+It normalizes verification intent, records repository state before and after a delegated run, checks required validation/scope/completion evidence, and produces a portable RunReceipt.
 
 ## Core promise
 
 ```text
-Turn roadmap intent into verified change — across any coding agent.
+Turn delegated coding work into independently verifiable evidence.
 ```
 
-Supporting promise:
+Supporting principle:
 
 ```text
-Trust the diff, not the agent summary.
+Trust evidence, not the executor's confidence.
 ```
-
-Token, time, and cost efficiency remain useful secondary metrics. They are not the primary product wedge and no savings percentage should be published without dogfood evidence.
 
 ## Product loop
 
 ```text
-Roadmap item / issue / prompt
-  -> Run Contract
+existing task / issue / prompt
+  -> verification RunContract
+  -> pre-run repository baseline
   -> external coding agent
-  -> start/end repository evidence
-  -> Agent Run Receipt
-  -> claims/diff/validation gate
-  -> scope and acceptance-criteria findings
-  -> Done / NeedsEvidence / NeedsReview / NeedsApproval / Blocked
-  -> learning and next route
+  -> run-interval repository delta
+  -> validation evidence
+  -> deterministic scope/claim/completion checks
+  -> portable RunReceipt
+  -> Done / NeedsEvidence / NeedsReview / NeedsApproval / Blocked / Failed
 ```
+
+Important:
+
+> A change observed during the recorded run interval is not automatically proven to be authored by the selected agent.
+
+If humans, hooks, formatters, generators or another process may have written concurrently, AgentsWatch preserves `Ambiguous` / `NeedsReview` rather than inventing causal attribution.
 
 ## What AgentsWatch is not
 
 AgentsWatch is not another:
-
 - coding-agent runtime;
+- generic AI code-review engine;
 - cloud sandbox;
 - multi-agent session manager;
-- generic scheduler;
-- visual workflow engine;
-- generic token/cost dashboard;
-- generic AI-code tracking dashboard;
+- generic scheduler/orchestrator;
+- token/cost dashboard;
+- AI-code tracking dashboard;
 - full chat/session archive;
 - CI/CD or release orchestrator.
 
-Those capabilities are increasingly provided by agent vendors and engineering platforms. AgentsWatch should integrate with them and specialize in independent, reviewable verification.
-
 ## Competitive boundary
 
-As of September 2026, Cursor, GitHub, Qodo and adjacent governance vendors already expose increasingly strong AI-code tracking, agent session/audit, review and governance capabilities.
+As of September 2026, Cursor, GitHub, Qodo and adjacent vendors already expose increasingly strong AI-code tracking, session/audit, review and policy/governance capabilities.
 
-Therefore the defensible hypothesis is **not** "better tracking".
+Therefore the defensible hypothesis is **not** “better tracking” or “independent review” in the generic sense.
 
-AgentsWatch must prove that an execution-independent, cross-vendor verifier can produce decision-changing evidence that native agent logs, Git, CI and PR review do not surface consistently enough.
+AgentsWatch must prove that a **cross-vendor run-evidence and completion-verification layer** produces decision-changing evidence that Git + CI + PR review + native vendor/Qodo workflows do not surface consistently enough.
 
-See:
+Latest accepted guardrails:
+`docs/DEEP_DIVE_DECISIONS_2026_09_16.md`
 
-`docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
+Latest deep-dive research:
+`docs/research/agentswatch_deep_dive_2026_09/`
+
+Deep-dive verdict: **CONTINUE, BUT NARROW WEDGE**. Current analytical score: **7.80/10**. This is a decision model, not product proof.
 
 ## MVP wedge
 
-The first credible product is deliberately narrow:
-
 ```text
-Task -> Contract -> Agent -> Verified Receipt
+Task/import -> verification Contract -> Agent -> interval evidence -> compact Verified Receipt
 ```
 
 MVP capabilities:
-
 1. local workspace initialization;
-2. canonical machine-readable `RunContract v1`;
-3. run start baseline with pre-existing dirty-worktree attribution;
-4. run finish delta;
-5. canonical `RunReceipt v1` plus Markdown projection;
-6. validation evidence capture;
-7. claims-vs-diff checks;
+2. `RunContract v1` verification normalization/lint;
+3. pre-run baseline with dirty-worktree evidence;
+4. finish run-interval delta with explicit ambiguity;
+5. compact `RunReceipt v1` JSON + Markdown projections;
+6. validation evidence/provenance;
+7. deterministic evidence gate;
 8. scope drift checks;
-9. explainable evidence findings and status;
-10. compact handoff and one learning note.
+9. narrow claims-vs-diff checks;
+10. .NET + Flutter + universal Git behavior;
+11. adversarial 30-run dogfood.
 
 ## Current runtime
 
@@ -91,32 +96,34 @@ agentswatch optimize <prompt-file-or-text>
 agentswatch status
 ```
 
-The current repository is still a skeleton/prototype. The core contract -> run -> receipt -> verification spine is not implemented yet.
+The repository is still a skeleton/prototype. The core Contract -> Run -> Receipt -> Verification spine is not implemented yet.
 
-The latest known GitHub CI evidence shows:
-
+Latest known CI truth remains:
 - restore: pass;
 - build: pass;
-- tests: fail in `GitStatusParserTests` because the current parser trims the fixed-width git porcelain prefix before slicing the path.
+- tests: fail in `GitStatusParserTests`;
+- current parser trims Git porcelain status layout before fixed-position path parsing, producing `README.md -> EADME.md` in the failing test.
 
-The first implementation prompt must fix and harden git status parsing, rerun the complete build/test gate, then run CLI smoke validation before feature expansion.
+The next implementation task remains:
+
+`AW-VFY-001` — fix/harden Git status parsing and make Gate 0 green.
 
 See:
-
 - `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
 - `docs/prompt_queues/verification_mvp_2026_08_25.md`
 
-## Canonical local artifacts
+## Canonical artifacts
 
-Machine-readable data is canonical from MVP start:
+Machine-readable verification truth:
 
 ```text
 .agentwatch/
   contracts/<contract-id>.json
+  active-runs/<run-id>.json
   runs/<run-id>.json
 ```
 
-Human-readable projections and handoffs remain git-friendly Markdown:
+Human projections:
 
 ```text
 .ai/
@@ -127,128 +134,86 @@ Human-readable projections and handoffs remain git-friendly Markdown:
 Rule:
 
 ```text
-JSON = source of truth
-Markdown = human-readable projection
+JSON = verification source of truth
+Markdown = human-readable projection / handoff
 ```
 
-Do not require downstream verification logic to parse free-form Markdown.
+`learningNote`, `nextPrompt`, routing and optimization advice may appear later in handoff/learning outputs, but are **not mandatory canonical RunReceipt evidence**.
 
 ## Architecture direction
 
 AgentsWatch remains a local-first modular monolith:
 
 ```text
-CLI / future MCP
+CLI / future GitHub Check / MCP
       |
 Application use cases
       |
-Contract | Run | Evidence | Learning
+Contract | Run evidence | Verification | optional later Learning
       |
 Domain models
       |
-Git | Local storage | Validation/stack adapters
+Git | local storage | validation adapters
 ```
 
-Current projects remain useful boundaries:
+Initial stack coverage:
+- universal Git behavior;
+- .NET;
+- Flutter.
 
-```text
-src/
-  AgentsWatch.Cli/
-  AgentsWatch.Core/
-  AgentsWatch.Git/
-  AgentsWatch.LanguageAdapters/
-  AgentsWatch.Reports/
-tests/
-  AgentsWatch.Tests/
-```
-
-After Gate 0, application use cases and ports should be introduced before feature growth so CLI logic does not accumulate in `Program.cs`.
-
-## MVP integration scope
-
-Start with:
-
-- universal git behavior;
-- .NET adapter;
-- Flutter adapter.
-
-React/TypeScript, Node, Python, MCP, GitHub checks, and vendor-specific adapters come after the verification spine works in dogfood.
+Broader vendor/language integrations come only after verification and external-value proof.
 
 ## Dogfood gate
 
-Use AgentsWatch on AgentsWatch itself and at least one real application repository.
-
-Before building a dashboard or sophisticated empirical router, collect at least 30 useful receipts across comparable task types and measure:
-
+Before product expansion, collect at least 30 adversarial real receipts and measure:
 - contract completeness;
-- attributable changed files;
-- scope drift;
-- evidence completeness;
-- validation breadth/duration;
-- retries;
-- repeated mistakes;
-- acceptance/rejection of agent claims.
+- interval evidence correctness/ambiguity;
+- unsupported claims;
+- scope findings;
+- missing evidence;
+- false positives;
+- material false attribution;
+- verification overhead vs reviewer time saved;
+- whether findings change decisions.
 
-Success evidence must include at least:
-
-- one real unsupported-claim catch;
-- one real scope-drift catch;
-- one missing-evidence block;
-- no observed false attribution in tested dogfood cases.
+Success must include real catches and no observed material false attribution in the tested corpus.
 
 ## External-value gate
 
-Dogfood success is necessary but not sufficient.
+Before advanced learning, broad integrations, dashboard or team/SaaS packaging:
+- >=10 real external evaluations;
+- >=2 agent ecosystems represented where practical;
+- >=3 external users/teams request continued use;
+- >=3 real cases where the receipt changes a review/rework/merge/evidence decision;
+- clear value beyond Git + CI + PR review + native vendor/Qodo alternatives.
 
-Before learning/router expansion, broad integrations, dashboards or team/SaaS packaging:
-
-- run at least 10 real external evaluations with agent-heavy developers/teams;
-- include at least two agent ecosystems/vendors across the cohort where practical;
-- compare explicitly against Git + CI + PR review + native vendor logs;
-- require real examples where the receipt changes review/rework/merge/evidence decisions;
-- require at least 3 external users/teams to request continued use.
-
-If native evidence already solves the problem well enough, narrow or stop rather than adding unrelated features.
+First commercial ICP hypothesis:
+**AI-heavy teams of roughly 5–30 developers**.
 
 ## Commercial gate
 
 Before auth/billing/team administration:
+- >=3 paid-pilot/design-partner/equivalent concrete commitments;
+- payer/budget owner identified;
+- payment tied to verification/review/governance outcomes.
 
-- test real buyer/budget ownership;
-- obtain at least 3 paid-pilot/design-partner or equivalent concrete commercial commitments;
-- payment must be tied to verification/review/governance outcomes.
+## Packaging hypothesis
+
+Leading hypothesis after value proof: **open core**.
+
+The deterministic local verifier should be inspectable. Potential paid value belongs in organization policies, managed evidence, cross-repo controls, compliance/team features and support — but only after commercial validation.
 
 ## Product principles
 
-- Verification before observability breadth.
 - Evidence before autonomy.
-- Cross-vendor contracts before deep vendor integration.
-- External value before commercial packaging.
-- Canonical structured data before derived reports.
-- Git attribution before scope scoring.
-- Deterministic findings before LLM interpretation.
-- Local-first and no telemetry by default.
-- Compact evidence instead of full session capture.
-- Explainable status decisions; no opaque score may decide completion alone.
-- Risky actions require explicit approval gates.
-- No dashboard until receipt dogfood and external validation prove what should be visualized.
-
-## De-prioritized
-
-Do not prioritize before the verification MVP and external/commercial gates are proven:
-
-- proprietary coding-agent execution;
-- cloud workspaces;
-- generic parallel-agent management;
-- generic schedules/playbooks;
-- visual workflow canvas;
-- full conversation history;
-- generic token dashboard as the core product;
-- generic AI-code tracking as the core product;
-- automatic merge/release;
-- SaaS/billing/team administration;
-- complex model routing without comparable local/external evidence;
-- large integration marketplace.
+- Run-interval evidence before causal claims.
+- Unknown/Ambiguous before fabricated certainty.
+- Deterministic verification before LLM interpretation.
+- Verification normalization before task-management duplication.
+- Compact receipt before session archive.
+- External value before product breadth.
+- Commercial proof before SaaS packaging.
+- Local-first/no telemetry by default.
 
 ## Canonical strategy documents
 
@@ -256,10 +221,11 @@ Read these first:
 
 1. `README.md`
 2. `docs/PRODUCT_SPEC.md`
-3. `docs/MVP_ROADMAP.md`
-4. `docs/ARCHITECTURE.md`
-5. `docs/DATA_MODEL.md`
-6. `docs/COMMAND_CONTRACTS.md`
-7. `docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
-8. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
-9. `docs/prompt_queues/verification_mvp_2026_08_25.md`
+3. `docs/DEEP_DIVE_DECISIONS_2026_09_16.md`
+4. `docs/MVP_ROADMAP.md`
+5. `docs/ARCHITECTURE.md`
+6. `docs/DATA_MODEL.md`
+7. `docs/COMMAND_CONTRACTS.md`
+8. `docs/research/agentswatch_deep_dive_2026_09/00_EXECUTIVE_DECISION.md`
+9. `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
+10. `docs/prompt_queues/verification_mvp_2026_08_25.md`
