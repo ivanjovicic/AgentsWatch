@@ -1,14 +1,15 @@
 # AgentsWatch Verification MVP Queue — 2026-08-25
 
-Status: **canonical active implementation queue**  
-Target repo: `ivanjovicic/AgentsWatch`
+Status: **canonical active implementation + validation queue**  
+Target repo: `ivanjovicic/AgentsWatch`  
+Last aligned: 2026-09-16
 
 ## Purpose
 
-Build the smallest credible AgentsWatch product:
+Build and validate the smallest credible AgentsWatch product:
 
 ```text
-Task -> RunContract -> Start baseline -> external agent -> Finish delta -> RunReceipt -> Evidence/Scope/Claims verification
+Task -> RunContract -> Start baseline -> external agent -> Finish delta -> RunReceipt -> Evidence/Scope/Claims verification -> External value -> Commercial proof
 ```
 
 This queue supersedes old next-work ordering in `bootstrap_validation.md`, `agentwatch_mvp.md`, token-economy queues, productization queues, and older roadmap-execution queues.
@@ -18,7 +19,7 @@ Historical prompts remain reference material only unless explicitly re-promoted 
 ## Global rules
 
 - Follow `AGENTS.md`.
-- One implementation slice per prompt.
+- One implementation or validation slice per prompt.
 - Do not implement dashboard/SaaS/billing/agent runtime/orchestration.
 - Do not expand token optimizer work ahead of the verification spine.
 - JSON is canonical for Contract/Baseline/Receipt; Markdown is projection.
@@ -27,6 +28,8 @@ Historical prompts remain reference material only unless explicitly re-promoted 
 - Add targeted tests for every runtime behavior change.
 - Keep full source contents, chat history, and terminal logs out of persisted evidence by default.
 - Do not claim validation passed without executed evidence.
+- After dogfood, external/commercial validation is required before broad product expansion.
+- Generic AI-code tracking is not a differentiated product wedge.
 
 ## Strict dependency chain
 
@@ -41,6 +44,8 @@ AW-VFY-001
   -> AW-VFY-008
   -> AW-VFY-009
   -> AW-VFY-010
+  -> AW-VFY-011
+  -> AW-VFY-012
 ```
 
 Do not skip ahead unless an earlier prompt is explicitly completed or replaced with equivalent committed evidence.
@@ -58,7 +63,9 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-007 | Ready after 006 | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | Ready after 007 | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify attributable changes against owned/avoid paths. |
 | AW-VFY-009 | Ready after 008 | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify initial structured claims against diff/validation evidence. |
-| AW-VFY-010 | Ready after 009 | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run structured dogfood, collect 30 receipts, decide next investment from evidence. |
+| AW-VFY-010 | Ready after 009 | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run structured dogfood, collect 30 receipts, prove real verification usefulness. |
+| AW-VFY-011 | Ready after 010 + dogfood review | `../prompts/AW-VFY-011-external-value-validation.md` | Test decision-changing value with 10+ external agent-heavy users/teams. |
+| AW-VFY-012 | Ready after 011 passes | `../prompts/AW-VFY-012-commercial-design-partner-validation.md` | Test real payer/budget ownership and obtain 3+ concrete commercial commitments before SaaS expansion. |
 
 ## Gate definitions
 
@@ -109,17 +116,64 @@ Required before dogfood:
 - initial claim classes have deterministic checks;
 - every decision/finding has explainable reasons.
 
+### Gate 5 — Dogfood value proven
+
+Required before external validation:
+
+- 30 useful receipts across comparable real tasks;
+- at least one real unsupported-claim catch;
+- at least one real scope-drift catch;
+- at least one real missing-evidence block;
+- no observed false attribution in tested dogfood cases;
+- evidence summary separates product findings from implementation bugs.
+
+### Gate 6 — External value proven
+
+Required before advanced learning, broad integrations, dashboard or team/SaaS packaging:
+
+- at least 10 real external evaluations;
+- at least two agent ecosystems/vendors represented where practical;
+- at least 3 users/teams request continued use;
+- at least 3 decision-changing evidence/scope/claim findings beyond the baseline workflow;
+- no observed material false attribution;
+- native vendor logs + Git + CI + PR review are demonstrably not sufficient for all validated use cases.
+
+Kill/narrow signal:
+- receipt does not change real decisions;
+- false positives/ambiguity create more review cost than value;
+- cross-vendor independence is not valued in the target segment.
+
+### Gate 7 — Commercial value proven
+
+Required before SaaS/auth/billing/team administration:
+
+- at least 3 paid-pilot/design-partner or equivalent concrete buyer commitments;
+- budget owner / payer identified;
+- pricing/package tested with real buyers;
+- payment reason is verification/review/governance value, not unrelated platform features.
+
 ## Post-queue decision
 
-After AW-VFY-010, choose the next phase from evidence only.
+After AW-VFY-012, choose the next product phase from evidence only.
 
-Possible next priorities:
+Possible next priorities **only if external/commercial gates pass**:
 
 1. validation economy / command profiler;
 2. mistake-learning rules;
 3. MCP exposure of stable use cases;
 4. GitHub/PR evidence checks;
 5. cross-agent import/routing;
-6. local dashboard.
+6. local/team dashboard;
+7. minimal commercial packaging.
 
-Do not pre-commit to a dashboard or SaaS before dogfood data identifies recurring user value.
+Do not pre-commit to a dashboard, broad integration marketplace or SaaS before real external value and willingness-to-pay evidence.
+
+## Current competitive context
+
+Canonical addendum:
+
+`docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
+
+Key rule:
+
+> Do not compete on tracking what the agent did; prove independent verification of whether the result is actually supported by repository and validation evidence.
