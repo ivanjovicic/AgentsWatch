@@ -5,169 +5,195 @@ Status: planning/specification with validated skeleton gaps
 
 ## Product definition
 
-AgentsWatch is a local-first, vendor-neutral verification and evidence layer for AI coding agents.
+AgentsWatch is a local-first, vendor-neutral **run-evidence and completion-verification layer for delegated coding-agent work**.
 
-It does not replace Codex, Claude Code, Cursor, Copilot, Devin, OpenHands, or similar execution tools. External agents write code. AgentsWatch independently records the execution contract and repository evidence, then verifies whether the result is supported by the diff and validation.
+External agents such as Codex, Claude Code, Cursor, Copilot, Devin and OpenHands execute coding work. AgentsWatch does not replace them and does not try to become another generic AI reviewer.
+
+AgentsWatch normalizes the verification contract, records pre/post repository evidence, computes a run-interval repository delta, verifies required validation/scope/completion claims and emits a portable RunReceipt.
 
 ## Core promise
 
 ```text
-Turn roadmap intent into verified change — across any coding agent.
+Turn delegated coding work into independently verifiable evidence.
 ```
 
-Supporting promise:
+Supporting principle:
 
 ```text
-Trust the diff, not the agent summary.
+Trust evidence, not the executor's confidence.
 ```
-
-Efficiency metrics such as tokens, command time, retries, and avoidable validation remain secondary product signals. They must not displace verification as the MVP wedge.
-
-## Category
-
-Preferred category language:
-
-```text
-AI coding-agent verification and evidence layer
-```
-
-Avoid relying on `agent control plane` as the primary category label. Broad control-plane, orchestration, scheduling, session-management, cost-tracking, AI-code tracking, and generic governance capabilities are increasingly native to coding-agent and developer platforms.
-
-The survivable differentiation hypothesis is narrower:
-
-> **execution-independent, cross-vendor verification of task scope, attributable repository change, validation evidence and completion claims**
 
 ## Competitive boundary — 2026-09-16
 
-Current products increasingly provide:
-- AI code contribution/tracking metrics;
+Cursor, GitHub, Qodo and adjacent products already provide increasingly strong:
 - agent session logs;
-- audit events;
+- AI-code attribution/tracking;
 - generic code review;
-- governance/policy surfaces.
+- hooks/policies;
+- audit/governance surfaces.
 
-AgentsWatch must therefore prove value that remains useful when these capabilities are available natively.
+Therefore these are **not** sufficient differentiation.
 
-A generic session log or code-tracking dashboard is not sufficient differentiation.
+The surviving thesis is narrower:
 
-Canonical competitive addendum:
-`docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md`
+> **execution-independent, cross-vendor verification of run scope, run-interval repository evidence, required validation and completion claims.**
+
+Qodo/current independent-review products are explicit validation baselines, not ignored competitors.
+
+Canonical strategy guardrails:
+`docs/DEEP_DIVE_DECISIONS_2026_09_16.md`
+
+Canonical deep-dive evidence:
+`docs/research/agentswatch_deep_dive_2026_09/`
+
+## Critical evidence rule
+
+A repository change observed between recorded run start and finish is not automatically proven to be authored by the selected agent.
+
+Humans, hooks, formatters, generators or another agent/process may write concurrently.
+
+Core classifications:
+
+```text
+RunIntervalChange
+PreExistingUnchanged
+PreExistingChangedFurther
+Ambiguous
+```
+
+Use executor/agent authorship language only when trustworthy executor-specific provenance supports it.
+
+Ambiguity is an explicit evidence state and may force `NeedsReview`.
 
 ## Target users
 
-Primary MVP users:
+### Dogfood / OSS users
+- solo developers using coding agents on real repositories;
+- developers working in dirty local worktrees;
+- maintainers who want deterministic scope/evidence checks.
 
-- solo developers using one or more coding agents on real repositories;
-- developers who delegate implementation but still need independent evidence;
-- developers working with dirty local worktrees where attribution matters;
-- developers who need deterministic scope and validation checks;
-- developers working across .NET and Flutter first.
+### First commercial ICP hypothesis
+**AI-heavy engineering teams of roughly 5–30 developers**, especially teams that:
+- use coding agents frequently;
+- use or evaluate more than one agent/tool ecosystem;
+- still perform meaningful human review;
+- can adopt a local CLI/GitHub check without enterprise procurement.
 
-Primary external-validation users after dogfood:
-
-- agent-heavy developers in small engineering teams;
-- engineering leads reviewing work produced by more than one coding-agent stack;
-- maintainers who need independent evidence before accepting agent-created changes.
-
-Later, only after external/commercial proof:
-
-- organizations needing auditable AI-change receipts and policy gates;
-- regulated engineering organizations;
-- platform/vendor integrations.
+### Later only after commercial proof
+- DevEx/platform teams;
+- security/compliance teams;
+- regulated enterprise engineering organizations.
 
 ## Problems to solve
 
-Execution itself is no longer the main gap. The verification gaps are:
+- task/acceptance intent is often not machine-checkable;
+- agent summaries are assertions, not independent evidence;
+- dirty worktrees make interval attribution easy to misstate;
+- required validation may be missing despite a `Done` claim;
+- scope drift can be discovered late;
+- vendor logs/session formats differ;
+- teams may need one compact evidence artifact without retaining full chat;
+- executor-native evidence may not be sufficient or independent for all workflows.
 
-- tasks and roadmap items are vague and not machine-checkable;
-- agent final summaries are assertions, not evidence;
-- pre-existing local changes can be incorrectly attributed to an agent run;
-- scope drift is often discovered only during review;
-- `tests added`, `bug fixed`, or `all tests pass` claims are not consistently checked;
-- different vendors expose different run/session formats;
-- completion often reflects agent confidence instead of independent evidence;
-- learning about repeated mistakes is fragmented by vendor/session.
-
-The product must additionally prove that these gaps are important **after** teams use native Git/CI/PR/vendor evidence. If existing workflows solve the problem sufficiently, AgentsWatch should narrow or stop rather than add unrelated features.
+The product must prove these problems remain material **after** Git + CI + PR review + native vendor/Qodo alternatives are considered.
 
 ## Product pillars
 
-### 1. Run Contract
+### 1. RunContract — verification normalization
 
-Convert a roadmap item, issue, or prompt into a machine-readable contract containing at minimum:
+RunContract is not another task-management system.
+
+Default direction:
+
+```text
+existing GitHub/Jira/Linear issue, roadmap item or prompt
+  -> import/normalize
+  -> request only missing verification-specific fields
+```
+
+Minimum fields:
 
 ```text
 schemaVersion
 contractId
 taskId
 intent
-acceptanceCriteria
-ownedPaths
-avoidPaths
+acceptanceCriteria[]
+ownedPaths[]
+avoidPaths[]
 permissionMode
 runMode
 validationContract
-stopRules
-expectedEvidence
+stopRules[]
+expectedEvidence[]
+sourceTaskRef?
 ```
 
-Optional later fields include budget guidance, dependencies, risk gates, and route recommendation.
+Incomplete implementation contracts produce lint findings instead of invented scope.
 
-Incomplete contracts should fail lint or produce an investigation/planning contract rather than silently invent implementation scope.
+### 2. Run baseline and interval evidence
 
-### 2. Run attribution
-
-At run start, capture enough repository state to distinguish pre-existing changes from changes introduced during the run.
-
-Minimum baseline:
-
+At run start capture enough state to distinguish pre-existing repository dirt from changes observed during the run interval:
 - branch;
-- HEAD commit SHA;
-- staged diff fingerprint/state;
-- unstaged diff fingerprint/state;
-- untracked-file set;
-- timestamp.
+- HEAD;
+- staged state/fingerprint;
+- unstaged state/fingerprint;
+- untracked set/fingerprint;
+- timestamp;
+- optional executor metadata.
 
-At finish, compute attributable delta from start to end. Scope and claims checks must use attributable run changes, not raw end-of-run `git status` alone.
+At finish compare equivalent state and produce explicit interval classifications/ambiguities.
 
-### 3. Agent Run Receipt
+Raw final `git status` is never equivalent to run evidence.
 
-Produce one vendor-neutral machine-readable receipt plus a Markdown projection containing:
+### 3. Compact RunReceipt
+
+Produce one canonical vendor-neutral machine-readable evidence artifact plus human projections.
+
+Canonical receipt should contain durable verification data:
 
 ```text
 schemaVersion
 runId
 contractId
 taskId
-agent/tool/model if known
-start/end repository state
-attributable files changed
-validation evidence
-agent claims
-acceptance-criteria findings
-scope findings
-risk findings
-status
-missed work
-learning note
-next prompt
+executor metadata if known
+start/end repository evidence
+runDelta
+validation evidence + provenance
+structured claims
+acceptance findings
+scope/risk findings
+decision + reasons
+missedWork[]
+override/evidence digest where supported
 ```
 
-The receipt must remain useful without full chat history.
+Do **not** require as canonical verification truth:
+
+```text
+learningNote
+nextPrompt
+routeSuggestion
+optimizationAdvice
+verbose session narrative
+```
+
+Those belong in optional handoff/learning projections downstream.
 
 ### 4. Evidence Gate
 
 Compare:
 
 ```text
-contract intent
-vs acceptance criteria
-vs agent claims
-vs attributable diff
+verification contract
+vs run-interval evidence
 vs validation evidence
+vs structured claims
+vs acceptance/scope findings
 ```
 
-Return deterministic, explainable findings and one auditable status:
+Statuses:
 
 ```text
 Done
@@ -178,148 +204,146 @@ Blocked
 Failed
 ```
 
-No opaque score may independently decide completion.
+Mandatory evidence missing => cannot be `Done`.
+
+No opaque numeric score or LLM opinion may independently decide completion.
 
 ### 5. Scope Drift
 
-Compare `ownedPaths` / `avoidPaths` against attributable changes.
+Compare high-confidence run-interval changes with `ownedPaths` / `avoidPaths`.
 
-Examples:
+Pre-existing unchanged dirt must not create current-run drift findings.
+Material ambiguity must remain visible.
 
-```text
-Owned: src/Profile/**
-Changed: src/Auth/SessionManager.cs
-=> scope drift finding
-```
+### 6. Claims vs Diff vs Validation
 
-Pre-existing dirty files must not produce scope-drift findings for the current run unless the run actually changed them further and the delta is attributable.
+Start with narrow deterministic claims:
+- `TestsAdded`;
+- `DocsOnly`;
+- `BackendUnchanged`;
+- `MigrationAdded`;
+- `ValidationPassed`;
+- `NoUnrelatedChanges`.
 
-### 6. Claims-vs-Diff-vs-Validation
+Broad semantic claims such as `BugFixed` or full acceptance completion may be advisory/Unknown unless evidence can support them.
 
-Start with deterministic claims that can be checked reliably, for example:
+LLM extraction may assist later but cannot upgrade evidence status by itself.
 
-- `tests added`;
-- `docs only`;
-- `backend unchanged`;
-- `migration added`;
-- `validation passed`;
-- `no unrelated files changed`.
+### 7. Learning — downstream only
 
-LLM interpretation may later expand claim extraction, but core verification must work without a provider key.
+Repository-local learning starts only after:
+- receipt/evidence correctness;
+- dogfood proof;
+- external value.
 
-### 7. Repository-local learning
-
-After the receipt/evidence loop is proven **and external value is validated**, record scoped, reviewable learning events such as:
-
-- repeated scope drift patterns;
-- repeated missing-test patterns;
-- validation sequences that were broader than necessary;
-- task types that repeatedly require retries.
-
-Learning is downstream of trustworthy receipts and real external value. Do not build a sophisticated router on untrusted or commercially irrelevant run data.
+Learning events, routing and next-prompt suggestions are not canonical RunReceipt truth.
 
 ## Canonical data rule
 
-From the MVP onward:
-
 ```text
-JSON = canonical machine-readable state
-Markdown = human-readable projection
+JSON = canonical verification state
+Markdown = human-readable projection/handoff
 ```
 
 Expected paths:
 
 ```text
 .agentwatch/contracts/<contract-id>.json
+.agentwatch/active-runs/<run-id>.json
 .agentwatch/runs/<run-id>.json
 .ai/runs/<run-id>.md
 .ai/handoffs/<run-id>.md
 ```
 
-Verification logic must not depend on parsing free-form Markdown reports.
-
 ## MVP scope
 
 Required:
-
 1. Gate 0 CI/test/smoke closure.
-2. `RunContract v1` schema and lint.
-3. `start` baseline and active-run state.
-4. `finish` attributable delta.
-5. `RunReceipt v1` JSON + Markdown projection.
-6. Validation evidence model/capture.
-7. Deterministic evidence gate.
-8. Scope drift findings.
-9. Initial claims-vs-diff rules.
-10. Handoff + one learning note.
-11. Universal git behavior plus .NET and Flutter adapter support.
+2. verification-focused `RunContract v1` schema/lint/storage.
+3. start baseline.
+4. finish run-interval delta with ambiguity.
+5. slim `RunReceipt v1` JSON + projections.
+6. validation evidence/provenance.
+7. deterministic Evidence Gate.
+8. Scope Drift v1.
+9. initial claims verification.
+10. .NET + Flutter + universal Git behavior.
+11. adversarial 30-run dogfood.
 
 ## Explicitly not MVP
 
-Do not prioritize:
-
-- another coding-agent runtime;
-- generic background-agent queue;
+- proprietary agent runtime;
+- generic AI code-review engine;
 - cloud sandbox/workspaces;
+- broad orchestration/scheduling;
 - visual workflow canvas;
-- generic scheduling;
-- full conversation/session archive;
-- generic token/cost dashboard as the main product;
-- generic AI-code tracking as the main product;
-- SaaS, billing, OAuth, team administration;
+- full chat/session archive;
+- generic token/cost dashboard;
+- generic AI-code tracking;
+- SaaS/billing/OAuth/team admin;
 - automatic merge/release/deploy;
-- complex empirical routing before comparable receipt data exists;
+- sophisticated routing/learning before trusted evidence;
 - broad integration marketplace.
-
-## Post-MVP sequence
-
-After the verification spine is reliable:
-
-1. dogfood at least 30 useful receipts;
-2. run external-value validation with at least 10 external developers/teams;
-3. require real decision-changing findings and requests for continued use;
-4. test commercial/design-partner willingness to pay before SaaS/team packaging;
-5. improve validation economy from real evidence;
-6. add mistake-pattern learning with confidence/expiry;
-7. add cross-agent normalized imports;
-8. add empirical route suggestions only when comparable evidence is sufficient;
-9. expose stable contracts through MCP;
-10. add GitHub/PR checks when validated users request them;
-11. build a dashboard only when receipt data and external users prove which views matter;
-12. consider broader team/commercial packaging only after the commercial gate.
 
 ## External-value gate
 
-The product is not validated simply because dogfood works.
+Dogfood success is necessary but insufficient.
 
-Pass candidate after 30-run dogfood:
-- 10+ external real evaluations;
-- at least 3 external users/teams request continued use;
-- at least 3 real evidence/scope/claim findings change a review/rework/merge decision;
+Pass candidate after dogfood:
+- >=10 external real evaluations;
+- >=2 agent ecosystems represented where practical;
+- >=3 users/teams request continued use;
+- >=3 real decision-changing evidence/scope/claim findings beyond baseline workflow;
 - no observed material false attribution;
-- the product adds clear value beyond Git + CI + PR review + native vendor logs.
+- false-positive burden low enough to preserve reviewer trust;
+- clear value beyond Git + CI + PR review + native vendor/Qodo evidence.
 
-If this gate fails, narrow or stop the thesis rather than adding dashboards, orchestration or tracking features.
+If this fails, narrow/pivot/stop rather than adding unrelated breadth.
 
 ## Commercial gate
 
-Before building SaaS/auth/billing/team administration:
-- at least 3 teams agree to a paid pilot, paid design-partner arrangement, or equivalent concrete buying commitment;
-- the payer/budget owner is known;
-- payment is for verification/review/governance value, not unrelated platform features.
+Before team/SaaS infrastructure:
+- >=3 paid pilots/design-partner/equivalent concrete commercial commitments;
+- payer/budget owner identified;
+- payment tied to verification/review/governance value;
+- pricing tested with real buyers.
+
+## Packaging hypothesis
+
+Leading hypothesis after value proof: **open core**.
+
+Open/local core may include:
+- schemas;
+- CLI;
+- Git evidence model;
+- deterministic rules;
+- basic receipt verifier/projection;
+- basic GitHub check after demand.
+
+Potential paid later:
+- organization policies;
+- managed evidence retention/search;
+- signed/managed attestations;
+- cross-repository controls;
+- team analytics;
+- RBAC/SSO/compliance/support.
+
+This is a hypothesis until WTP evidence exists.
 
 ## Signature metrics
 
-Primary verification metrics:
-- attribution correctness/ambiguity;
+Verification quality:
+- interval evidence correctness/ambiguity;
+- material false attribution;
+- false-positive findings;
 - unsupported-claim catches;
 - scope-drift catches;
 - evidence completeness;
-- false-positive findings;
 - decision-changing findings;
-- reviewer trust/continued-use request.
+- reviewer time added/saved.
 
-Commercial proof metrics later:
+External/commercial proof:
+- continued-use requests;
+- second-repo/team adoption;
 - paid/design-partner commitments;
-- repeat usage across real teams;
-- time/risk saved where measurable.
+- repeated usage across real teams.
