@@ -1,22 +1,41 @@
 # AgentsWatch Data Model
 
-Last aligned: 2026-08-25  
+Last aligned: 2026-09-16  
 Status: active MVP contract
 
 ## Core rule
 
-Machine-readable structured state is canonical from the verification MVP onward.
+Machine-readable structured state is canonical.
 
 ```text
 JSON = source of truth
 Markdown = human-readable projection
 ```
 
-Do not make verification logic depend on parsing free-form Markdown.
+Verification logic must never depend on parsing free-form Markdown.
+
+## Evidence wording rule
+
+AgentsWatch records **run-interval repository evidence**.
+
+A change observed between the recorded start and finish of a run is not automatically proven to be authored by the selected AI agent. Humans, hooks, formatters, generators or another process may write concurrently.
+
+Use causal language only when executor instrumentation proves it.
+
+Otherwise classify evidence explicitly as:
+
+```text
+RunIntervalChange
+PreExistingUnchanged
+PreExistingChangedFurther
+Ambiguous
+```
+
+Ambiguity must remain visible and may force `NeedsReview`.
 
 ## Storage phases
 
-### Phase 1 — JSON + Markdown projection
+### MVP — JSON + Markdown projection
 
 Canonical machine data:
 
@@ -26,18 +45,16 @@ Canonical machine data:
 .agentwatch/runs/<run-id>.json
 ```
 
-Human-readable projection:
+Human projections:
 
 ```text
 .ai/runs/<run-id>.md
 .ai/handoffs/<run-id>.md
-.ai/STATUS.md
-.ai/CHANGELOG_AI.md
 ```
 
-### Phase 2 — JSONL indexes / command evidence
+### Later — optional indexes/learning
 
-When needed:
+Only after receipts are trustworthy and externally valuable:
 
 ```text
 .agentwatch/command-history.jsonl
@@ -45,25 +62,23 @@ When needed:
 .agentwatch/mistake-patterns.json
 ```
 
-### Phase 3 — SQLite
+SQLite is optional later only when stable schemas/query needs justify it.
 
-Only after schemas stabilize and queries justify it:
+## Schema version rule
 
-```text
-.agentwatch/agentswatch.db
-```
-
-## Schema-version rule
-
-Every persisted contract, baseline and receipt must contain:
+Every persisted contract, baseline and receipt contains:
 
 ```text
 schemaVersion
 ```
 
-Readers must reject unsupported future versions clearly rather than silently misparse them.
+Readers reject unsupported future versions instead of silently misparsing them.
 
-## RunContract v1
+# RunContract v1
+
+RunContract is a **verification normalization layer**, not a replacement for GitHub/Jira/Linear/task-management metadata.
+
+Default flow should import/normalize an existing issue, roadmap item or prompt and ask only for missing verification-specific information.
 
 Minimum canonical shape:
 
@@ -80,28 +95,17 @@ runMode
 validationContract
 stopRules[]
 expectedEvidence[]
+sourceTaskRef?
 createdAtUtc
 ```
 
-Optional later fields:
-
-```text
-dependencies[]
-riskGates[]
-budgetGuidance
-routeSuggestion
-sourceRoadmapItem
-```
-
 Rules:
-
 - implementation contracts require non-empty intent and acceptance criteria;
-- `ownedPaths` / `avoidPaths` may be empty only when explicitly justified by contract type;
 - validation requirements are explicit;
-- incomplete contracts produce lint findings;
+- incomplete contracts produce lint findings rather than invented scope;
 - generated Markdown is not authoritative.
 
-## RunBaseline v1
+# RunBaseline v1
 
 Persisted by `agentswatch start` under:
 
@@ -120,16 +124,12 @@ startedAtUtc
 branch
 headCommitSha
 worktreeState
-agent
-model
-tool
+executorMetadata?
 ```
 
-### WorktreeState
+## WorktreeState
 
-Must preserve enough evidence to distinguish pre-existing changes from run-attributable changes.
-
-Minimum logical fields:
+Preserve staged, unstaged and untracked state separately.
 
 ```text
 porcelainVersion
@@ -139,23 +139,25 @@ untracked[]
 stateFingerprint
 ```
 
-Each tracked changed-file record should support:
+Changed-file evidence should support:
 
 ```text
 path
-oldPath
+oldPath?
 status
 contentOrDiffFingerprint
 ```
 
-Do not store full source-file contents merely to calculate attribution when hashes/diff fingerprints are sufficient.
+Do not persist full source contents merely to calculate state comparison when hashes/diff fingerprints are sufficient.
 
-## RunDelta v1
+# RunDelta v1
 
-Produced by comparing start baseline with end repository evidence.
+Produced by comparing the start baseline with finish repository evidence.
+
+Canonical naming should avoid causal overclaim:
 
 ```text
-attributableChanges[]
+runIntervalChanges[]
 preExistingUnchangedChanges[]
 preExistingChangedFurther[]
 attributionAmbiguities[]
@@ -163,34 +165,35 @@ endBranch
 endHeadCommitSha
 ```
 
-### AttributableChange
+## RunIntervalChange
 
 ```text
 path
-oldPath
+oldPath?
 status
 addedLines?
 deletedLines?
-attribution
-attributionReason
+classification
+classificationReason
+executorAttribution?
 ```
 
-Suggested attribution values:
+Classification values:
 
 ```text
-Attributable
+RunIntervalChange
 PreExistingUnchanged
 PreExistingChangedFurther
 Ambiguous
 ```
 
 Rules:
+- raw end-of-run dirty state is never equivalent to run-interval change;
+- concurrent-writer ambiguity is preserved;
+- scope/claims checks can use high-confidence run-interval evidence but must surface material ambiguity separately;
+- `executorAttribution` is optional and requires a trustworthy executor-specific evidence source.
 
-- raw end-of-run dirty state is never automatically equivalent to attributable changes;
-- ambiguous attribution remains explicit;
-- scope and claims checks operate on attributable changes, while ambiguities are surfaced separately.
-
-## ValidationEvidence v1
+# ValidationEvidence v1
 
 ```text
 validationId
@@ -204,6 +207,8 @@ exitCode?
 outputSummary?
 firstErrorLine?
 source
+sourceRef?
+evidenceDigest?
 ```
 
 Status values:
@@ -218,7 +223,7 @@ Killed
 Unknown
 ```
 
-Source values may include:
+Source examples:
 
 ```text
 AgentsWatchCommand
@@ -229,13 +234,12 @@ Unknown
 ```
 
 Rules:
-
 - user-declared evidence is labeled as such;
 - full stdout/stderr is not stored by default;
-- secret-looking values are redacted before summaries are persisted;
-- `Pass` must not be invented from an agent prose claim without a corresponding evidence source.
+- secret-looking values are redacted before summaries persist;
+- `Pass` must never be inferred only from agent prose.
 
-## AgentClaim v1
+# AgentClaim v1
 
 ```text
 claimId
@@ -257,11 +261,9 @@ ValidationPassed
 NoUnrelatedChanges
 ```
 
-Claims may initially be entered/imported structurally. LLM extraction is optional later.
+Semantic claims such as `BugFixed` may be advisory later but must not become deterministic fact without evidence.
 
-## Finding v1
-
-Common shape for contract/evidence/scope/claim findings:
+# Finding v1
 
 ```text
 findingId
@@ -299,7 +301,7 @@ Unknown
 NeedsReview
 ```
 
-## AcceptanceCriterionResult v1
+# AcceptanceCriterionResult v1
 
 ```text
 criterionId
@@ -317,9 +319,9 @@ Unsupported
 Unknown
 ```
 
-MVP may require explicit/manual mappings where semantics cannot be verified deterministically. Unknown is preferable to fabricated certainty.
+Unknown is preferable to fabricated semantic certainty.
 
-## RunReceipt v1
+# RunReceipt v1
 
 Canonical path:
 
@@ -327,7 +329,9 @@ Canonical path:
 .agentwatch/runs/<run-id>.json
 ```
 
-Minimum fields:
+RunReceipt is a **compact evidence artifact**, not a workflow/session transcript.
+
+Minimum canonical fields:
 
 ```text
 schemaVersion
@@ -336,9 +340,7 @@ contractId
 taskId
 startedAtUtc
 finishedAtUtc
-agent
-model
-tool
+executorMetadata?
 startRepositoryState
 endRepositoryState
 runDelta
@@ -348,11 +350,22 @@ acceptanceCriteria[]
 findings[]
 decision
 missedWork[]
-learningNote
-nextPrompt
+evidenceDigest?
 ```
 
-### RunDecision
+Do **not** require these as canonical audit fields:
+
+```text
+learningNote
+nextPrompt
+routeSuggestion
+optimizationAdvice
+verboseSessionNarrative
+```
+
+Those belong in optional downstream handoff/learning projections.
+
+## RunDecision
 
 ```text
 status
@@ -371,7 +384,7 @@ Blocked
 Failed
 ```
 
-Override, if supported later:
+Optional auditable override:
 
 ```text
 overriddenBy
@@ -380,13 +393,12 @@ overriddenAtUtc
 ```
 
 Rules:
-
-- no numeric score alone upgrades status;
+- no numeric score upgrades status by itself;
 - mandatory validation missing => cannot be `Done`;
-- unresolved attribution ambiguity that affects scope/acceptance should normally prevent high-confidence `Done`;
-- all non-Done decisions expose reasons.
+- material unresolved attribution ambiguity affecting scope/acceptance normally prevents high-confidence `Done`;
+- every non-Done decision exposes reasons.
 
-## Markdown projections
+# Markdown projections
 
 Generated from structured data:
 
@@ -395,47 +407,27 @@ Generated from structured data:
 .ai/handoffs/<run-id>.md
 ```
 
-The Markdown report should include concise sections for:
-
+Run projection should contain concise evidence sections:
 - contract intent;
-- attributable changes;
-- pre-existing changes/ambiguities;
+- run-interval changes;
+- pre-existing state/ambiguities;
 - validation;
-- claims and support status;
+- claims/support status;
 - scope findings;
 - acceptance criteria;
-- decision and reasons;
-- missed work;
+- decision/reasons;
+- missed work.
+
+Handoff may separately include:
 - learning note;
-- next prompt.
+- next prompt;
+- suggested follow-up.
 
-## CommandProfile — later
+Those are not verification truth.
 
-Command profiling remains useful after the verification spine works.
+# LearningEvent — post-receipt
 
-Potential shape:
-
-```text
-commandId
-runId
-workingDirectory
-commandDisplay
-commandHash
-startedAtUtc
-finishedAtUtc
-durationMs
-exitCode
-stdoutBytes
-stderrBytes
-status
-firstErrorLine
-outputSummary
-suggestedByAgentsWatch
-```
-
-Do not let command-profiling work block RunContract/RunReceipt/Evidence implementation.
-
-## LearningEvent — post-receipt MVP
+Only after receipt attribution/evidence and external value are trustworthy:
 
 ```text
 learningEventId
@@ -451,10 +443,28 @@ evidenceCount
 expiresAtUtc?
 ```
 
-Learning is only trustworthy after receipt attribution and evidence are trustworthy.
+# Trust rule
+
+Deterministic/core evidence:
+- repository state/fingerprints;
+- path/scope rules;
+- validation results/provenance;
+- narrow claim checks;
+- evidence hashes/references.
+
+AI-assisted only:
+- free-text claim extraction;
+- semantic acceptance analysis;
+- explanation;
+- suggested next step.
+
+AI output must never silently upgrade `Unknown` / `NeedsReview` to `Supported` / `Done`.
 
 ## Compatibility rule
 
-Every human-readable report must be fully regenerable from the canonical JSON models without losing the core verification state.
+Every human-readable report must be regenerable from canonical JSON verification state without losing core evidence.
 
 No downstream checker may require information that exists only in Markdown prose.
+
+Latest strategy guardrails:
+`DEEP_DIVE_DECISIONS_2026_09_16.md`
