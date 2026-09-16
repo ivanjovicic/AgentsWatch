@@ -1,34 +1,36 @@
 # AgentsWatch Architecture
 
-Last aligned: 2026-08-25
+Last aligned: 2026-09-16
 
 ## Goal
 
-AgentsWatch starts as a local, vendor-neutral verification and evidence layer for AI coding-agent runs.
+AgentsWatch is a local-first, vendor-neutral **run-evidence and completion-verification layer** for delegated coding-agent work.
 
 External agents execute coding work. AgentsWatch owns:
-
-- machine-readable run contracts;
-- repository start/end evidence and attribution;
-- vendor-neutral run receipts;
+- verification-focused RunContract normalization;
+- repository start/end evidence;
+- run-interval delta and ambiguity classification;
+- compact vendor-neutral RunReceipt;
 - deterministic evidence/scope/claim findings;
-- compact human-readable reports and handoffs;
-- later repository-local learning built on trusted receipts.
+- compact human-readable projections/handoffs;
+- later learning built on trusted evidence and external value.
+
+AgentsWatch does not need to own generic code review, agent execution or session orchestration.
 
 ## Architectural style
 
 Use a local-first modular monolith with ports and adapters.
 
-Do not introduce microservices, hosted services, or an agent runtime for the MVP.
+Do not introduce microservices, hosted services, message buses or a proprietary agent runtime for MVP.
 
 ## Target logical layers
 
 ```text
-AgentsWatch.Cli / future MCP
+AgentsWatch.Cli / future GitHub Check / MCP
         |
         v
 Application use cases
-  CreateContract
+  CreateOrImportContract
   CheckContract
   StartRun
   FinishRun
@@ -63,11 +65,10 @@ Adapters
   local JSON/file system
   Markdown projection
   .NET / Flutter validation adapters
+  later thin executor/session metadata adapters
 ```
 
 ## Current project mapping
-
-The existing projects remain useful but should evolve:
 
 ```text
 AgentsWatch.Cli
@@ -77,7 +78,7 @@ AgentsWatch.Core
   domain models and application use cases
 
 AgentsWatch.Git
-  git repository evidence adapter and attribution primitives
+  Git repository evidence adapter and interval-delta primitives
 
 AgentsWatch.LanguageAdapters
   stack detection, risk hints and validation suggestions
@@ -86,27 +87,31 @@ AgentsWatch.Reports
   Markdown projections and compact handoffs
 ```
 
-After Gate 0, avoid growing `Program.cs` with business logic. Introduce application services/use cases and interfaces before adding the verification features.
+After Gate 0, avoid growing `Program.cs` with domain/application logic.
 
 ## Canonical data flow
 
 ```text
-roadmap / issue / prompt
-  -> RunContract v1 JSON
+existing roadmap / issue / prompt
+  -> verification RunContract JSON
   -> StartRun baseline
   -> external agent execution
-  -> FinishRun end state
-  -> attributable RunDelta
-  -> RunReceipt v1 JSON
+  -> FinishRun end evidence
+  -> run-interval RunDelta
+  -> compact RunReceipt JSON
   -> Evidence / Scope / Claims checks
   -> auditable RunDecision
-  -> Markdown report + handoff
-  -> later learning
+  -> Markdown evidence projection / handoff
+  -> later optional learning
 ```
 
-## Critical attribution rule
+## Critical run-evidence rule
 
-Raw end-of-run `git status` is not sufficient evidence of what the agent changed.
+Raw end-of-run `git status` is not evidence of what changed during the recorded interval.
+
+More importantly:
+
+> **A change observed during the run interval is not automatically proven to be authored by the selected agent.**
 
 Example:
 
@@ -114,126 +119,173 @@ Example:
 before start:
  M src/UserService.cs
 
-during run:
- M src/OrderService.cs
+during interval:
+ - external agent changes src/OrderService.cs
+ - formatter or human may also write files
 ```
 
-The receipt must not attribute `UserService.cs` to the run merely because it is dirty at finish.
-
-`StartRun` must record a baseline capable of distinguishing:
-
+StartRun records a baseline capable of distinguishing:
 - pre-existing staged changes;
 - pre-existing unstaged changes;
 - pre-existing untracked files;
-- repository HEAD and branch.
+- HEAD/branch.
 
-`FinishRun` computes attributable delta from start to end. Ambiguous attribution must be represented explicitly rather than guessed.
+FinishRun compares end evidence and produces classifications such as:
+
+```text
+RunIntervalChange
+PreExistingUnchanged
+PreExistingChangedFurther
+Ambiguous
+```
+
+Executor-specific authorship is optional evidence and must not be invented from Git snapshots alone.
+
+Material ambiguity remains explicit and may require human review.
 
 ## Git evidence contract
 
-Prefer a lossless, machine-safe git porcelain format such as:
+Prefer machine-safe, lossless porcelain such as:
 
 ```bash
 git status --porcelain=v1 -z -uall
 ```
 
-and additional targeted git diff commands/fingerprints as required for attribution.
+plus targeted diff/fingerprint commands as required.
 
 Do not parse by trimming fixed-width status prefixes.
 
-The adapter must handle at minimum:
-
+Adapter must handle at minimum:
 - clean repository;
 - staged modification;
 - unstaged modification;
+- partial staged/unstaged state where relevant;
 - add/delete;
 - rename;
 - untracked files;
 - filenames with spaces;
 - cross-platform paths;
-- pre-existing dirty files.
+- pre-existing dirty files;
+- changed-further dirty files;
+- explicit ambiguity cases.
+
+## RunContract architecture
+
+RunContract is a verification normalization layer, not a new project-management database.
+
+Preferred flow:
+
+```text
+GitHub/Jira/Linear issue or prompt
+  -> importer/manual normalization
+  -> verification-specific fields only
+```
+
+Core should allow future source-task adapters without coupling the domain to a specific tracker.
 
 ## Storage
 
-Machine-readable state is canonical from the start of the verification MVP:
+Canonical machine state:
 
 ```text
 .agentwatch/
-  contracts/
-    <contract-id>.json
-  active-runs/
-    <run-id>.json
-  runs/
-    <run-id>.json
+  contracts/<contract-id>.json
+  active-runs/<run-id>.json
+  runs/<run-id>.json
 ```
 
-Human-readable projections:
+Human projections:
 
 ```text
 .ai/
-  runs/
-    <run-id>.md
-  handoffs/
-    <run-id>.md
+  runs/<run-id>.md
+  handoffs/<run-id>.md
 ```
 
 Rule:
 
 ```text
-JSON = source of truth
-Markdown = projection
+JSON = verification source of truth
+Markdown = projection / handoff
 ```
 
-Do not make domain verification depend on parsing Markdown.
+SQLite may be added later only when stable schemas and real query needs justify it.
 
-SQLite may be added after receipt schemas stabilize and local history queries justify it.
+## RunReceipt boundary
+
+Canonical RunReceipt is a compact evidence artifact.
+
+It contains repository/evidence/claim/scope/decision truth needed by developer, reviewer, CI or audit consumers.
+
+Do not make these mandatory canonical receipt fields:
+- learning note;
+- next prompt;
+- route suggestion;
+- optimization advice;
+- full session narrative.
+
+Those may be derived downstream into handoff/learning outputs.
 
 ## Deterministic verification first
 
-MVP verification should work offline and without an LLM provider key.
+MVP verification works offline and without an LLM provider key.
 
-Initial checks should be deterministic:
-
+Deterministic/core checks:
 - contract completeness;
+- repository evidence/fingerprints;
 - required validation present/missing;
-- owned/avoid path violations;
-- common claim classes vs attributable diff;
+- owned/avoid path rules;
+- narrow claim classes vs interval evidence;
 - expected evidence present/missing;
-- run status reasons.
+- status reasons.
 
-LLM-based claim extraction or semantic acceptance analysis may be added later as advisory evidence, not as the sole source of truth.
+AI-assisted later:
+- free-text claim extraction;
+- semantic acceptance analysis;
+- explanation;
+- suggested follow-up.
+
+AI output must not silently upgrade `Unknown` / `NeedsReview` to `Supported` / `Done`.
 
 ## Validation adapters
 
 Initial priority:
-
-1. universal git behavior;
+1. universal Git behavior;
 2. .NET;
 3. Flutter.
 
 Adapters suggest validation by default. Execution remains explicit.
 
-React/TypeScript, Node and Python support may remain available where already inexpensive, but must not block the verification spine.
-
 ## Future interfaces
 
-After internal contracts stabilize:
+After internal contracts and external value stabilize:
+- GitHub Check/Action can consume/export findings/receipts;
+- MCP can expose stable use cases;
+- thin vendor adapters can import executor/session metadata;
+- organization policy/evidence services can be added if commercial gates pass;
+- a dashboard may read structured receipts only when users prove which views matter.
 
-- MCP can expose the same application use cases;
-- GitHub checks can consume/export receipts/findings;
-- vendor adapters can map session metadata into the same run model;
-- a local dashboard can read structured receipts without changing core logic.
+## Packaging direction
+
+Leading hypothesis is open core after validation:
+- inspectable local verifier/schemas/rules;
+- paid organization policy, managed evidence, cross-repo controls, compliance/team features later.
+
+Packaging is not an MVP architecture requirement.
 
 ## Non-goals
 
-Do not make the architecture depend on:
-
-- a proprietary agent loop;
+Do not make architecture depend on:
+- proprietary agent loop;
+- generic AI code-review engine;
 - cloud sandbox/workspace management;
 - generic workflow orchestration;
 - hosted database;
-- message bus;
-- microservices;
+- message bus/microservices;
 - SaaS authentication/billing;
 - full chat capture;
-- a generic observability trace store.
+- generic observability trace store;
+- generic AI-code contribution analytics.
+
+Latest strategy guardrails:
+`DEEP_DIVE_DECISIONS_2026_09_16.md`
