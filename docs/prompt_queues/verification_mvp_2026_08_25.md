@@ -73,8 +73,8 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-001 | **Done** (2026-11-05, evidence `.ai/runs/2026-11-05-aw-vfy-001-evidence.md`) | `../prompts/AW-VFY-001-git-parser-ci-hardening.md` | Fix known Git parser failure, harden porcelain parsing, make full CI test gate green. |
 | AW-VFY-002 | **Done locally; GitHub CI confirmation pending push** (2026-11-05, evidence `.ai/runs/2026-11-05-aw-vfy-002-evidence.md`) | `../prompts/AW-VFY-002-cli-smoke-gate0-close.md` | Prove CLI smoke/local writes and close Gate 0. |
 | AW-VFY-003 | **Done locally** (2026-11-05; Gate 0 CI confirmation pending push, user chose to proceed; evidence `.ai/runs/2026-11-05-aw-vfy-003-evidence.md`) | `../prompts/AW-VFY-003-run-contract-v1.md` | Implement verification-focused RunContract v1 model/storage/lint/import boundary. |
-| AW-VFY-004 | **Ready now** (local) | `../prompts/AW-VFY-004-start-run-baseline.md` | Implement dirty-worktree-safe start baseline. |
-| AW-VFY-005 | Ready after 004 | `../prompts/AW-VFY-005-finish-run-attribution.md` | Compute run-interval repository delta and explicit ambiguity from start/end evidence. |
+| AW-VFY-004 | **Done locally** (2026-11-05; evidence `.ai/runs/2026-11-05-aw-vfy-004-evidence.md`) | `../prompts/AW-VFY-004-start-run-baseline.md` | Implement dirty-worktree-safe start baseline. |
+| AW-VFY-005 | **Ready now** (local) | `../prompts/AW-VFY-005-finish-run-attribution.md` | Compute run-interval repository delta and explicit ambiguity from start/end evidence. |
 | AW-VFY-006 | Ready after 005 | `../prompts/AW-VFY-006-run-receipt-v1.md` | Implement slim canonical RunReceipt v1 + Markdown evidence/handoff projections. |
 | AW-VFY-007 | Ready after 006 | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | Ready after 007 | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify high-confidence run-interval changes against owned/avoid paths; surface ambiguity separately. |
