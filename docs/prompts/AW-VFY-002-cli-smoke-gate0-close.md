@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Ready after AW-VFY-001  
+Status: Done locally (2026-11-05); GitHub CI confirmation pending push  
 Run mode: validation-first, minimal hardening only  
 Budget: low  
 Gate: AW-VFY-001 full test gate passes

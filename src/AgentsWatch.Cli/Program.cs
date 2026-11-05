@@ -71,7 +71,10 @@ internal static class InitCommand
         Directory.CreateDirectory(Path.Combine(root, ".ai", "tasks"));
         Directory.CreateDirectory(Path.Combine(root, ".ai", "runs"));
         Directory.CreateDirectory(Path.Combine(root, ".ai", "generated"));
-        Directory.CreateDirectory(Path.Combine(root, ".agentwatch"));
+        Directory.CreateDirectory(Path.Combine(root, ".ai", "handoffs"));
+        Directory.CreateDirectory(Path.Combine(root, ".agentwatch", "contracts"));
+        Directory.CreateDirectory(Path.Combine(root, ".agentwatch", "active-runs"));
+        Directory.CreateDirectory(Path.Combine(root, ".agentwatch", "runs"));
 
         WriteIfMissing(Path.Combine(root, ".ai", "config.yml"), DefaultConfig());
         WriteIfMissing(Path.Combine(root, ".ai", "STATUS.md"), "# AgentsWatch Status\n\nNo runs recorded yet.\n");
@@ -158,25 +161,38 @@ internal static class OptimizeCommand
 
 internal static class StatusCommand
 {
-    public static async Task<int> RunAsync(string root)
+    public static async Task<int> RunAsync(string root, TextWriter? output = null)
     {
+        var o = output ?? Console.Out;
+        o.WriteLine($"Project root: {root}");
         var detector = new ProjectTypeDetector();
         var projectTypes = detector.Detect(root);
-        Console.WriteLine("Detected project types: " + string.Join(", ", projectTypes));
+        o.WriteLine("Detected project types: " + string.Join(", ", projectTypes));
 
         var provider = new ValidationCommandProvider();
         var commands = provider.GetSuggestedCommands(projectTypes);
-        Console.WriteLine("Suggested validation:");
+        o.WriteLine("Suggested validation:");
         foreach (var command in commands.DefaultIfEmpty("none"))
         {
-            Console.WriteLine("- " + command);
+            o.WriteLine("- " + command);
         }
 
-        var git = new GitSnapshotReader(new GitCommandRunner());
+        var runner = new GitCommandRunner();
+        try
+        {
+            await runner.RunAsync(root, "rev-parse --is-inside-work-tree");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            o.WriteLine("Git: not a git repository (or git unavailable); git status skipped.");
+            return 0;
+        }
+
+        var git = new GitSnapshotReader(runner);
         var snapshot = await git.ReadAsync(root);
-        Console.WriteLine($"Branch: {snapshot.Branch}");
-        Console.WriteLine($"Commit: {snapshot.CommitSha}");
-        Console.WriteLine($"Changed files: {snapshot.ChangedFiles.Count}");
+        o.WriteLine($"Branch: {snapshot.Branch}");
+        o.WriteLine($"Commit: {snapshot.CommitSha}");
+        o.WriteLine($"Changed files: {snapshot.ChangedFiles.Count}");
         return 0;
     }
 }

@@ -12,4 +12,7 @@
     <ProjectReference Include="..\AgentsWatch.LanguageAdapters\AgentsWatch.LanguageAdapters.csproj" />
     <ProjectReference Include="..\AgentsWatch.Reports\AgentsWatch.Reports.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AgentsWatch.Tests" />
+  </ItemGroup>
 </Project>

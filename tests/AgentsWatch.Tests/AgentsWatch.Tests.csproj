@@ -11,6 +11,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\AgentsWatch.Cli\AgentsWatch.Cli.csproj" />
     <ProjectReference Include="..\..\src\AgentsWatch.Core\AgentsWatch.Core.csproj" />
     <ProjectReference Include="..\..\src\AgentsWatch.LanguageAdapters\AgentsWatch.LanguageAdapters.csproj" />
     <ProjectReference Include="..\..\src\AgentsWatch.Git\AgentsWatch.Git.csproj" />
