@@ -70,8 +70,8 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 
 | ID | Status | Prompt file | Purpose |
 |---|---|---|---|
-| AW-VFY-001 | **Ready now** | `../prompts/AW-VFY-001-git-parser-ci-hardening.md` | Fix known Git parser failure, harden porcelain parsing, make full CI test gate green. |
-| AW-VFY-002 | Ready after 001 | `../prompts/AW-VFY-002-cli-smoke-gate0-close.md` | Prove CLI smoke/local writes and close Gate 0. |
+| AW-VFY-001 | **Done** (2026-11-05, evidence `.ai/runs/2026-11-05-aw-vfy-001-evidence.md`) | `../prompts/AW-VFY-001-git-parser-ci-hardening.md` | Fix known Git parser failure, harden porcelain parsing, make full CI test gate green. |
+| AW-VFY-002 | **Ready now** | `../prompts/AW-VFY-002-cli-smoke-gate0-close.md` | Prove CLI smoke/local writes and close Gate 0. |
 | AW-VFY-003 | Ready after 002 | `../prompts/AW-VFY-003-run-contract-v1.md` | Implement verification-focused RunContract v1 model/storage/lint/import boundary. |
 | AW-VFY-004 | Ready after 003 | `../prompts/AW-VFY-004-start-run-baseline.md` | Implement dirty-worktree-safe start baseline. |
 | AW-VFY-005 | Ready after 004 | `../prompts/AW-VFY-005-finish-run-attribution.md` | Compute run-interval repository delta and explicit ambiguity from start/end evidence. |

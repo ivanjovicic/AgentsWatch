@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Ready now  
+Status: Done (2026-11-05)  
 Run mode: implementation + validation  
 Budget: low/medium  
 Gate: current Gate 0 blocker

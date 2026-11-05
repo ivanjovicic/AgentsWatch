@@ -45,7 +45,8 @@ public sealed record ChangedFile(
     string Path,
     string Status,
     int? AddedLines = null,
-    int? DeletedLines = null);
+    int? DeletedLines = null,
+    string? OriginalPath = null);
 
 public sealed record GitSnapshot(
     string Branch,
