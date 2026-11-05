@@ -83,6 +83,29 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-011 | Ready after 010 + dogfood review | `../prompts/AW-VFY-011-external-value-validation.md` | Test value with 10+ external agent-heavy users/teams against Git/CI/PR/native/Qodo baselines. |
 | AW-VFY-012 | Ready after 011 passes | `../prompts/AW-VFY-012-commercial-design-partner-validation.md` | Obtain 3+ concrete commercial commitments before SaaS/team expansion. |
 
+
+## Supporting validation and release-readiness work (does not change AW-VFY-001..012 order)
+
+The main implementation chain remains **strictly sequential**. The tasks below are **independent, documentation-first support tracks**, not a second active runtime queue. They must never be used to claim that an upstream implementation gate is complete.
+
+| ID | Earliest start | Required before | Prompt | Deliverable |
+|---|---|---|---|---|
+| AW-RES-001 | Ready now, research-only | AW-VFY-011 review | `../prompts/AW-RES-001-competitive-baseline-verification.md` | Reproducible Git/CI/native/Qodo scenario matrix and sourced market counterarguments. |
+| AW-RES-002 | Ready now, prep only | AW-VFY-011/012 study launch | `../prompts/AW-RES-002-buyer-discovery-preflight.md` | Buyer/participant screen, neutral interview script, ROI model, privacy and paid-pilot test. |
+| AW-QA-001 | After AW-VFY-006 schema is stable | AW-VFY-010 experiment | `../prompts/AW-QA-001-receipt-benchmark-preflight.md` | Adversarial 30-case matrix, independent baseline/adjudication protocol. |
+| AW-SEC-001 | Ready now, audit only | External installer/sharing or AW-VFY-011 handling private evidence | `../prompts/AW-SEC-001-oss-license-and-privacy-preflight.md` | License decision request, security/PII/secret exposure and safe evaluation protocol. |
+
+**What may run now:** AW-VFY-001 implementation; independent AW-RES-001, AW-RES-002 and AW-SEC-001 **documentation-only** preparation. AW-QA-001 should wait until the receipt schema is stable. No support-track result authorizes contract/start/finish/receipt runtime work ahead of the strict chain.
+
+**Review checkpoints**
+1. On AW-VFY-001, record exact CLI and test evidence for the candidate commit SHA; historical CI failures alone never certify a new head.
+2. After AW-VFY-006, align the QA protocol with the *actual* receipt schema, not planned fields.
+3. Before AW-VFY-010, decide how each useful finding is independently adjudicated and compared with Git/CI/native tooling.
+4. Before AW-VFY-011, review current competitor capabilities and safety/privacy/distribution blockers; recruit real users only with permission and do not invent interviews.
+5. Before AW-VFY-012, require independently observed decision impact and a budget owner; generic enthusiasm is not commercial evidence.
+
+**No-go:** no license chosen on the owner's behalf; no code/telemetry sent to unapproved external services; no false author attribution; no Done without required evidence; no SaaS or gateway work until commercial proof.
+
 ## Gate 0 — Skeleton proven
 
 Required before AW-VFY-003:
