@@ -25,7 +25,7 @@ tests: PASS (47/47 local)
 ```
 
 AW-VFY-001..004 done locally (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
-GitHub CI confirmation of Gate 0 is pending the first push of these commits.
+Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt
 

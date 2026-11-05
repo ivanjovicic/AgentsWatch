@@ -1,7 +1,7 @@
 # AW-VFY-003 evidence: RunContract v1
 
 - Prompt: AW-VFY-003; queue `docs/prompt_queues/verification_mvp_2026_08_25.md`; run mode: implementation
-- Gate basis: Gate 0 green locally (AW-VFY-002). GitHub CI confirmation still pending (nothing pushed); user explicitly chose to proceed.
+- Gate basis: Gate 0 green locally (AW-VFY-002). CI was pending at run time (user chose to proceed); later Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 - Model/client: unknown-not-exposed; timing: unknown-not-recorded
 
 ## RunContract v1 shape (`src/AgentsWatch.Core/Contracts/RunContract.cs`)

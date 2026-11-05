@@ -34,7 +34,7 @@
 
 ## Gate 0
 
-Closed locally per BOOTSTRAP_NEXT_STEPS definition. NOT confirmed on GitHub CI (commits e4977ae..3290a02 not pushed). AW-VFY-003 held at "Ready after CI confirms Gate 0".
+Closed locally per BOOTSTRAP_NEXT_STEPS definition. Later confirmed: Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05). Originally NOT confirmed on GitHub CI (commits e4977ae..3290a02 not pushed). AW-VFY-003 held at "Ready after CI confirms Gate 0".
 
 ## Missed / risk
 

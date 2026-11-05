@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Done locally (2026-11-05); GitHub CI confirmation pending push  
+Status: Done (2026-11-05); Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05)  
 Run mode: validation-first, minimal hardening only  
 Budget: low  
 Gate: AW-VFY-001 full test gate passes

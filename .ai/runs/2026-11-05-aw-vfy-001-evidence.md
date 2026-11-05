@@ -51,5 +51,5 @@ Mistake ledger not consulted (out of prompt read list). Observed: none new.
 
 AW-VFY-002 - CLI smoke/Gate 0 closure: Ready now.
 
-Completion: 100% of prompt scope locally; CI confirmation pending push.
+Completion: 100% of prompt scope locally; Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 Commit SHA (fix): e4977ae

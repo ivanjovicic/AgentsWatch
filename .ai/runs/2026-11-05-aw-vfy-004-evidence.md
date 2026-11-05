@@ -1,7 +1,7 @@
 # AW-VFY-004 evidence: start-run dirty-worktree baseline
 
 - Prompt: AW-VFY-004; queue `docs/prompt_queues/verification_mvp_2026_08_25.md`; run mode: implementation
-- Gate basis: AW-VFY-003 done locally; Gate 0 GitHub CI confirmation still pending (user chose to proceed without push).
+- Gate basis: AW-VFY-003 done locally; CI pending at run time; later Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 - Model/client: unknown-not-exposed; timing: unknown-not-recorded
 
 ## Persisted baseline (`.agentwatch/active-runs/<run-id>.json`)
