@@ -29,6 +29,8 @@ public static class Program
                 "status" => await StatusCommand.RunAsync(Directory.GetCurrentDirectory()),
                 "start" => await StartCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "finish" => await FinishCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
+                "receipt" => ReceiptCommand.Show(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
+                "handoff" => ReceiptCommand.Handoff(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "contract" => ContractCommand.Run(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 _ => Unknown(args[0])
             };
@@ -58,12 +60,12 @@ Usage:
   agentswatch contract check <contract-id-or-json-file>
   agentswatch start <contract-id> [--agent <name>] [--tool <name>] [--model <name>]
   agentswatch finish <run-id>
+  agentswatch receipt show <run-id>
+  agentswatch handoff <run-id>
   agentswatch --version
 
 Planned:
   agentswatch task split <prompt-file>
-  agentswatch report
-  agentswatch handoff
   agentswatch review-diff <commit-or-range>
   agentswatch validate
 """;

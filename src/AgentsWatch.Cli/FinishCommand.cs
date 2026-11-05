@@ -1,5 +1,7 @@
 using AgentsWatch.Core.Runs;
+using AgentsWatch.Core.Contracts;
 using AgentsWatch.Git;
+using AgentsWatch.Reports;
 
 namespace AgentsWatch.Cli;
 
@@ -16,7 +18,8 @@ internal static class FinishCommand
         }
 
         var git = new GitRepositoryStateReader(new GitCommandRunner());
-        var service = new RunFinishService(new FileActiveRunStore(root), new FileRunRecordStore(root), git, git);
+        var service = new RunFinishService(new FileActiveRunStore(root), new FileRunRecordStore(root), git, git,
+            receipts: new FileRunReceiptStore(root), contracts: new FileRunContractStore(root), projections: new FileReceiptProjectionWriter());
         var result = await service.FinishAsync(root, args[0]);
         if (!result.Finished)
         {
@@ -27,7 +30,18 @@ internal static class FinishCommand
         var r = result.Record!;
         var d = r.Delta;
         o.WriteLine($"Run finished: {r.RunId}");
-        o.WriteLine($"Record: {result.Path}");
+        o.WriteLine($"Receipt: {result.ReceiptPath}");
+        foreach (var p in result.ProjectionPaths ?? [])
+        {
+            o.WriteLine($"Projection: {p}");
+        }
+
+        if (result.ProjectionError is not null)
+        {
+            e.WriteLine("warning: " + result.ProjectionError);
+        }
+
+        o.WriteLine($"Decision: {result.Receipt!.Decision.Status}");
         o.WriteLine($"HEAD: {r.HeadTransition.Kind}{(r.HeadTransition.BranchChanged ? $" (branch {r.HeadTransition.FromBranch} -> {r.HeadTransition.ToBranch})" : string.Empty)}");
         o.WriteLine($"Run-interval changes: {d.RunIntervalChanges.Count}");
         o.WriteLine($"Pre-existing unchanged: {d.PreExistingUnchangedChanges.Count}");

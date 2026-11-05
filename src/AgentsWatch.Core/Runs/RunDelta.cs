@@ -258,7 +258,15 @@ public sealed class FileRunRecordStore(string workspaceRoot) : IRunRecordStore
     public RunFinishRecord Read(string runId) => RunFinishJson.Deserialize(File.ReadAllText(PathFor(runId)));
 }
 
-public sealed record RunFinishResult(bool Finished, RunFinishRecord? Record, string? Path, string? Error);
+public sealed record RunFinishResult(
+    bool Finished,
+    RunFinishRecord? Record,
+    string? Path,
+    string? Error,
+    RunReceipt? Receipt = null,
+    string? ReceiptPath = null,
+    IReadOnlyList<string>? ProjectionPaths = null,
+    string? ProjectionError = null);
 
 /// <summary>Application use case for `agentswatch finish`.</summary>
 public sealed class RunFinishService(
@@ -266,7 +274,10 @@ public sealed class RunFinishService(
     IRunRecordStore records,
     IRepositoryStateReader repository,
     IRepositoryHistoryReader history,
-    TimeProvider? clock = null)
+    TimeProvider? clock = null,
+    IRunReceiptStore? receipts = null,
+    IRunContractStore? contracts = null,
+    IReceiptProjectionWriter? projections = null)
 {
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
@@ -280,6 +291,11 @@ public sealed class RunFinishService(
         if (!activeRuns.ActiveRunIds().Contains(runId, StringComparer.Ordinal))
         {
             return new RunFinishResult(false, null, null, $"no active run '{runId}' (expected {activeRuns.PathFor(runId)}).");
+        }
+
+        if (receipts?.Exists(runId) == true)
+        {
+            return new RunFinishResult(false, null, receipts.PathFor(runId), $"receipt for '{runId}' already exists; refusing to overwrite.");
         }
 
         if (records.Exists(runId))
@@ -312,7 +328,50 @@ public sealed class RunFinishService(
             return new RunFinishResult(false, null, null, "could not persist run record; active baseline kept: " + ex.Message);
         }
 
-        activeRuns.Remove(runId); // only after the record is durably written
-        return new RunFinishResult(true, record, records.PathFor(runId), null);
+        RunReceipt? receipt = null;
+        if (receipts is not null)
+        {
+            RunContract? contract = null;
+            try
+            {
+                if (contracts?.Exists(record.ContractId) == true)
+                {
+                    contract = RunContractJson.Deserialize(contracts.ReadRaw(record.ContractId));
+                }
+            }
+            catch (Exception ex) when (ex is ContractFormatException or JsonException)
+            {
+                contract = null;
+            }
+
+            receipt = RunReceiptBuilder.Build(record, contract);
+            try
+            {
+                receipts.WriteNew(receipt);
+            }
+            catch (IOException ex)
+            {
+                return new RunFinishResult(false, record, records.PathFor(runId), "could not persist receipt; active baseline kept: " + ex.Message);
+            }
+        }
+
+        activeRuns.Remove(runId); // only after canonical JSON is durably written
+
+        IReadOnlyList<string> projectionPaths = [];
+        string? projectionError = null;
+        if (receipt is not null && projections is not null)
+        {
+            try
+            {
+                projectionPaths = projections.Write(workspaceRoot, receipt);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                projectionError = "Markdown projection failed (canonical receipt is intact): " + ex.Message;
+            }
+        }
+
+        return new RunFinishResult(true, record, records.PathFor(runId), null, receipt,
+            receipt is null ? null : receipts!.PathFor(runId), projectionPaths, projectionError);
     }
 }

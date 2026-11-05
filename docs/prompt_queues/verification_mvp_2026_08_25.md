@@ -75,8 +75,8 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-003 | **Done** (2026-11-05; Gate 0 CI-confirmed run 42071854837; evidence `.ai/runs/2026-11-05-aw-vfy-003-evidence.md`) | `../prompts/AW-VFY-003-run-contract-v1.md` | Implement verification-focused RunContract v1 model/storage/lint/import boundary. |
 | AW-VFY-004 | **Done** (CI green on 9d3f459) (2026-11-05; evidence `.ai/runs/2026-11-05-aw-vfy-004-evidence.md`) | `../prompts/AW-VFY-004-start-run-baseline.md` | Implement dirty-worktree-safe start baseline. |
 | AW-VFY-005 | **Done locally** (2026-11-05; not yet pushed/CI; evidence `.ai/runs/2026-11-05-aw-vfy-005-evidence.md`) | `../prompts/AW-VFY-005-finish-run-attribution.md` | Compute run-interval repository delta and explicit ambiguity from start/end evidence. |
-| AW-VFY-006 | **Ready now** (local) | `../prompts/AW-VFY-006-run-receipt-v1.md` | Implement slim canonical RunReceipt v1 + Markdown evidence/handoff projections. |
-| AW-VFY-007 | Ready after 006 | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
+| AW-VFY-006 | **Done locally** (2026-11-05; not yet pushed/CI; evidence `.ai/runs/2026-11-05-aw-vfy-006-evidence.md`) | `../prompts/AW-VFY-006-run-receipt-v1.md` | Implement slim canonical RunReceipt v1 + Markdown evidence/handoff projections. |
+| AW-VFY-007 | **Ready now** (local) | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | Ready after 007 | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify high-confidence run-interval changes against owned/avoid paths; surface ambiguity separately. |
 | AW-VFY-009 | Ready after 008 | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify narrow structured claims against diff/validation evidence. |
 | AW-VFY-010 | Ready after 009 | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
