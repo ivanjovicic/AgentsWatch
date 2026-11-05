@@ -27,6 +27,7 @@ public static class Program
                 "init" => InitCommand.Run(Directory.GetCurrentDirectory()),
                 "optimize" => OptimizeCommand.Run(args.Skip(1).ToArray()),
                 "status" => await StatusCommand.RunAsync(Directory.GetCurrentDirectory()),
+                "contract" => ContractCommand.Run(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 _ => Unknown(args[0])
             };
         }
@@ -51,6 +52,8 @@ Usage:
   agentswatch init
   agentswatch optimize <prompt text or prompt file>
   agentswatch status
+  agentswatch contract create <task-id> --intent <text> --accept <text> --validate <cmd> ...
+  agentswatch contract check <contract-id-or-json-file>
   agentswatch --version
 
 Planned:
