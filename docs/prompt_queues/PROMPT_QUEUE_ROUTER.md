@@ -16,36 +16,28 @@ Older bootstrap, MVP, token-economy, productization, roadmap, architecture, lice
 
 ## Current known state
 
-Latest known GitHub CI evidence on `main`:
+Updated 2026-11-05 (local evidence, `.ai/runs/2026-11-05-aw-vfy-00[1-4]-evidence.md`):
 
 ```text
 restore: PASS
 build: PASS
-tests: FAIL
+tests: PASS (47/47 local)
 ```
 
-Known failing test/root cause:
-
-```text
-GitStatusParserTests.Parse_ParsesModifiedAndUntrackedFiles
-```
-
-The parser trims the fixed-width git porcelain prefix before slicing the path, corrupting `README.md` to `EADME.md`.
-
-Therefore the current next prompt is not generic build discovery. It is the focused parser/CI hardening prompt.
+AW-VFY-001..004 done locally (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
+GitHub CI confirmation of Gate 0 is pending the first push of these commits.
 
 ## Current next prompt
 
 ```text
-AW-VFY-001 — Git parser and CI hardening
+AW-VFY-005 - Finish-run interval delta
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-001-git-parser-ci-hardening.md
+docs/prompts/AW-VFY-005-finish-run-attribution.md
 ```
-
 ## Strict decision tree
 
 ```text

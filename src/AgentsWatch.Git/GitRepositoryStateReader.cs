@@ -15,9 +15,15 @@ public sealed class GitRepositoryStateReader(IGitCommandRunner git) : IRepositor
 
     public async Task<RepositoryState> ReadAsync(string workspaceRoot, CancellationToken cancellationToken = default)
     {
-        var branch = await git.RunAsync(workspaceRoot, "rev-parse --abbrev-ref HEAD", cancellationToken).ContinueWith(
-            t => t.IsCompletedSuccessfully ? t.Result : null, cancellationToken);
-        branch ??= await git.RunAsync(workspaceRoot, "symbolic-ref --short HEAD", cancellationToken);
+        string branch;
+        try
+        {
+            branch = await git.RunAsync(workspaceRoot, "rev-parse --abbrev-ref HEAD", cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            branch = await git.RunAsync(workspaceRoot, "symbolic-ref --short HEAD", cancellationToken); // unborn branch
+        }
         string? head;
         try
         {
