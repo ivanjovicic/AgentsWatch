@@ -28,6 +28,7 @@ public static class Program
                 "optimize" => OptimizeCommand.Run(args.Skip(1).ToArray()),
                 "status" => await StatusCommand.RunAsync(Directory.GetCurrentDirectory()),
                 "start" => await StartCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
+                "finish" => await FinishCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "contract" => ContractCommand.Run(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 _ => Unknown(args[0])
             };
@@ -56,11 +57,11 @@ Usage:
   agentswatch contract create <task-id> --intent <text> --accept <text> --validate <cmd> ...
   agentswatch contract check <contract-id-or-json-file>
   agentswatch start <contract-id> [--agent <name>] [--tool <name>] [--model <name>]
+  agentswatch finish <run-id>
   agentswatch --version
 
 Planned:
   agentswatch task split <prompt-file>
-  agentswatch finish <task-id>
   agentswatch report
   agentswatch handoff
   agentswatch review-diff <commit-or-range>

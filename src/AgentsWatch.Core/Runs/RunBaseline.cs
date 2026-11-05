@@ -73,6 +73,7 @@ public interface IActiveRunStore
     string PathFor(string runId);
     void WriteNew(RunBaseline baseline);
     RunBaseline Read(string runId);
+    void Remove(string runId);
 }
 
 public static class RunBaselineJson
@@ -131,6 +132,8 @@ public sealed class FileActiveRunStore(string workspaceRoot) : IActiveRunStore
     }
 
     public RunBaseline Read(string runId) => RunBaselineJson.Deserialize(File.ReadAllText(PathFor(runId)));
+
+    public void Remove(string runId) => File.Delete(PathFor(runId));
 }
 
 public sealed record RunStartResult(bool Started, RunBaseline? Baseline, string? Path, string? Error, ContractCheckResult? ContractCheck = null);

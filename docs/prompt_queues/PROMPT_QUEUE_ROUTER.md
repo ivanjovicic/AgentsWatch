@@ -21,22 +21,22 @@ Updated 2026-11-05 (local evidence, `.ai/runs/2026-11-05-aw-vfy-00[1-4]-evidence
 ```text
 restore: PASS
 build: PASS
-tests: PASS (47/47 local)
+tests: PASS (61/61 local after AW-VFY-005; 47/47 CI-confirmed on 9d3f459)
 ```
 
-AW-VFY-001..004 done locally (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
+AW-VFY-001..005 done (005 local, not yet pushed) (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
 Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt
 
 ```text
-AW-VFY-005 - Finish-run interval delta
+AW-VFY-006 - RunReceipt v1
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-005-finish-run-attribution.md
+docs/prompts/AW-VFY-006-run-receipt-v1.md
 ```
 ## Strict decision tree
 

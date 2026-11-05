@@ -8,7 +8,7 @@ namespace AgentsWatch.Git;
 /// staged = index blob id (git ls-files -s), unstaged/untracked = sha256 of worktree bytes,
 /// "deleted" when absent. Tool-owned ".agentwatch/" paths are excluded.
 /// </summary>
-public sealed class GitRepositoryStateReader(IGitCommandRunner git) : IRepositoryStateReader
+public sealed class GitRepositoryStateReader(IGitCommandRunner git) : IRepositoryStateReader, IRepositoryHistoryReader
 {
     public const string Deleted = "deleted";
     private const string ToolDir = ".agentwatch/";
@@ -75,6 +75,58 @@ public sealed class GitRepositoryStateReader(IGitCommandRunner git) : IRepositor
         return new RepositoryState(branch, head, WorktreeState.Create(staged, unstaged, untracked));
     }
 
+    public async Task<HeadTransition> GetTransitionAsync(string workspaceRoot, string fromBranch, string? fromSha, string toBranch, string? toSha, CancellationToken cancellationToken = default)
+    {
+        if (fromSha == toSha)
+        {
+            return new HeadTransition(HeadTransitionKind.Unchanged, fromSha, toSha, fromBranch, toBranch, []);
+        }
+
+        if (toSha is null)
+        {
+            return new HeadTransition(HeadTransitionKind.NonFastForward, fromSha, toSha, fromBranch, toBranch, []);
+        }
+
+        if (fromSha is null)
+        {
+            var files = await git.RunAsync(workspaceRoot, $"ls-tree -r -z --name-only {toSha}", cancellationToken);
+            var added = files.Split('\0', StringSplitOptions.RemoveEmptyEntries)
+                .Where(p => !p.StartsWith(ToolDir, StringComparison.Ordinal))
+                .Select(p => new CommittedChange(p, "A")).ToArray();
+            return new HeadTransition(HeadTransitionKind.UnbornToCommit, fromSha, toSha, fromBranch, toBranch, added);
+        }
+
+        bool ancestor;
+        try
+        {
+            await git.RunAsync(workspaceRoot, $"merge-base --is-ancestor {fromSha} {toSha}", cancellationToken);
+            ancestor = true;
+        }
+        catch (InvalidOperationException)
+        {
+            ancestor = false;
+        }
+
+        if (!ancestor)
+        {
+            return new HeadTransition(HeadTransitionKind.NonFastForward, fromSha, toSha, fromBranch, toBranch, []);
+        }
+
+        var diff = await git.RunAsync(workspaceRoot, $"diff --name-status -z --no-renames {fromSha} {toSha}", cancellationToken);
+        var tokens = diff.Split('\0');
+        var changes = new List<CommittedChange>();
+        for (var i = 0; i + 1 < tokens.Length; i += 2)
+        {
+            if (tokens[i].Length == 0 || tokens[i + 1].StartsWith(ToolDir, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            changes.Add(new CommittedChange(tokens[i + 1], tokens[i]));
+        }
+
+        return new HeadTransition(HeadTransitionKind.FastForward, fromSha, toSha, fromBranch, toBranch, changes);
+    }
     public sealed record StatusEntry(char X, char Y, string Path, string? OldPath);
 
     public static IReadOnlyList<StatusEntry> ParseStatusZ(string output)
