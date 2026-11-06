@@ -161,6 +161,76 @@ public sealed class EvidenceGateTests
     }
 
     [Fact]
+    public async Task ValidContractChangedDuringRun_MustNotBeCertified()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var contracts = new FileRunContractStore(repo.Root);
+            var draft = new ContractDraft("T", null, "intent", ["feature works"], ["src/**"], [],
+                PermissionMode.WorkspaceWrite, RunMode.Implementation,
+                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null);
+            var created = new ContractService(contracts).Create(draft);
+            Assert.True(created.Created, created.Error);
+
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var active = new FileActiveRunStore(repo.Root);
+            var started = await new RunStartService(contracts, active, git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var run = started.Baseline!.RunId;
+
+            var original = RunContractJson.Deserialize(contracts.ReadRaw("t"));
+            var altered = original with { ValidationContract = new ValidationContract([new ValidationRequirement("t", "echo ok")]) };
+            Assert.True(RunContractLinter.Check(altered).IsValid);
+            contracts.Write(altered, overwrite: true);
+
+            var finished = await new RunFinishService(active, new FileRunRecordStore(repo.Root), git, git,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: contracts, projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, run);
+            Assert.True(finished.Finished, finished.Error);
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo ok"));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("contract", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public async Task LegacyActiveRunWithoutStartContractDigest_CannotBeCertified()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var contracts = new FileRunContractStore(repo.Root);
+            var created = new ContractService(contracts).Create(new ContractDraft("T", null, "intent",
+                ["feature works"], ["**"], [], PermissionMode.WorkspaceWrite, RunMode.Implementation,
+                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            Assert.True(created.Created, created.Error);
+
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var active = new FileActiveRunStore(repo.Root);
+            var started = await new RunStartService(contracts, active, git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var run = started.Baseline!.RunId;
+            File.WriteAllText(active.PathFor(run), RunBaselineJson.Serialize(started.Baseline with { ContractDigest = null }));
+
+            var finished = await new RunFinishService(active, new FileRunRecordStore(repo.Root), git, git,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: contracts, projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, run);
+            Assert.True(finished.Finished, finished.Error);
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
     public async Task ValidContractChangedAfterFinish_IsRejected()
     {
         var (repo, run) = await StartedAndFinished();
