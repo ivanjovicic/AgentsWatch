@@ -19,7 +19,11 @@ public static class ReceiptMarkdownWriter
         b.AppendLine($"- Start: `{r.StartRepositoryState.Branch}` @ `{Short(r.StartRepositoryState.HeadCommitSha)}`; End: `{r.EndRepositoryState.Branch}` @ `{Short(r.EndRepositoryState.HeadCommitSha)}` ({r.HeadTransition.Kind})");
         b.AppendLine($"- Evidence digest: `{r.EvidenceDigest ?? "none"}`");
         b.AppendLine();
-        b.AppendLine($"## Decision: {r.Decision.Status}");
+        foreach (var line in DecisionBanner.MarkdownLines(r))
+        {
+            b.AppendLine(line);
+        }
+
         b.AppendLine();
         List(b, r.Decision.Reasons);
         b.AppendLine("## Run-interval changes (observed during interval; authorship not proven)");
@@ -90,12 +94,15 @@ public static class ReceiptHandoffWriter
         b.AppendLine($"# Handoff - {r.TaskId} ({r.RunId})");
         b.AppendLine();
         b.AppendLine($"- Decision: {r.Decision.Status} (from canonical receipt)");
+        var blocking = DecisionOrdering.BlockingReasons(r.Findings ?? [], r.Decision.Status);
+        b.AppendLine("- Blocking: " + (blocking.Count == 0 ? "none" : string.Join("; ", blocking)));
+        b.AppendLine($"- Findings by severity: {DecisionOrdering.SeverityCountLabel(r.Findings ?? [])}");
         b.AppendLine($"- Executor: {ReceiptMarkdownWriter.Executor(r.ExecutorMetadata)}");
         b.AppendLine($"- Run-interval files: {Join(r.RunDelta.RunIntervalChanges.Select(c => c.Path))}");
         b.AppendLine($"- Pre-existing changed further: {Join(r.RunDelta.PreExistingChangedFurther.Select(c => c.Path))}");
         b.AppendLine($"- Ambiguous: {Join(r.RunDelta.AttributionAmbiguities.Select(c => c.Path))}");
         b.AppendLine($"- Validation: {(r.Validations.Count == 0 ? "none recorded" : Join(r.Validations.Select(v => $"{v.CommandDisplay}={v.Status}")))}");
-        b.AppendLine($"- Open findings: {Join(r.Findings.Where(f => f.Status != FindingStatus.Supported).Select(f => $"{f.RuleId} {f.Category}"))}");
+        b.AppendLine($"- Open findings: {Join((r.Findings ?? []).Where(f => f.Status != FindingStatus.Supported).Select(f => $"{f.RuleId} {f.Category}"))}");
         b.AppendLine($"- Residual risk: {Join(r.Decision.Reasons.Concat(r.MissedWork))}");
         b.AppendLine();
         b.AppendLine("## Next step (non-canonical)");
@@ -129,5 +136,46 @@ public sealed class FileReceiptProjectionWriter : IReceiptProjectionWriter
         var temp = path + ".tmp";
         File.WriteAllText(temp, content);
         File.Move(temp, path, overwrite: true);
+    }
+}
+
+/// <summary>Receipt/CLI header: decision, top blocking reasons, and finding severity counts.</summary>
+public static class DecisionBanner
+{
+    public static IReadOnlyList<string> MarkdownLines(RunReceipt r)
+    {
+        var blocking = DecisionOrdering.BlockingReasons(r.Findings ?? [], r.Decision.Status);
+        return
+        [
+            $"## Decision: {r.Decision.Status}",
+            "",
+            "- Blocking: " + (blocking.Count == 0 ? "none" : string.Join("; ", blocking)),
+            "- Findings by severity: " + DecisionOrdering.SeverityCountLabel(r.Findings ?? [])
+        ];
+    }
+
+    public static int WriteCli(RunReceipt receipt, TextWriter o)
+    {
+        o.WriteLine("Decision: " + receipt.Decision.Status);
+        o.WriteLine("Blocking:");
+        var blocking = DecisionOrdering.BlockingReasons(receipt.Findings ?? [], receipt.Decision.Status);
+        if (blocking.Count == 0)
+        {
+            o.WriteLine("- none");
+        }
+
+        foreach (var reason in blocking)
+        {
+            o.WriteLine("- " + reason);
+        }
+
+        o.WriteLine("Findings by severity: " + DecisionOrdering.SeverityCountLabel(receipt.Findings ?? []));
+        o.WriteLine("Reasons:");
+        foreach (var reason in receipt.Decision.Reasons)
+        {
+            o.WriteLine("- " + reason);
+        }
+
+        return receipt.Decision.Status == DecisionStatus.Done ? 0 : 1;
     }
 }

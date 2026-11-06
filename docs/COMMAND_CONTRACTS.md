@@ -232,6 +232,7 @@ Rules:
 - mandatory validation missing => cannot return `Done`;
 - agent prose saying tests passed is not validation evidence by itself;
 - every non-Done decision lists reasons/evidence references;
+- receipt and handoff headers show the decision, top blocking reasons, and finding counts by severity;
 - overrides, if later supported, must store an auditable reason.
 
 ## `agentswatch drift check <run-id>`
@@ -249,6 +250,18 @@ Rules:
 - pre-existing unchanged dirty files do not count as drift;
 - ambiguous attribution is reported separately and may require review;
 - output exact paths and matched rule/pattern.
+
+## `agentswatch accept record <run-id>`
+
+Purpose: evaluate and persist one acceptance criterion without free-form Supported marks.
+
+Rules:
+
+- `Supported` must cite recorded passing validation evidence; no evidence-free Supported.
+- `NotSupported` must cite a recorded validation id.
+- Invalid or digest-mismatched receipts are rejected without rewrite.
+- Decision ranking after the mark follows `docs/DECISION_ORDERING.md` (`Failed > Blocked > NeedsApproval > NeedsReview > NeedsEvidence > Done`).
+- Unknown acceptance never auto-converts a historical `NeedsEvidence` receipt to `Done`.
 
 ## `agentswatch claims check <run-id>`
 
