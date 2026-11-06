@@ -41,6 +41,19 @@ public static class EvidenceGate
         foreach (var v in validations)
         {
             var pref = $"validations[{v.ValidationId}]";
+            if (!string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal))
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    $"validation '{v.ValidationId}' belongs to run '{v.RunId}', not this receipt.", [], [pref, "receipt.runId"]);
+                continue;
+            }
+
+            if (v.Status == ValidationStatus.Pass && v.ExitCode is not null and not 0)
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    $"validation '{v.ValidationId}' reports Pass but has nonzero exit code {v.ExitCode}.", [], [pref]);
+            }
+
             switch (v.Status)
             {
                 case ValidationStatus.Fail:
@@ -63,11 +76,30 @@ public static class EvidenceGate
         }
         else
         {
+            if (!string.Equals(contract.ContractId, receipt.ContractId, StringComparison.Ordinal)
+                || !string.Equals(contract.TaskId, receipt.TaskId, StringComparison.Ordinal)
+                || !RunContractLinter.Check(contract).IsValid)
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    "contract identity or mandatory contract fields are inconsistent with the receipt.", [], ["contract", "receipt"]);
+            }
+
+            var expectedCriteria = (contract.AcceptanceCriteria ?? []).Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
+            var actualCriteria = receipt.AcceptanceCriteria ?? [];
+            if (expectedCriteria.Length != actualCriteria.Count ||
+                expectedCriteria.Where((criterion, i) =>
+                    !string.Equals(actualCriteria[i].CriterionId, $"ac{i + 1}", StringComparison.Ordinal)
+                    || !string.Equals(actualCriteria[i].Text, criterion, StringComparison.Ordinal)).Any())
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    "receipt acceptance criteria do not exactly match the contract (missing, substituted or reordered).", [], ["contract.acceptanceCriteria", "receipt.acceptanceCriteria"]);
+            }
+
             foreach (var req in (contract.ValidationContract?.Requirements ?? []).Where(r => r.Mandatory))
             {
                 var matches = validations.Where(v =>
-                    string.Equals(v.ValidationId, req.Id, StringComparison.Ordinal)
-                    || string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal)).ToList();
+                    string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal)
+                    && string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal)).ToList();
                 var pref = $"contract.validationContract.requirements[{req.Id}]";
                 if (matches.Count == 0)
                 {
@@ -86,7 +118,7 @@ public static class EvidenceGate
 
             foreach (var item in (contract.ExpectedEvidence ?? []).Where(e => !string.IsNullOrWhiteSpace(e)))
             {
-                if (!validations.Any(v => BacksExpectedItem(v, item)))
+                if (!validations.Any(v => string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal) && BacksExpectedItem(v, item)))
                 {
                     Add(EvidenceRules.ExpectedEvidenceMissing, FindingCategory.MissingValidation, FindingSeverity.Warning, FindingStatus.Unsupported,
                         $"expected evidence '{item}' is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it.", [], [$"contract.expectedEvidence[{item}]"]);
@@ -165,8 +197,10 @@ public static class EvidenceGate
     {
         return (contract.ValidationContract?.Requirements ?? []).Where(r => r.Mandatory).All(req =>
             (receipt.Validations ?? []).Any(v =>
-                (string.Equals(v.ValidationId, req.Id, StringComparison.Ordinal) || string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal))
-                && v.Status == ValidationStatus.Pass));
+                string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal)
+                && string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal)
+                && v.Status == ValidationStatus.Pass
+                && (v.ExitCode is null or 0)));
     }
 
     private static bool BacksExpectedItem(ValidationEvidence v, string item) =>
@@ -210,6 +244,12 @@ public sealed class EvidenceService(
         if (!loaded.Ok)
         {
             return loaded;
+        }
+
+        if (!string.Equals(evidence.RunId, runId, StringComparison.Ordinal))
+        {
+            return new EvidenceCommandResult(false, loaded.Receipt, loaded.Path,
+                $"validation evidence runId '{evidence.RunId}' does not match requested run '{runId}'; refusing to import.");
         }
 
         var list = loaded.Receipt!.Validations.ToList();
