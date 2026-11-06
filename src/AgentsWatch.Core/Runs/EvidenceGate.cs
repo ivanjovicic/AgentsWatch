@@ -131,12 +131,17 @@ public static class EvidenceGate
             _ => (DecisionStatus.Done, $"{EvidenceRules.Satisfied}: mandatory validations passed; no blocking evidence findings")
         };
 
-        if (status == DecisionStatus.Done && findings.Any(f => f.RuleId is ScopeDriftRules.OutsideOwned or ScopeDriftRules.AvoidTouched or ScopeDriftRules.RenameCrosses))
+        if (status == DecisionStatus.Done && findings.Any(f => f.RuleId is ScopeDriftRules.OutsideOwned or ScopeDriftRules.AvoidTouched or ScopeDriftRules.RenameCrosses or ClaimRules.Unsupported))
         {
             status = DecisionStatus.NeedsReview;
         }
 
-        var reasons = findings.Where(f => f.RuleId.StartsWith("AWE", StringComparison.Ordinal) || f.RuleId.StartsWith("AWD", StringComparison.Ordinal))
+        if (status == DecisionStatus.Done && findings.Any(f => f.RuleId == ClaimRules.Unknown))
+        {
+            status = DecisionStatus.NeedsEvidence;
+        }
+
+        var reasons = findings.Where(f => f.RuleId.StartsWith("AWE", StringComparison.Ordinal) || f.RuleId.StartsWith("AWD", StringComparison.Ordinal) || f.RuleId.StartsWith("AWK", StringComparison.Ordinal))
             .Select(f => $"{f.RuleId}: {f.Message} [{string.Join(", ", f.EvidenceRefs)}]").ToList();
         var ambiguous = findings.Count(f => f.Category == FindingCategory.AttributionAmbiguous);
         if (ambiguous > 0)

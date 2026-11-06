@@ -40,7 +40,7 @@ public static class ReceiptMarkdownWriter
             "none recorded - no validation result is claimed");
         b.AppendLine("## Claims");
         b.AppendLine();
-        List(b, r.Claims.Select(c => $"{c.ClaimType} = {c.Value} (source: {c.Source})").ToArray(), "none recorded");
+        List(b, r.Claims.Select(c => $"{c.ClaimType} = {c.Value} [{c.Status?.ToString() ?? "pending"}] (source: {c.Source}){(c.Reason is null ? "" : " - " + c.Reason)}").ToArray(), "none recorded");
         b.AppendLine("## Acceptance criteria");
         b.AppendLine();
         List(b, r.AcceptanceCriteria.Select(a => $"{a.CriterionId} [{a.Status}] {a.Text} - {a.Reason}").ToArray());

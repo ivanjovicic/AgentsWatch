@@ -21,22 +21,22 @@ Updated 2026-11-05 (local evidence, `.ai/runs/2026-11-05-aw-vfy-00[1-4]-evidence
 ```text
 restore: PASS
 build: PASS
-tests: PASS (120/120 local after AW-VFY-008; 79/79 CI-confirmed on d078295, run 42192082705)
+tests: PASS (143/143 local after AW-VFY-009; 79/79 CI-confirmed on d078295, run 42192082705)
 ```
 
-AW-VFY-001..007 done (CI run 42192082705 on d078295). Follow-up 2026-11-06 closed finish-recovery, per-item AWE006, and unique evidence-id gaps; AW-VFY-008 done locally (not yet pushed). Next: AW-VFY-009 claims verification. (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
+AW-VFY-001..007 done (CI run 42192082705 on d078295). Follow-up 2026-11-06 closed finish-recovery, per-item AWE006, and unique evidence-id gaps; AW-VFY-008 and AW-VFY-009 done locally (not yet pushed). Next: AW-VFY-010 dogfood (requires real runs). (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
 Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt
 
 ```text
-AW-VFY-009 - Claims verification v1
+AW-VFY-010 - Dogfood 30 receipts
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-009-claims-verification-v1.md
+docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 ```
 ## Strict decision tree
 

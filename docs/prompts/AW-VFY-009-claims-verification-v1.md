@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Ready after AW-VFY-008  
+Status: Done locally (2026-11-06)  
 Run mode: implementation  
 Budget: medium  
 Gate: Scope Drift proven

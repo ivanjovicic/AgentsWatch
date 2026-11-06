@@ -47,7 +47,7 @@ public sealed record ValidationEvidence(
     string? EvidenceDigest = null);
 
 /// <summary>AgentClaim v1. Populated by AW-VFY-009.</summary>
-public sealed record AgentClaim(string ClaimId, string RunId, string ClaimType, string Source, string Value, string? RawText = null);
+public sealed record AgentClaim(string ClaimId, string RunId, string ClaimType, string Source, string Value, string? RawText = null, CriterionStatus? Status = null, string? Reason = null, IReadOnlyList<string>? EvidenceRefs = null, IReadOnlyList<string>? Paths = null);
 
 public sealed record AcceptanceCriterionResult(string CriterionId, string Text, CriterionStatus Status, IReadOnlyList<string> EvidenceRefs, string Reason);
 

@@ -78,8 +78,8 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-006 | **Done** (CI run 42192082705 on d078295; finish-recovery follow-up 2026-11-06, evidence `.ai/runs/2026-11-06-aw-vfy-006-007-followup-evidence.md`) | `../prompts/AW-VFY-006-run-receipt-v1.md` | Implement slim canonical RunReceipt v1 + Markdown evidence/handoff projections. |
 | AW-VFY-007 | **Done** (CI run 42192082705 on d078295; AWE006-per-item + unique evidence IDs follow-up 2026-11-06, evidence `.ai/runs/2026-11-06-aw-vfy-006-007-followup-evidence.md`) | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | **Done locally** (2026-11-06; not yet pushed/CI; evidence `.ai/runs/2026-11-06-aw-vfy-008-evidence.md`) | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify high-confidence run-interval changes against owned/avoid paths; surface ambiguity separately. |
-| AW-VFY-009 | **Ready now** (local) | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify narrow structured claims against diff/validation evidence. |
-| AW-VFY-010 | Ready after 009 | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
+| AW-VFY-009 | **Done locally** (2026-11-06; not yet pushed/CI; evidence `.ai/runs/2026-11-06-aw-vfy-009-evidence.md`) | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify narrow structured claims against diff/validation evidence. |
+| AW-VFY-010 | **Ready now** (local; requires dogfood runs) | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
 | AW-VFY-011 | Ready after 010 + dogfood review | `../prompts/AW-VFY-011-external-value-validation.md` | Test value with 10+ external agent-heavy users/teams against Git/CI/PR/native/Qodo baselines. |
 | AW-VFY-012 | Ready after 011 passes | `../prompts/AW-VFY-012-commercial-design-partner-validation.md` | Obtain 3+ concrete commercial commitments before SaaS/team expansion. |
 
