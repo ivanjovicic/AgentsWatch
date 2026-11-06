@@ -12,7 +12,8 @@ Usage:
       [--evidence <validation-id>] [--reason <text>] [--replace]
 
 Supported and NotSupported require --evidence linking to a recorded validation id.
-Supported additionally requires that each linked validation is Pass with exit 0 or no exit code.
+Supported additionally requires a non-empty --reason and that each linked validation is Pass with exit 0 or no exit code.
+The stored Supported assessment is a manual (declared, not attested) judgment plus that reason and the declared evidence ids.
 Unknown may omit --evidence. Tampered or digest-invalid receipts are rejected.
 """;
 
@@ -94,6 +95,10 @@ Unknown may omit --evidence. Tampered or digest-invalid receipts are rejected.
 
         var marked = result.Receipt!.AcceptanceCriteria.First(c => c.CriterionId == id);
         o.WriteLine("Acceptance recorded: " + marked.CriterionId + " [" + marked.Status + "]");
+        if (!string.IsNullOrWhiteSpace(marked.Reason))
+        {
+            o.WriteLine(marked.Reason);
+        }
         return DecisionBanner.WriteCli(result.Receipt, o);
     }
 

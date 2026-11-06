@@ -178,13 +178,30 @@ public sealed class DecisionOrderingAndAcceptTests
             Evidence(repo.Root).Record(run, Ev(run, ValidationStatus.Pass));
             var o = new StringWriter();
             var err = new StringWriter();
-            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t"], o, err));
+            Assert.Equal(1, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t"], o, err));
+            Assert.Contains("non-empty --reason", err.ToString(), StringComparison.OrdinalIgnoreCase);
+
+            o = new StringWriter();
+            err = new StringWriter();
+            const string reason = "the recorded test log shows the feature works";
+            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", reason], o, err));
             Assert.Contains("Acceptance recorded: ac1 [Supported]", o.ToString());
+            Assert.Contains("manual assessment", o.ToString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("declared", o.ToString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(reason, o.ToString());
             var receipt = new FileRunReceiptStore(repo.Root).Read(run);
-            Assert.Equal(CriterionStatus.Supported, Assert.Single(receipt.AcceptanceCriteria).Status);
-            Assert.Contains("validations[t]", receipt.AcceptanceCriteria[0].EvidenceRefs);
+            var ac = Assert.Single(receipt.AcceptanceCriteria);
+            Assert.Equal(CriterionStatus.Supported, ac.Status);
+            Assert.Contains("validations[t]", ac.EvidenceRefs);
+            Assert.Contains("manual assessment", ac.Reason, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("declared, not attested", ac.Reason, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(reason, ac.Reason);
+            Assert.Contains("t", ac.Reason);
             Assert.Equal(DecisionStatus.Done, receipt.Decision.Status);
             Assert.True(RunReceiptJson.VerifyDigest(receipt));
+            var md = File.ReadAllText(Path.Combine(repo.Root, ".ai", "runs", run + ".md"));
+            Assert.Contains("manual assessment", md, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(reason, md);
         }
     }
 
@@ -194,12 +211,12 @@ public sealed class DecisionOrderingAndAcceptTests
         var (repo, run) = await StartedAndFinished();
         using (repo)
         {
-            var missing = Accept(repo.Root).Record(run, "ac1", CriterionStatus.Supported, ["nope"], null);
+            var missing = Accept(repo.Root).Record(run, "ac1", CriterionStatus.Supported, ["nope"], "looks good");
             Assert.False(missing.Ok);
             Assert.Contains("not recorded", missing.Error);
 
             Evidence(repo.Root).Record(run, Ev(run, ValidationStatus.Fail));
-            var failed = Accept(repo.Root).Record(run, "ac1", CriterionStatus.Supported, ["t"], null);
+            var failed = Accept(repo.Root).Record(run, "ac1", CriterionStatus.Supported, ["t"], "looks good");
             Assert.False(failed.Ok);
             Assert.Contains("cannot support acceptance", failed.Error);
             Assert.Equal(DecisionStatus.Failed, new FileRunReceiptStore(repo.Root).Read(run).Decision.Status);
@@ -236,6 +253,91 @@ public sealed class DecisionOrderingAndAcceptTests
             Assert.True(cleared.Ok, cleared.Error);
             Assert.Equal(CriterionStatus.Unknown, Assert.Single(cleared.Receipt!.AcceptanceCriteria).Status);
             Assert.Equal(DecisionStatus.NeedsEvidence, cleared.Receipt.Decision.Status);
+        }
+    }
+    [Fact]
+    public async Task AcceptRecord_SupportedWithoutReason_IsRejected()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            Evidence(repo.Root).Record(run, Ev(run, ValidationStatus.Pass));
+            var blank = Accept(repo.Root).Record(run, "ac1", CriterionStatus.Supported, ["t"], "   ");
+            Assert.False(blank.Ok);
+            Assert.Contains("reason", blank.Error, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(CriterionStatus.Unknown, Assert.Single(new FileRunReceiptStore(repo.Root).Read(run).AcceptanceCriteria).Status);
+            Assert.NotEqual(DecisionStatus.Done, new FileRunReceiptStore(repo.Root).Read(run).Decision.Status);
+        }
+    }
+
+    [Fact]
+    public async Task ClaimsBeforeEvidence_ThenAcceptAndEvidenceCheck_DoesNotKeepStaleUnsupportedClaim()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var o = new StringWriter();
+            var err = new StringWriter();
+            Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["record", run, "--type", "ValidationPassed", "--value", "true", "--source", "agent-prose"], o, err));
+            var afterClaim = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.Contains(afterClaim.Findings, f => f.RuleId == ClaimRules.Unsupported);
+            Assert.Equal(CriterionStatus.Unsupported, Assert.Single(afterClaim.Claims).Status);
+
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "t", "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--exit-code", "0", "--summary", "test log"], o, err));
+
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
+
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            var afterEvidenceCheck = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.Equal(DecisionStatus.Done, afterEvidenceCheck.Decision.Status);
+            Assert.DoesNotContain(afterEvidenceCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
+            Assert.Equal(CriterionStatus.Supported, Assert.Single(afterEvidenceCheck.Claims).Status);
+            Assert.Contains("manual assessment", Assert.Single(afterEvidenceCheck.AcceptanceCriteria).Reason, StringComparison.OrdinalIgnoreCase);
+
+            var decision = afterEvidenceCheck.Decision.Status;
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
+            var afterClaimsCheck = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.Equal(decision, afterClaimsCheck.Decision.Status);
+            Assert.Equal(DecisionStatus.Done, afterClaimsCheck.Decision.Status);
+            Assert.DoesNotContain(afterClaimsCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
+            Assert.Equal(CriterionStatus.Supported, Assert.Single(afterClaimsCheck.Claims).Status);
+        }
+    }
+
+    [Fact]
+    public async Task EvidenceBeforeClaims_ThenAccept_YieldsSameDecisionAsOppositeOrder()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var o = new StringWriter();
+            var err = new StringWriter();
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "t", "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--exit-code", "0", "--summary", "test log"], o, err));
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["record", run, "--type", "ValidationPassed", "--value", "true", "--source", "agent-prose"], o, err));
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            var afterEvidenceCheck = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.Equal(DecisionStatus.Done, afterEvidenceCheck.Decision.Status);
+            Assert.DoesNotContain(afterEvidenceCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
+
+            o = new StringWriter();
+            err = new StringWriter();
+            Assert.Equal(0, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Equal(afterEvidenceCheck.Decision.Status, new FileRunReceiptStore(repo.Root).Read(run).Decision.Status);
         }
     }
 }

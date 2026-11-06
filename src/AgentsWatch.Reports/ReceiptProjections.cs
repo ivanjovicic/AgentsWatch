@@ -145,13 +145,15 @@ public static class DecisionBanner
     public static IReadOnlyList<string> MarkdownLines(RunReceipt r)
     {
         var blocking = DecisionOrdering.BlockingReasons(r.Findings ?? [], r.Decision.Status);
-        return
-        [
+        var lines = new List<string>
+        {
             $"## Decision: {r.Decision.Status}",
             "",
             "- Blocking: " + (blocking.Count == 0 ? "none" : string.Join("; ", blocking)),
             "- Findings by severity: " + DecisionOrdering.SeverityCountLabel(r.Findings ?? [])
-        ];
+        };
+        lines.AddRange(AcceptanceProvenanceMarkdown(r));
+        return lines;
     }
 
     public static int WriteCli(RunReceipt receipt, TextWriter o)
@@ -170,6 +172,11 @@ public static class DecisionBanner
         }
 
         o.WriteLine("Findings by severity: " + DecisionOrdering.SeverityCountLabel(receipt.Findings ?? []));
+        foreach (var line in AcceptanceProvenanceCli(receipt))
+        {
+            o.WriteLine(line);
+        }
+
         o.WriteLine("Reasons:");
         foreach (var reason in receipt.Decision.Reasons)
         {
@@ -178,4 +185,26 @@ public static class DecisionBanner
 
         return receipt.Decision.Status == DecisionStatus.Done ? 0 : 1;
     }
+
+    private static IEnumerable<string> AcceptanceProvenanceMarkdown(RunReceipt r) =>
+        AssessedAcceptance(r).Select(ac =>
+            $"- Acceptance {ac.CriterionId} [{ac.Status}]: {ac.Reason}");
+
+    private static IEnumerable<string> AcceptanceProvenanceCli(RunReceipt r)
+    {
+        var assessed = AssessedAcceptance(r).ToArray();
+        if (assessed.Length == 0)
+        {
+            yield break;
+        }
+
+        yield return "Acceptance:";
+        foreach (var ac in assessed)
+        {
+            yield return "- " + ac.CriterionId + " [" + ac.Status + "]: " + ac.Reason;
+        }
+    }
+
+    private static IEnumerable<AcceptanceCriterionResult> AssessedAcceptance(RunReceipt r) =>
+        (r.AcceptanceCriteria ?? []).Where(ac => ac.Status != CriterionStatus.Unknown);
 }

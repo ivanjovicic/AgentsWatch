@@ -325,10 +325,7 @@ public sealed class ClaimsService(
             contract = null;
         }
 
-        var (claims, claimFindings) = ClaimVerifier.Evaluate(receipt, contract);
-        var kept = (receipt.Findings ?? []).Where(f => !f.RuleId.StartsWith("AWK", StringComparison.Ordinal)).ToList();
-        var merged = receipt with { Claims = claims, Findings = kept.Concat(claimFindings).ToArray(), EvidenceDigest = null };
-        var updated = EvidenceGate.Apply(merged, contract);
+        var updated = EvidenceGate.Apply(receipt, contract);
         try
         {
             receipts.Replace(updated);

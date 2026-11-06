@@ -36,3 +36,50 @@ Replay summary: #1, #2, #3, #4, #8 stay NeedsEvidence (not Done). #7 changes Nee
 - Happy-path Done now exists via `accept record` after passing evidence; batch-1 originals were intentionally left Unknown.
 - #5/#6 Flutter tasks remain on hold and were not part of this PR.
 - No production deploy and no merge without owner approval.
+
+---
+
+# Review follow-up (PR #11 review 5805629005) — P1 stale AWK001 + P2 Supported reason
+
+Date: 2026-11-06 (Europe/Belgrade)
+Parent SHA before this follow-up: `4fe216491a0cdf05416f2cd9bc398c7b3177aac6`
+Scope: only these two review fixes. No new features, no deploy, no merge. PR stays draft. No cloud agents.
+
+## Local gate (this follow-up)
+
+- Negative tests (Fail / TimedOut / Blocked / NeedsApproval / tampered or missing digest): 8 passed / 0 failed
+  - `ValidationFail_IsFailed`
+  - `TimedOut_CannotProduceDone`
+  - `BlockedByEnvironment_IsBlocked_NeverPass`
+  - `ApprovalRequired_WithoutOverride_IsNeedsApproval`
+  - `AcceptRecord_RejectsMissingValidation_FailedValidation_AndTamperedReceipt`
+  - `MissingAcceptanceStatus_WithStaleDigest_CannotProduceDoneOrRewrite`
+  - `MissingReceiptEvidenceDigest_CannotReblessTamperedAcceptanceOrRewrite`
+  - `DecisionClass_IsIndependentOfFindingOrder`
+- `dotnet restore` — pass
+- `dotnet build -c Release` — pass, 0 warnings, 0 errors
+- `dotnet test -c Release` — **176 passed / 0 failed / 0 skipped** (was 173 on `4fe2164`; +3 tests)
+
+## What changed
+
+P1. Stale `AWK001` no longer depends on command order.
+- Regression first: `claims record` → `evidence record` → `accept record` → `evidence check`, then a subsequent `claims check` must not change the decision when evidence did not change (`ClaimsBeforeEvidence_ThenAcceptAndEvidenceCheck_DoesNotKeepStaleUnsupportedClaim`). Reverse order is covered too.
+- `EvidenceGate.Apply` now re-evaluates recorded claims from current evidence (`ClaimVerifier.Evaluate`) and persists the refreshed `Claims` before `DecisionOrdering.Decide`. Prior `AWK` findings are replaced by that fresh evaluation, not dropped without a re-check.
+- `ClaimsService.Persist` delegates to the same shared `Apply` path (no separate AWK strip-only path).
+
+P2. `Supported` without a reason is rejected.
+- Non-empty `--reason` is required for `Supported` (whitespace-only rejected; `AcceptRecord_SupportedWithoutReason_IsRejected`).
+- The receipt stores a manual assessment (declared, not attested), the supplied reason, and the declared evidence ids.
+- The same provenance is shown in the CLI output and decision banner (markdown + CLI).
+- Docs (`DECISION_ORDERING.md`, `CLI_SPEC.md`, `COMMAND_CONTRACTS.md`) and `accept` usage text match.
+
+## Safety unchanged
+
+Fail / TimedOut / Blocked / NeedsApproval / invalid receipts still cannot become Done and are not rewritten on digest failure. Historical Unknown acceptance still does not auto-convert to Done. Original batch-1 receipts were not modified.
+
+## Remaining gaps (honest)
+
+- Linking a passing validation to a criterion is still a declared/manual judgment. AgentsWatch does not prove that the validation is semantically about that criterion text.
+- `Supported` provenance is encoded in the stored reason string (no new receipt schema field) so older receipts keep deserializing.
+- Incomplete-receipt early return in `EvidenceGate.Apply` still skips claim refresh (NeedsEvidence; `RunDelta` may be null).
+- #5/#6 Flutter tasks remain on hold. No production deploy. No merge without owner OK.

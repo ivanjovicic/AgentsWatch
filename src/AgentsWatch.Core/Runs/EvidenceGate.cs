@@ -19,9 +19,12 @@ public static class EvidenceGate
 {
     public static RunReceipt Apply(RunReceipt receipt, RunContract? contract)
     {
+        // Replace AWE/AWD/AWK with a fresh evaluation. AWK is stripped only so
+        // ClaimVerifier.Evaluate can re-check claims against current evidence.
         var findings = (receipt.Findings ?? []).Where(f =>
             !f.RuleId.StartsWith("AWE", StringComparison.Ordinal)
-            && !f.RuleId.StartsWith("AWD", StringComparison.Ordinal)).ToList();
+            && !f.RuleId.StartsWith("AWD", StringComparison.Ordinal)
+            && !f.RuleId.StartsWith("AWK", StringComparison.Ordinal)).ToList();
         var n = 0;
         void Add(string rule, FindingCategory category, FindingSeverity severity, FindingStatus status, string message, IReadOnlyList<string> paths, IReadOnlyList<string> evidenceRefs) =>
             findings.Add(new Finding($"e{++n}", rule, category, severity, status, message, paths, evidenceRefs, receipt.RunId, receipt.ContractId));
@@ -168,6 +171,10 @@ public static class EvidenceGate
                     $"acceptance criterion '{ac.CriterionId}' is unsupported.", [], [$"acceptanceCriteria[{ac.CriterionId}]"]);
             }
         }
+
+        var (evaluatedClaims, claimFindings) = ClaimVerifier.Evaluate(receipt, contract);
+        findings.AddRange(claimFindings);
+        receipt = receipt with { Claims = evaluatedClaims };
 
         var fallback = $"{EvidenceRules.Satisfied}: mandatory validations passed; no blocking evidence findings";
         var decided = DecisionOrdering.Decide(findings, fallback);

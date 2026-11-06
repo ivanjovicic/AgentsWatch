@@ -40,10 +40,14 @@ public sealed class AcceptanceService(
             return new EvidenceCommandResult(false, receipt, loaded.Path, check);
         }
 
+        if (status == CriterionStatus.Supported && string.IsNullOrWhiteSpace(reason))
+        {
+            return new EvidenceCommandResult(false, receipt, loaded.Path,
+                "Supported acceptance requires a non-empty --reason describing why the linked evidence supports the criterion.");
+        }
+
         var refs = ids.Select(id => $"validations[{id}]").ToArray();
-        var storedReason = string.IsNullOrWhiteSpace(reason)
-            ? DefaultReason(status, ids)
-            : reason.Trim();
+        var storedReason = ComposeStoredReason(status, ids, reason);
         criteria[index] = current with { Status = status, EvidenceRefs = refs, Reason = storedReason };
         return Persist(receipt with { AcceptanceCriteria = criteria, EvidenceDigest = null });
     }
@@ -96,14 +100,28 @@ public sealed class AcceptanceService(
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-    private static string DefaultReason(CriterionStatus status, IReadOnlyList<string> ids) => status switch
+    public const string ManualAssessmentLabel = "manual assessment (declared, not attested)";
+
+    internal static string ComposeStoredReason(CriterionStatus status, IReadOnlyList<string> ids, string? reason)
     {
-        CriterionStatus.Supported => "supported by recorded validation " + string.Join(", ", ids),
-        CriterionStatus.Unsupported => "marked unsupported using recorded validation " + string.Join(", ", ids),
-        _ => ids.Count == 0
-            ? "reset to unknown"
-            : "marked unknown; referenced validation " + string.Join(", ", ids)
-    };
+        if (status == CriterionStatus.Supported)
+        {
+            return $"{ManualAssessmentLabel}; reason: {reason!.Trim()}; declared evidence: {string.Join(", ", ids)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            return reason.Trim();
+        }
+
+        return status switch
+        {
+            CriterionStatus.Unsupported => "marked unsupported using recorded validation " + string.Join(", ", ids),
+            _ => ids.Count == 0
+                ? "reset to unknown"
+                : "marked unknown; referenced validation " + string.Join(", ", ids)
+        };
+    }
 
     private EvidenceCommandResult Load(string runId)
     {
