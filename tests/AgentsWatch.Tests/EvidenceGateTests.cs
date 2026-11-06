@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using AgentsWatch.Cli;
 using AgentsWatch.Core.Contracts;
 using AgentsWatch.Core.Runs;
@@ -525,6 +526,51 @@ public sealed class EvidenceGateTests
             e = new StringWriter();
             Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "v1", "--command", "dotnet test", "--status", "pass", "--source", "ci", "--summary", "test log"], o, e));
             Assert.Contains("already exists", e.ToString());
+        }
+    }
+
+    [Fact]
+    public async Task MissingAcceptanceStatus_WithStaleDigest_CannotProduceDoneOrRewrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var path = new FileRunReceiptStore(repo.Root).PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            Assert.False(string.IsNullOrWhiteSpace(node["evidenceDigest"]?.GetValue<string>()));
+            Assert.True(node["acceptanceCriteria"]![0]!.AsObject().Remove("status"));
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+            Assert.DoesNotContain("status", node["acceptanceCriteria"]![0]!.ToJsonString());
+
+            var o = new StringWriter();
+            var e = new StringWriter();
+            var code = EvidenceCommand.Run(repo.Root, ["record", run, "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--summary", "test log"], o, e);
+            Assert.NotEqual(0, code);
+            Assert.NotEqual(DecisionStatus.Done, Service(repo.Root).Check(run).Receipt?.Decision.Status);
+            Assert.Equal(tampered, File.ReadAllText(path));
+            Assert.DoesNotContain("\"done\"", File.ReadAllText(path), StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task EmptyRunDeltaObject_DoesNotThrow_AndIsRejectedWithoutRewrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var path = new FileRunReceiptStore(repo.Root).PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            node["runDelta"] = new JsonObject();
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+
+            var o = new StringWriter();
+            var err = new StringWriter();
+            var thrown = Record.Exception(() => EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Null(thrown);
+            Assert.Contains("invalid", err.ToString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(tampered, File.ReadAllText(path));
         }
     }
 }

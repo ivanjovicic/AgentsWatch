@@ -300,7 +300,9 @@ public sealed class ClaimsService(
 
         try
         {
-            return new EvidenceCommandResult(true, receipts.Read(runId), receipts.PathFor(runId), null);
+            var receipt = receipts.Read(runId);
+            RunReceiptJson.EnsureStoredDigest(receipt);
+            return new EvidenceCommandResult(true, receipt, receipts.PathFor(runId), null);
         }
         catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException)
         {

@@ -113,6 +113,8 @@ public static class RunReceiptJson
             {
                 throw new InvalidDataException($"receipt schemaVersion {version} is not supported (supported: {RunReceipt.CurrentSchemaVersion}).");
             }
+
+            ValidateRequiredShape(doc.RootElement);
         }
 
         return JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null.");
@@ -125,6 +127,49 @@ public static class RunReceiptJson
     public static RunReceipt WithDigest(RunReceipt r) => r with { EvidenceDigest = ComputeDigest(r) };
 
     public static bool VerifyDigest(RunReceipt r) => r.EvidenceDigest is not null && r.EvidenceDigest == ComputeDigest(r);
+
+    public static void EnsureStoredDigest(RunReceipt r)
+    {
+        if (r.EvidenceDigest is not null && !VerifyDigest(r))
+        {
+            throw new InvalidDataException("receipt evidence digest does not match its contents.");
+        }
+    }
+
+    internal static void ValidateRequiredShape(JsonElement root)
+    {
+        if (root.TryGetProperty("acceptanceCriteria", out var criteria) && criteria.ValueKind == JsonValueKind.Array)
+        {
+            var i = 0;
+            foreach (var item in criteria.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object
+                    || !item.TryGetProperty("status", out var status)
+                    || status.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+                {
+                    throw new InvalidDataException($"acceptanceCriteria[{i}].status is missing; a missing status is not treated as Supported.");
+                }
+
+                i++;
+            }
+        }
+
+        if (root.TryGetProperty("runDelta", out var delta))
+        {
+            if (delta.ValueKind != JsonValueKind.Object)
+            {
+                throw new InvalidDataException("runDelta must be an object.");
+            }
+
+            foreach (var name in new[] { "runIntervalChanges", "preExistingUnchangedChanges", "preExistingChangedFurther", "attributionAmbiguities" })
+            {
+                if (!delta.TryGetProperty(name, out var arr) || arr.ValueKind != JsonValueKind.Array)
+                {
+                    throw new InvalidDataException($"runDelta.{name} is missing or not an array.");
+                }
+            }
+        }
+    }
 }
 
 public static class RunReceiptBuilder

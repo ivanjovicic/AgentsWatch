@@ -94,7 +94,18 @@ public static class EvidenceGate
                     "stored contract does not match the digest captured when the run finished; a later edit cannot reinterpret this run's evidence.", [], ["contract", "receipt.contractDigest"]);
             }
 
-            findings.AddRange(ScopeDriftChecker.Check(receipt, contract));
+            if (receipt.RunDelta.RunIntervalChanges is null
+                || receipt.RunDelta.PreExistingUnchangedChanges is null
+                || receipt.RunDelta.PreExistingChangedFurther is null
+                || receipt.RunDelta.AttributionAmbiguities is null)
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    "runDelta is missing required change collections.", [], ["receipt.runDelta"]);
+            }
+            else
+            {
+                findings.AddRange(ScopeDriftChecker.Check(receipt, contract));
+            }
 
             var expectedCriteria = (contract.AcceptanceCriteria ?? []).Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
             var actualCriteria = receipt.AcceptanceCriteria ?? [];
@@ -324,7 +335,9 @@ public sealed class EvidenceService(
 
         try
         {
-            return new EvidenceCommandResult(true, receipts.Read(runId), receipts.PathFor(runId), null);
+            var receipt = receipts.Read(runId);
+            RunReceiptJson.EnsureStoredDigest(receipt);
+            return new EvidenceCommandResult(true, receipt, receipts.PathFor(runId), null);
         }
         catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException)
         {
