@@ -38,3 +38,40 @@ restore exit 0; build Release 0 warnings 0 errors; test Release: Failed 0, Passe
 - `ValidationSource.CI` remains user-supplied. `ExpectedEvidence` matching remains substring-based.
 - Semantic acceptance may still be marked Supported when the field is present.
 - AW-VFY-010 dogfood and independent reviewer approval remain open. No claim of independently trusted agent execution.
+
+## Follow-up review: digest-omission downgrade (2026-11-06)
+
+The P1 and P2 review fixes at `21a2281f734f8cb87116bdcb4f86e013506caec8` passed exact-head GitHub
+CI [42243960199](https://github.com/ivanjovicic/AgentsWatch/actions/runs/42243960199):
+162/162 on Linux and 162/162 on Windows, zero build warnings/errors.
+
+A further code-level review found that `RunReceiptJson.EnsureStoredDigest` rejected a
+*mismatching non-null* digest but accepted a **missing or null** `evidenceDigest`.
+Removing the digest after editing the receipt was therefore an integrity downgrade:
+a mutation command could silently create a new digest over altered acceptance data.
+
+Red-before regression:
+- `MissingReceiptEvidenceDigest_CannotReblessTamperedAcceptanceOrRewrite`
+  has two variants (`evidenceDigest` removed or explicitly null).
+- [Run 42248717280](https://github.com/ivanjovicic/AgentsWatch/actions/runs/42248717280),
+  Ubuntu: 162 passed, **2 failed** at intermediate `66a8a373aefe`.
+  Both variants unexpectedly returned `Ok=true` rather than rejecting the altered
+  receipt (test line 582). The test did not rely on an independently attested CI source.
+
+Fix:
+- `EnsureStoredDigest` now rejects absent/blank digests as well as mismatches;
+  the evidence/claims/drift mutation entry points consistently call this guard.
+- Existing tests that deliberately create modified, valid-digest fixtures now
+  recompute the fixture digest explicitly. This reflects the known limitation
+  that anyone controlling local content and its checksum can also forge both.
+- The no-digest test asserts failed evidence/claims/drift operations and
+  byte-for-byte preservation of the tampered receipt.
+- Legacy or incomplete receipts without the stored checksum cannot be
+  automatically upgraded by a mutation command. No unsafe auto-backfill.
+
+Full exact-final-head CI verification must be linked in the PR review before any
+merge recommendation; this log does not claim tests passed until that succeeds.
+
+Residual limitations remain unchanged: an unkeyed local checksum is not independent
+attestation, validation source labels are user-controlled, and semantic acceptance
+is not authenticated. AW-VFY-010 remains the next independent dogfood gate.
