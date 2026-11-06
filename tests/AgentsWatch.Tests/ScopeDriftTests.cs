@@ -206,6 +206,33 @@ public sealed class ScopeDriftTests
     }
 
     [Fact]
+    public async Task OutsideOwnedAndAvoided_EmitsBothFindings()
+    {
+        var (repo, run) = await RunAsync(["src/**"], ["docs/**"], during: r => r.Write("docs/note.md", "n"));
+        using (repo)
+        {
+            var receipt = Service(repo.Root).Check(run).Receipt!;
+            Assert.Contains(receipt.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("docs/note.md"));
+            Assert.Contains(receipt.Findings, f => f.RuleId == ScopeDriftRules.AvoidTouched && f.Paths.Contains("docs/note.md") && f.Message.Contains("docs/**"));
+        }
+    }
+
+    [Fact]
+    public async Task EvidenceCheck_AfterDriftCheck_PreservesAwdFindings()
+    {
+        var (repo, run) = await RunAsync(["src/**"], [], during: r => r.Write("a.txt", "unrelated"));
+        using (repo)
+        {
+            var afterDrift = Service(repo.Root).Check(run).Receipt!;
+            Assert.Contains(afterDrift.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned);
+            var afterEvidence = new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root), new FileReceiptProjectionWriter()).Check(run);
+            Assert.True(afterEvidence.Ok, afterEvidence.Error);
+            Assert.Contains(afterEvidence.Receipt!.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("a.txt"));
+            Assert.Contains(afterEvidence.Receipt.Decision.Reasons, r => r.StartsWith(ScopeDriftRules.OutsideOwned));
+        }
+    }
+
+    [Fact]
     public async Task Check_IsIdempotent_AndMissingIdsFail()
     {
         var (repo, run) = await RunAsync(["src/**"], [], during: r => r.Write("a.txt", "x"));
