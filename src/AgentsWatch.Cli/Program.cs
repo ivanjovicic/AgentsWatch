@@ -29,6 +29,7 @@ public static class Program
                 "status" => await StatusCommand.RunAsync(Directory.GetCurrentDirectory()),
                 "start" => await StartCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "finish" => await FinishCommand.RunAsync(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
+                "drift" => DriftCommand.CheckFromArgs(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "evidence" => EvidenceCommand.Run(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "receipt" => ReceiptCommand.Show(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
                 "handoff" => ReceiptCommand.Handoff(Directory.GetCurrentDirectory(), args.Skip(1).ToArray()),
@@ -61,6 +62,7 @@ Usage:
   agentswatch contract check <contract-id-or-json-file>
   agentswatch start <contract-id> [--agent <name>] [--tool <name>] [--model <name>]
   agentswatch finish <run-id>
+  agentswatch drift check <run-id>
   agentswatch evidence record <run-id> --command <text> --status <status> --source <source>
   agentswatch evidence check <run-id>
   agentswatch receipt show <run-id>
