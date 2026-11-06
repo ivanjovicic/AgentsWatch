@@ -121,17 +121,7 @@ Source: agentswatch-command|imported-agent-result|user-declared|ci|unknown
         return Print(result.Receipt!, o);
     }
 
-    private static int Print(RunReceipt receipt, TextWriter o)
-    {
-        o.WriteLine("Decision: " + receipt.Decision.Status);
-        o.WriteLine("Reasons:");
-        foreach (var reason in receipt.Decision.Reasons)
-        {
-            o.WriteLine("- " + reason);
-        }
-
-        return receipt.Decision.Status == DecisionStatus.Done ? 0 : 1;
-    }
+    private static int Print(RunReceipt receipt, TextWriter o) => DecisionBanner.WriteCli(receipt, o);
 
     private static bool TryEnum<T>(string value, out T result) where T : struct, Enum =>
         Enum.TryParse(value.Replace("-", string.Empty), ignoreCase: true, out result) && Enum.IsDefined(result);

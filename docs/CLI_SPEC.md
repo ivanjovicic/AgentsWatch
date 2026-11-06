@@ -33,6 +33,7 @@ agentswatch receipt show <run-id>
 agentswatch evidence check <run-id>
 agentswatch drift check <run-id>
 agentswatch claims check <run-id>
+agentswatch accept record <run-id> --id <criterion-id> --status <supported|not-supported|unknown> --evidence <validation-id> --reason <text>
 agentswatch handoff <run-id>
 ```
 
@@ -204,6 +205,20 @@ Purpose: compare attributable changes against `ownedPaths` and `avoidPaths`.
 Output must list exact path and violated rule/reason.
 
 Raw pre-existing dirty files do not count as drift unless run attribution shows they changed further.
+
+## `agentswatch accept record <run-id>`
+
+Purpose: mark one acceptance criterion `Supported`, `NotSupported`, or `Unknown`.
+
+Rules:
+
+- `Supported` requires `--evidence <validation-id>` pointing at a recorded passing validation (exit 0 or no exit code) and a non-empty `--reason`. Evidence-free or unexplained `Supported` is rejected. The receipt records a manual assessment (declared, not attested), the reason, and the declared evidence ids, and the banner/CLI output shows that provenance.
+- `NotSupported` also requires a recorded validation id.
+- `Unknown` may omit `--evidence`.
+- Digest and integrity checks are the same as `evidence`/`claims`: tampered or invalid receipts are rejected and not rewritten.
+- See `docs/DECISION_ORDERING.md` for how unknown vs unsupported acceptance affects the run decision.
+
+Default `receipt show` / handoff headers include the decision, top blocking reasons for that decision class, and finding counts by severity (`error=…, warning=…`).
 
 ## `agentswatch claims check <run-id>`
 

@@ -202,7 +202,7 @@ public static class RunReceiptBuilder
 
         var criteria = (contract?.AcceptanceCriteria ?? [])
             .Where(c => !string.IsNullOrWhiteSpace(c))
-            .Select((c, i) => new AcceptanceCriterionResult($"ac{i + 1}", c, CriterionStatus.Unknown, [], "not evaluated; acceptance checks are not implemented yet"))
+            .Select((c, i) => new AcceptanceCriterionResult($"ac{i + 1}", c, CriterionStatus.Unknown, [], "not evaluated; mark with agentswatch accept record and link recorded validation evidence"))
             .ToArray();
 
         var baseline = record.StartBaseline;

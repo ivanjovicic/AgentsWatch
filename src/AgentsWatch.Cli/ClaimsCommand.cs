@@ -90,7 +90,7 @@ Usage:
 
     private static int Print(RunReceipt receipt, TextWriter o)
     {
-        o.WriteLine("Decision: " + receipt.Decision.Status);
+        DecisionBanner.WriteCli(receipt, o);
         o.WriteLine("Claims:");
         if (receipt.Claims.Count == 0)
         {

@@ -19,9 +19,12 @@ public static class EvidenceGate
 {
     public static RunReceipt Apply(RunReceipt receipt, RunContract? contract)
     {
+        // Replace AWE/AWD/AWK with a fresh evaluation. AWK is stripped only so
+        // ClaimVerifier.Evaluate can re-check claims against current evidence.
         var findings = (receipt.Findings ?? []).Where(f =>
             !f.RuleId.StartsWith("AWE", StringComparison.Ordinal)
-            && !f.RuleId.StartsWith("AWD", StringComparison.Ordinal)).ToList();
+            && !f.RuleId.StartsWith("AWD", StringComparison.Ordinal)
+            && !f.RuleId.StartsWith("AWK", StringComparison.Ordinal)).ToList();
         var n = 0;
         void Add(string rule, FindingCategory category, FindingSeverity severity, FindingStatus status, string message, IReadOnlyList<string> paths, IReadOnlyList<string> evidenceRefs) =>
             findings.Add(new Finding($"e{++n}", rule, category, severity, status, message, paths, evidenceRefs, receipt.RunId, receipt.ContractId));
@@ -169,51 +172,13 @@ public static class EvidenceGate
             }
         }
 
-        var failed = findings.Any(f => f.RuleId == EvidenceRules.ValidationFailed);
-        var blocked = findings.Any(f => f.RuleId == EvidenceRules.ValidationBlocked);
-        var approval = findings.Any(f => f.RuleId == EvidenceRules.ApprovalRequired);
-        var unsupportedAc = findings.Any(f => f.RuleId == EvidenceRules.AcceptanceUnsupported && f.Status == FindingStatus.Unsupported);
-        var needsEvidence = findings.Any(f => f.RuleId is EvidenceRules.ReceiptIncomplete or EvidenceRules.MandatoryMissing or EvidenceRules.ExpectedEvidenceMissing
-            || (f.RuleId == EvidenceRules.AcceptanceUnsupported && f.Status == FindingStatus.Unknown));
+        var (evaluatedClaims, claimFindings) = ClaimVerifier.Evaluate(receipt, contract);
+        findings.AddRange(claimFindings);
+        receipt = receipt with { Claims = evaluatedClaims };
 
-        var (status, fallback) = (failed, blocked, approval, unsupportedAc, needsEvidence) switch
-        {
-            (true, _, _, _, _) => (DecisionStatus.Failed, $"{EvidenceRules.ValidationFailed}: one or more validations failed, timed out or were killed"),
-            (_, true, _, _, _) => (DecisionStatus.Blocked, $"{EvidenceRules.ValidationBlocked}: validation blocked by environment"),
-            (_, _, true, _, _) => (DecisionStatus.NeedsApproval, $"{EvidenceRules.ApprovalRequired}: approval required"),
-            (_, _, _, true, _) => (DecisionStatus.NeedsReview, $"{EvidenceRules.AcceptanceUnsupported}: an acceptance criterion is unsupported"),
-            (_, _, _, _, true) => (DecisionStatus.NeedsEvidence, $"{EvidenceRules.MandatoryMissing}: required evidence is missing or unknown"),
-            _ => (DecisionStatus.Done, $"{EvidenceRules.Satisfied}: mandatory validations passed; no blocking evidence findings")
-        };
-
-        if (status == DecisionStatus.Done && findings.Any(f => f.RuleId is ScopeDriftRules.OutsideOwned or ScopeDriftRules.AvoidTouched or ScopeDriftRules.RenameCrosses or ClaimRules.Unsupported))
-        {
-            status = DecisionStatus.NeedsReview;
-        }
-
-        if (status == DecisionStatus.Done && findings.Any(f => f.RuleId == ClaimRules.Unknown))
-        {
-            status = DecisionStatus.NeedsEvidence;
-        }
-
-        var reasons = findings.Where(f => f.RuleId.StartsWith("AWE", StringComparison.Ordinal) || f.RuleId.StartsWith("AWD", StringComparison.Ordinal) || f.RuleId.StartsWith("AWK", StringComparison.Ordinal))
-            .Select(f => $"{f.RuleId}: {f.Message} [{string.Join(", ", f.EvidenceRefs)}]").ToList();
-        var ambiguous = findings.Count(f => f.Category == FindingCategory.AttributionAmbiguous);
-        if (ambiguous > 0)
-        {
-            reasons.Add($"AWR002: {ambiguous} ambiguous change(s) need review [runDelta.attributionAmbiguities]");
-            if (status == DecisionStatus.Done)
-            {
-                status = DecisionStatus.NeedsReview;
-            }
-        }
-
-        if (reasons.Count == 0)
-        {
-            reasons.Add(fallback);
-        }
-
-        return Finalize(receipt, findings, status, reasons);
+        var fallback = $"{EvidenceRules.Satisfied}: mandatory validations passed; no blocking evidence findings";
+        var decided = DecisionOrdering.Decide(findings, fallback);
+        return Finalize(receipt, findings, decided.Status, decided.Reasons);
     }
 
     public static bool SatisfiesMandatory(RunReceipt receipt, RunContract contract)
