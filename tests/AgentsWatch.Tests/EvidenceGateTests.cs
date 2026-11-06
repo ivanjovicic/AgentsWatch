@@ -44,6 +44,122 @@ public sealed class EvidenceGateTests
         });
     }
 
+
+    [Fact]
+    public async Task RemovedAcceptanceCriteria_CannotTurnEvidenceGateGreen()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var store = new FileRunReceiptStore(repo.Root);
+            store.Replace(store.Read(run) with { AcceptanceCriteria = [], EvidenceDigest = null });
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("acceptance criteria"));
+        }
+    }
+
+    [Fact]
+    public async Task SubstitutedAcceptanceCriteria_CannotTurnEvidenceGateGreen()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunReceiptStore(repo.Root);
+            var receipt = store.Read(run);
+            store.Replace(receipt with
+            {
+                AcceptanceCriteria = receipt.AcceptanceCriteria.Select(c => c with { Text = "different condition" }).ToArray(),
+                EvidenceDigest = null
+            });
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
+    public async Task CrossRunEvidence_IsRejectedAtImport_AndIgnoredIfAlreadyStored()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var wrongRun = Ev("unrelated-run", ValidationStatus.Pass, ValidationSource.CI);
+            var imported = Service(repo.Root).Record(run, wrongRun);
+            Assert.False(imported.Ok);
+            Assert.Contains("does not match", imported.Error);
+            Assert.Empty(new FileRunReceiptStore(repo.Root).Read(run).Validations);
+
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunReceiptStore(repo.Root);
+            store.Replace(store.Read(run) with { Validations = [wrongRun], EvidenceDigest = null });
+            var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
+            Assert.Equal(DecisionStatus.NeedsEvidence, checkedReceipt.Decision.Status);
+            Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("belongs to run"));
+            Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(checkedReceipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task MatchingIdWithDifferentCommand_DoesNotSatisfyMandatoryValidation()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo skipped tests"));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task PassingStatusWithNonzeroExitCode_IsContradictoryEvidence()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var inconsistent = Ev(run, ValidationStatus.Pass, ValidationSource.CI) with { ExitCode = 7 };
+            var result = Service(repo.Root).Record(run, inconsistent);
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("nonzero exit code"));
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task InvalidContractModifiedAfterFinish_CannotProduceDone()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunContractStore(repo.Root);
+            var original = RunContractJson.Deserialize(store.ReadRaw("t"));
+            store.Write(original with { ValidationContract = new ValidationContract([]) }, overwrite: true);
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("mandatory contract fields"));
+        }
+    }
+
     [Fact]
     public async Task MissingValidation_CannotBeDone()
     {
