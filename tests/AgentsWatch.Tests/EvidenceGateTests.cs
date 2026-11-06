@@ -30,7 +30,7 @@ public sealed class EvidenceGateTests
     private static EvidenceService Service(string root) =>
         new(root, new FileRunReceiptStore(root), new FileRunContractStore(root), new FileReceiptProjectionWriter());
 
-    private static ValidationEvidence Ev(string runId, ValidationStatus status, ValidationSource source, string id = "t", string command = "dotnet test", string? summary = "Passed 1/1") =>
+    private static ValidationEvidence Ev(string runId, ValidationStatus status, ValidationSource source, string id = "t", string command = "dotnet test", string? summary = "test log") =>
         new(id, runId, command, status, source, ExitCode: status == ValidationStatus.Pass ? 0 : 1, OutputSummary: summary);
 
     private static void SupportAcceptance(string root, string runId)
@@ -197,6 +197,91 @@ public sealed class EvidenceGateTests
             Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "t", "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--summary", "Passed 1"], o, e));
             Assert.Contains("UserDeclared", o.ToString());
             Assert.Equal(ValidationSource.UserDeclared, Assert.Single(new FileRunReceiptStore(repo.Root).Read(run).Validations).Source);
+        }
+    }
+
+    [Fact]
+    public async Task EachExpectedEvidenceItem_MustBeBacked_OrNotDone()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["**"], [],
+                PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"],
+                ["unit test log", "coverage report"], null));
+            Assert.True(created.Created, created.Error);
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var git2 = new GitRepositoryStateReader(new GitCommandRunner());
+            var finished = await new RunFinishService(new FileActiveRunStore(repo.Root), new FileRunRecordStore(repo.Root), git2, git2,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: new FileRunContractStore(repo.Root), projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, started.Baseline!.RunId);
+            Assert.True(finished.Finished, finished.Error);
+            var run = started.Baseline.RunId;
+            SupportAcceptance(repo.Root, run);
+
+            var partial = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, summary: "unit test log"));
+            Assert.True(partial.Ok, partial.Error);
+            Assert.Contains(partial.Receipt!.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing && f.Message.Contains("coverage report"));
+            Assert.DoesNotContain(partial.Receipt.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing && f.Message.Contains("unit test log"));
+            Assert.NotEqual(DecisionStatus.Done, partial.Receipt.Decision.Status);
+
+            var complete = Service(repo.Root).Record(run, new ValidationEvidence("cov", run, "coverage", ValidationStatus.Pass, ValidationSource.CI, OutputSummary: "coverage report"));
+            Assert.True(complete.Ok, complete.Error);
+            Assert.DoesNotContain(complete.Receipt!.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing);
+            Assert.Equal(DecisionStatus.Done, complete.Receipt.Decision.Status);
+        }
+    }
+
+    [Fact]
+    public async Task RecordWithoutId_AllocatesUniqueIds_AndRefusesSilentOverwrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var svc = Service(repo.Root);
+            var first = svc.Record(run, Ev(run, ValidationStatus.Fail, ValidationSource.CI, id: "", summary: "Failed"));
+            Assert.True(first.Ok, first.Error);
+            Assert.Equal("v1", first.Recorded!.ValidationId);
+            Assert.Equal(ValidationStatus.Fail, Assert.Single(first.Receipt!.Validations).Status);
+
+            var second = svc.Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.UserDeclared, id: "", summary: "test log"));
+            Assert.True(second.Ok, second.Error);
+            Assert.Equal("v2", second.Recorded!.ValidationId);
+            Assert.Equal(2, second.Receipt!.Validations.Count);
+            Assert.Contains(second.Receipt.Validations, v => v.ValidationId == "v1" && v.Status == ValidationStatus.Fail);
+            Assert.Contains(second.Receipt.Validations, v => v.ValidationId == "v2" && v.Status == ValidationStatus.Pass);
+
+            var clash = svc.Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, id: "v1", summary: "test log"));
+            Assert.False(clash.Ok);
+            Assert.Contains("--replace", clash.Error);
+            Assert.Equal(ValidationStatus.Fail, new FileRunReceiptStore(repo.Root).Read(run).Validations.Single(v => v.ValidationId == "v1").Status);
+
+            var replaced = svc.Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, id: "v1", summary: "test log"), replace: true);
+            Assert.True(replaced.Ok, replaced.Error);
+            Assert.Equal(ValidationStatus.Pass, replaced.Receipt!.Validations.Single(v => v.ValidationId == "v1").Status);
+        }
+    }
+
+    [Fact]
+    public async Task Cli_RecordWithoutId_DoesNotOverwrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var e = new StringWriter();
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--command", "dotnet test", "--status", "fail", "--source", "ci", "--summary", "Failed"], new StringWriter(), e));
+            var o = new StringWriter();
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--summary", "test log"], o, e));
+            Assert.Contains("Evidence recorded: v2", o.ToString());
+            var ids = new FileRunReceiptStore(repo.Root).Read(run).Validations.Select(v => v.ValidationId + ":" + v.Status).OrderBy(x => x).ToArray();
+            Assert.Equal(["v1:Fail", "v2:Pass"], ids);
+
+            o = new StringWriter();
+            e = new StringWriter();
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "v1", "--command", "dotnet test", "--status", "pass", "--source", "ci", "--summary", "test log"], o, e));
+            Assert.Contains("already exists", e.ToString());
         }
     }
 }

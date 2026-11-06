@@ -9,7 +9,7 @@ internal static class EvidenceCommand
     public const string Usage = """
 Usage:
   agentswatch evidence record <run-id> --command <text> --status <status> --source <source>
-      [--id <validation-id>] [--exit-code <n>] [--summary <text>] [--digest <text>] [--source-ref <text>]
+      [--id <validation-id>] [--replace] [--exit-code <n>] [--summary <text>] [--digest <text>] [--source-ref <text>]
   agentswatch evidence check <run-id>
 
 Status: pass|fail|not-run|blocked-by-environment|timed-out|killed|unknown
@@ -40,8 +40,15 @@ Source: agentswatch-command|imported-agent-result|user-declared|ci|unknown
 
         var runId = args[0];
         var flags = new Dictionary<string, string>(StringComparer.Ordinal);
+        var replace = false;
         for (var i = 1; i < args.Length; i++)
         {
+            if (args[i] == "--replace")
+            {
+                replace = true;
+                continue;
+            }
+
             if (!args[i].StartsWith("--") || i + 1 >= args.Length)
             {
                 e.WriteLine($"Unexpected argument: {args[i]}");
@@ -79,9 +86,9 @@ Source: agentswatch-command|imported-agent-result|user-declared|ci|unknown
         flags.TryGetValue("summary", out var summary);
         flags.TryGetValue("digest", out var digest);
         flags.TryGetValue("source-ref", out var sourceRef);
-        var evidence = new ValidationEvidence(string.IsNullOrWhiteSpace(id) ? "v1" : id, runId, command, status, source,
+        var evidence = new ValidationEvidence(id ?? string.Empty, runId, command, status, source,
             ExitCode: exit, OutputSummary: summary, EvidenceDigest: digest, SourceRef: sourceRef);
-        var result = service.Record(runId, evidence);
+        var result = service.Record(runId, evidence, replace);
         if (!result.Ok)
         {
             e.WriteLine("error: " + result.Error);
@@ -93,7 +100,7 @@ Source: agentswatch-command|imported-agent-result|user-declared|ci|unknown
             e.WriteLine(result.Error);
         }
 
-        o.WriteLine("Evidence recorded: " + evidence.ValidationId + " " + status + " (source: " + source + ")");
+        o.WriteLine("Evidence recorded: " + (result.Recorded?.ValidationId ?? evidence.ValidationId) + " " + status + " (source: " + source + ")");
         return Print(result.Receipt!, o);
     }
 

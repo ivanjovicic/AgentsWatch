@@ -84,11 +84,13 @@ public static class EvidenceGate
                 }
             }
 
-            var expected = (contract.ExpectedEvidence ?? []).Where(e => !string.IsNullOrWhiteSpace(e)).ToArray();
-            if (expected.Length > 0 && !validations.Any(HasBacking))
+            foreach (var item in (contract.ExpectedEvidence ?? []).Where(e => !string.IsNullOrWhiteSpace(e)))
             {
-                Add(EvidenceRules.ExpectedEvidenceMissing, FindingCategory.MissingValidation, FindingSeverity.Warning, FindingStatus.Unsupported,
-                    $"expected evidence is not backed by a passing validation with outputSummary, evidenceDigest or sourceRef ({string.Join("; ", expected)}).", [], ["contract.expectedEvidence"]);
+                if (!validations.Any(v => BacksExpectedItem(v, item)))
+                {
+                    Add(EvidenceRules.ExpectedEvidenceMissing, FindingCategory.MissingValidation, FindingSeverity.Warning, FindingStatus.Unsupported,
+                        $"expected evidence '{item}' is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it.", [], [$"contract.expectedEvidence[{item}]"]);
+                }
             }
 
             if (contract.PermissionMode == PermissionMode.ApprovalRequired && receipt.Decision.Override is null)
@@ -157,8 +159,10 @@ public static class EvidenceGate
                 && v.Status == ValidationStatus.Pass));
     }
 
-    private static bool HasBacking(ValidationEvidence v) =>
-        v.Status == ValidationStatus.Pass && (v.OutputSummary is not null || v.EvidenceDigest is not null || v.SourceRef is not null);
+    private static bool BacksExpectedItem(ValidationEvidence v, string item) =>
+        v.Status == ValidationStatus.Pass
+        && new[] { v.OutputSummary, v.EvidenceDigest, v.SourceRef, v.CommandDisplay, v.ValidationId }
+            .Any(field => field is not null && field.Contains(item, StringComparison.OrdinalIgnoreCase));
 
     private static int Rank(ValidationStatus s) => s switch
     {
@@ -181,7 +185,7 @@ public static class EvidenceGate
     }
 }
 
-public sealed record EvidenceCommandResult(bool Ok, RunReceipt? Receipt, string? Path, string? Error);
+public sealed record EvidenceCommandResult(bool Ok, RunReceipt? Receipt, string? Path, string? Error, ValidationEvidence? Recorded = null);
 
 /// <summary>Application use case: import labeled validation evidence and evaluate the Evidence Gate.</summary>
 public sealed class EvidenceService(
@@ -190,7 +194,7 @@ public sealed class EvidenceService(
     IRunContractStore? contracts = null,
     IReceiptProjectionWriter? projections = null)
 {
-    public EvidenceCommandResult Record(string runId, ValidationEvidence evidence)
+    public EvidenceCommandResult Record(string runId, ValidationEvidence evidence, bool replace = false)
     {
         var loaded = Load(runId);
         if (!loaded.Ok)
@@ -199,17 +203,43 @@ public sealed class EvidenceService(
         }
 
         var list = loaded.Receipt!.Validations.ToList();
-        var i = list.FindIndex(v => v.ValidationId == evidence.ValidationId);
-        if (i >= 0)
+        if (string.IsNullOrWhiteSpace(evidence.ValidationId))
         {
-            list[i] = evidence;
+            evidence = evidence with { ValidationId = NextValidationId(list) };
         }
         else
         {
-            list.Add(evidence);
+            var i = list.FindIndex(v => v.ValidationId == evidence.ValidationId);
+            if (i >= 0)
+            {
+                if (!replace)
+                {
+                    return new EvidenceCommandResult(false, loaded.Receipt, loaded.Path,
+                        $"validation '{evidence.ValidationId}' already exists; use --replace to overwrite.");
+                }
+
+                list[i] = evidence;
+                return Persist(loaded.Receipt with { Validations = list, EvidenceDigest = null }, evidence);
+            }
         }
 
-        return Persist(loaded.Receipt with { Validations = list, EvidenceDigest = null });
+        list.Add(evidence);
+        return Persist(loaded.Receipt with { Validations = list, EvidenceDigest = null }, evidence);
+    }
+
+    internal static string NextValidationId(IReadOnlyList<ValidationEvidence> existing)
+    {
+        var used = existing.Select(v => v.ValidationId).ToHashSet(StringComparer.Ordinal);
+        for (var n = 1; n < int.MaxValue; n++)
+        {
+            var id = "v" + n;
+            if (!used.Contains(id))
+            {
+                return id;
+            }
+        }
+
+        throw new InvalidOperationException("could not allocate a validation id.");
     }
 
     public EvidenceCommandResult Check(string runId)
@@ -240,7 +270,7 @@ public sealed class EvidenceService(
         }
     }
 
-    private EvidenceCommandResult Persist(RunReceipt? receipt)
+    private EvidenceCommandResult Persist(RunReceipt? receipt, ValidationEvidence? recorded = null)
     {
         if (receipt is null)
         {
@@ -267,7 +297,7 @@ public sealed class EvidenceService(
         }
         catch (IOException ex)
         {
-            return new EvidenceCommandResult(false, updated, receipts.PathFor(updated.RunId), "could not persist receipt: " + ex.Message);
+            return new EvidenceCommandResult(false, updated, receipts.PathFor(updated.RunId), "could not persist receipt: " + ex.Message, recorded);
         }
 
         if (projections is not null)
@@ -278,10 +308,10 @@ public sealed class EvidenceService(
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                return new EvidenceCommandResult(true, updated, receipts.PathFor(updated.RunId), "warning: projection failed (receipt updated): " + ex.Message);
+                return new EvidenceCommandResult(true, updated, receipts.PathFor(updated.RunId), "warning: projection failed (receipt updated): " + ex.Message, recorded);
             }
         }
 
-        return new EvidenceCommandResult(true, updated, receipts.PathFor(updated.RunId), null);
+        return new EvidenceCommandResult(true, updated, receipts.PathFor(updated.RunId), null, recorded);
     }
 }

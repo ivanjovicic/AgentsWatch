@@ -209,6 +209,7 @@ public interface IRunRecordStore
     string PathFor(string runId);
     void WriteNew(RunFinishRecord record);
     RunFinishRecord Read(string runId);
+    void Remove(string runId);
 }
 
 public static class RunFinishJson
@@ -256,6 +257,15 @@ public sealed class FileRunRecordStore(string workspaceRoot) : IRunRecordStore
     }
 
     public RunFinishRecord Read(string runId) => RunFinishJson.Deserialize(File.ReadAllText(PathFor(runId)));
+
+    public void Remove(string runId)
+    {
+        var path = PathFor(runId);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+    }
 }
 
 public sealed record RunFinishResult(
@@ -300,7 +310,14 @@ public sealed class RunFinishService(
 
         if (records.Exists(runId))
         {
-            return new RunFinishResult(false, null, records.PathFor(runId), $"run record for '{runId}' already exists; refusing to overwrite.");
+            // Delta without a receipt is a partial previous attempt and is retryable.
+            var orphanDelta = receipts is not null && !receipts.Exists(runId);
+            if (!orphanDelta)
+            {
+                return new RunFinishResult(false, null, records.PathFor(runId), $"run record for '{runId}' already exists; refusing to overwrite.");
+            }
+
+            records.Remove(runId);
         }
 
         RunBaseline baseline;
@@ -351,7 +368,16 @@ public sealed class RunFinishService(
             }
             catch (IOException ex)
             {
-                return new RunFinishResult(false, record, records.PathFor(runId), "could not persist receipt; active baseline kept: " + ex.Message);
+                try
+                {
+                    records.Remove(runId);
+                }
+                catch (IOException)
+                {
+                    // Retry can still resume: orphan delta + missing receipt is accepted above.
+                }
+
+                return new RunFinishResult(false, record, null, "could not persist receipt; active baseline kept and delta record removed so finish can be retried: " + ex.Message);
             }
         }
 

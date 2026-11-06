@@ -20,11 +20,11 @@ public sealed class RunReceiptTests
         return r.Baseline!.RunId;
     }
 
-    private static RunFinishService Service(string root, IReceiptProjectionWriter? projections = null)
+    private static RunFinishService Service(string root, IReceiptProjectionWriter? projections = null, IRunReceiptStore? receipts = null)
     {
         var git = new GitRepositoryStateReader(new GitCommandRunner());
         return new RunFinishService(new FileActiveRunStore(root), new FileRunRecordStore(root), git, git,
-            receipts: new FileRunReceiptStore(root), contracts: new FileRunContractStore(root), projections: projections ?? new FileReceiptProjectionWriter());
+            receipts: receipts ?? new FileRunReceiptStore(root), contracts: new FileRunContractStore(root), projections: projections ?? new FileReceiptProjectionWriter());
     }
 
     private static async Task<RunFinishResult> Finish(TempGitRepo repo, string run, IReceiptProjectionWriter? projections = null)
@@ -174,6 +174,47 @@ public sealed class RunReceiptTests
         Assert.Contains("digest mismatch", e.ToString());
         Assert.Equal(1, ReceiptCommand.Show(repo.Root, ["show", "nope"], new StringWriter(), new StringWriter()));
         Assert.Equal(0, ReceiptCommand.Handoff(repo.Root, [run], new StringWriter(), new StringWriter()));
+    }
+
+    [Fact]
+    public async Task ReceiptWriteFailure_IsRetryable()
+    {
+        using var repo = new TempGitRepo();
+        var run = await Start(repo);
+        repo.Write("a.txt", "edit");
+        var inner = new FileRunReceiptStore(repo.Root);
+        var receipts = new FailOnceReceiptStore(inner);
+        var r1 = await Service(repo.Root, receipts: receipts).FinishAsync(repo.Root, run);
+        Assert.False(r1.Finished);
+        Assert.Contains("retried", r1.Error);
+        Assert.Single(new FileActiveRunStore(repo.Root).ActiveRunIds());
+        Assert.False(new FileRunRecordStore(repo.Root).Exists(run));
+
+        var r2 = await Service(repo.Root, receipts: receipts).FinishAsync(repo.Root, run);
+        Assert.True(r2.Finished, r2.Error);
+        Assert.True(inner.Exists(run));
+        Assert.Empty(new FileActiveRunStore(repo.Root).ActiveRunIds());
+        Assert.True(RunReceiptJson.VerifyDigest(inner.Read(run)));
+    }
+
+    private sealed class FailOnceReceiptStore(IRunReceiptStore inner) : IRunReceiptStore
+    {
+        private int _attempts;
+
+        public bool Exists(string runId) => inner.Exists(runId);
+        public string PathFor(string runId) => inner.PathFor(runId);
+        public RunReceipt Read(string runId) => inner.Read(runId);
+        public void Replace(RunReceipt receipt) => inner.Replace(receipt);
+
+        public void WriteNew(RunReceipt receipt)
+        {
+            if (System.Threading.Interlocked.Increment(ref _attempts) == 1)
+            {
+                throw new IOException("disk full (simulated)");
+            }
+
+            inner.WriteNew(receipt);
+        }
     }
 
     private sealed class ThrowingProjections : IReceiptProjectionWriter
