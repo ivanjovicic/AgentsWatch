@@ -88,29 +88,40 @@ MVP capabilities:
 
 ## Current runtime
 
-Implemented today:
+Implemented and integrated in the CLI:
 
 ```bash
 agentswatch init
-agentswatch optimize <prompt-file-or-text>
+agentswatch optimize "<prompt text or path>"
 agentswatch status
+agentswatch contract create <task-id> --intent <text> --accept <text> --validate <command> ...
+agentswatch contract check <contract-id-or-json-file>
+agentswatch start <contract-id>
+agentswatch finish <run-id>
+agentswatch receipt show <run-id>
+agentswatch handoff <run-id>
+agentswatch evidence record <run-id> --command <text> --status <status> --source <source>
+agentswatch evidence check <run-id>
+agentswatch drift check <run-id>
+agentswatch claims record <run-id> --type <type> --value true --source <source>
+agentswatch claims check <run-id>
 ```
 
-The repository is still a skeleton/prototype. The core Contract -> Run -> Receipt -> Verification spine is not implemented yet.
+Gate 0 is closed. On November 6, 2026, the main branch reached AW-VFY-009
+(Contract, baseline, interval delta, receipt, Evidence Gate, Scope Drift, structured Claims).
+The prior parser failure and earlier skeleton-only descriptions below this date are obsolete.
+The GitHub CI on `ab3ebe62f1a23fd19a87caff98f8a267e598920c` completed successfully;
+this does **not** establish dogfood, independent provenance or commercial readiness.
 
-Latest known CI truth remains:
-- restore: pass;
-- build: pass;
-- tests: fail in `GitStatusParserTests`;
-- current parser trims Git porcelain status layout before fixed-position path parsing, producing `README.md -> EADME.md` in the failing test.
+**Important remaining boundary:** validation evidence can be manually imported with a
+declared source, and semantic acceptance criteria are not autonomously verified. The
+current receipt hash is an integrity checksum, not a signed or trusted attestation.
+Treat any `Done` verdict as bounded to the configured deterministic checks; it is
+not proof that the agent independently executed every claimed action.
 
-The next implementation task remains:
-
-`AW-VFY-001` — fix/harden Git status parsing and make Gate 0 green.
-
-See:
-- `docs/prompt_queues/PROMPT_QUEUE_ROUTER.md`
-- `docs/prompt_queues/verification_mvp_2026_08_25.md`
+Next required gate: `AW-VFY-010`, 30 real/adversarially reviewed receipts, followed by
+external user-value validation (011) and commercial validation (012). Do not start
+hosted infrastructure or a dashboard as a substitute for these gates.
 
 ## Canonical artifacts
 
