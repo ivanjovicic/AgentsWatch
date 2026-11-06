@@ -130,7 +130,14 @@ public static class RunReceiptJson
 
     public static void EnsureStoredDigest(RunReceipt r)
     {
-        if (r.EvidenceDigest is not null && !VerifyDigest(r))
+        // Do not permit a missing digest to downgrade an existing receipt into an
+        // unchecked record that the next mutation could silently re-sign.
+        if (string.IsNullOrWhiteSpace(r.EvidenceDigest))
+        {
+            throw new InvalidDataException("receipt evidence digest is missing; refusing to rewrite an unverified receipt.");
+        }
+
+        if (!VerifyDigest(r))
         {
             throw new InvalidDataException("receipt evidence digest does not match its contents.");
         }
