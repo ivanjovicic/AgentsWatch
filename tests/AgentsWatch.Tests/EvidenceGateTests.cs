@@ -38,11 +38,13 @@ public sealed class EvidenceGateTests
     {
         var store = new FileRunReceiptStore(root);
         var receipt = store.Read(runId);
-        store.Replace(receipt with
+        // Test-only: simulate a locally edited receipt whose checksum is also recomputed.
+        // This does not authenticate the manual acceptance claim.
+        store.Replace(RunReceiptJson.WithDigest(receipt with
         {
             AcceptanceCriteria = receipt.AcceptanceCriteria.Select(a => a with { Status = CriterionStatus.Supported, Reason = "marked supported in test" }).ToArray(),
             EvidenceDigest = null
-        });
+        }));
     }
 
 
@@ -53,7 +55,7 @@ public sealed class EvidenceGateTests
         using (repo)
         {
             var store = new FileRunReceiptStore(repo.Root);
-            store.Replace(store.Read(run) with { AcceptanceCriteria = [], EvidenceDigest = null });
+            store.Replace(RunReceiptJson.WithDigest(store.Read(run) with { AcceptanceCriteria = [], EvidenceDigest = null }));
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
@@ -72,11 +74,11 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var store = new FileRunReceiptStore(repo.Root);
             var receipt = store.Read(run);
-            store.Replace(receipt with
+            store.Replace(RunReceiptJson.WithDigest(receipt with
             {
                 AcceptanceCriteria = receipt.AcceptanceCriteria.Select(c => c with { Text = "different condition" }).ToArray(),
                 EvidenceDigest = null
-            });
+            }));
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
@@ -99,7 +101,7 @@ public sealed class EvidenceGateTests
 
             SupportAcceptance(repo.Root, run);
             var store = new FileRunReceiptStore(repo.Root);
-            store.Replace(store.Read(run) with { Validations = [wrongRun], EvidenceDigest = null });
+            store.Replace(RunReceiptJson.WithDigest(store.Read(run) with { Validations = [wrongRun], EvidenceDigest = null }));
             var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
             Assert.Equal(DecisionStatus.NeedsEvidence, checkedReceipt.Decision.Status);
             Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("belongs to run"));
@@ -405,7 +407,7 @@ public sealed class EvidenceGateTests
         {
             var store = new FileRunReceiptStore(repo.Root);
             var receipt = store.Read(run);
-            store.Replace(receipt with { Claims = [new AgentClaim("c1", run, "ValidationPassed", "agent-prose", "all tests pass")], EvidenceDigest = null });
+            store.Replace(RunReceiptJson.WithDigest(receipt with { Claims = [new AgentClaim("c1", run, "ValidationPassed", "agent-prose", "all tests pass")], EvidenceDigest = null }));
             var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
             Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
             Assert.NotEqual(DecisionStatus.Done, checkedReceipt.Decision.Status);
