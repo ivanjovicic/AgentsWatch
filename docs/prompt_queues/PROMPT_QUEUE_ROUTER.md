@@ -16,15 +16,15 @@ Older bootstrap, MVP, token-economy, productization, roadmap, architecture, lice
 
 ## Current known state
 
-Updated 2026-11-05 (local evidence, `.ai/runs/2026-11-05-aw-vfy-00[1-4]-evidence.md`):
+Updated 2026-11-06 (local evidence, `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`):
 
 ```text
 restore: PASS
 build: PASS
-tests: PASS (143/143 local after AW-VFY-009; 79/79 CI-confirmed on d078295, run 42192082705)
+tests: PASS (150/150 local after 008/009 review-fix; previous CI 79/79 on d078295, run 42192082705)
 ```
 
-AW-VFY-001..007 done (CI run 42192082705 on d078295). Follow-up 2026-11-06 closed finish-recovery, per-item AWE006, and unique evidence-id gaps; AW-VFY-008 and AW-VFY-009 done locally (not yet pushed). Next: AW-VFY-010 dogfood (requires real runs). (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
+AW-VFY-001..009 done locally (150/150 after review-fix of value:false, finding preservation, replace-middle display). 001-007 CI-confirmed on d078295 (42192082705). 008/009 + follow-up + this review-fix are in the delivery push; CI on new HEAD pending. Next: AW-VFY-010 dogfood (requires real runs). Not started.
 Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt

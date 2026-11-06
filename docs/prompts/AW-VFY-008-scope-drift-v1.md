@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Done locally (2026-11-06)  
+Status: Done (2026-11-06; review-fix delivery, CI pending on push)  
 Run mode: implementation  
 Budget: medium  
 Gate: Evidence Gate proven

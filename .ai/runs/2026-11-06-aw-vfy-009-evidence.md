@@ -23,7 +23,7 @@ Unsupported claims: finding AWK001, Done becomes NeedsReview. Unknown claims: AW
 
 PathClassifier theories. Each initial type: supported, unsupported, unknown. Extra: ValidationPassed Fail; prose without evidence; NoUnrelatedChanges with pre-existing unchanged outside file (still Supported) and ambiguous outside (Unknown); persist/project + unknown type; id allocation/overwrite refusal + CLI.
 
-Step 1 (008): OutsideOwnedAndAvoided_EmitsBothFindings; EvidenceCheck_AfterDriftCheck_PreservesAwdFindings — both passed without production changes.
+Step 1 (008): OutsideOwnedAndAvoided_EmitsBothFindings; EvidenceCheck_AfterDriftCheck_PreservesAwdFindings ï¿½ both passed without production changes.
 
 ## Gate (executed)
 
@@ -36,11 +36,11 @@ finish after editing `src/app.cs` and `extra.txt`. `claims record DocsOnly` -> U
 ## Self-review gaps
 
 - No LLM/prose extraction (in scope to avoid).
-- `value: false` is stored but not treated as a negated claim.
+- `value: false` was stored but ignored; fixed in the 2026-11-06 review-fix (negated evaluation; non-boolean rejected at record). See `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`.
 - Backend heuristic treats remaining compiled-language files as backend; `contest.cs` is Backend, not a test (PascalCase *Test required). Flutter/Dart widgets in `lib/` may be classified Backend via no dedicated frontend rule for `.dart`.
 - Empty-delta BackendUnchanged is Supported (nothing changed), not Unknown.
 - Modified (not added) migration files do not support MigrationAdded.
-- No separate test that `evidence check` after `claims check` keeps AWK findings (same keep-non-AWE mechanism as AWD, which is now tested).
+- AWK preservation after evidence check is now tested (`EvidenceCheck_AfterClaimsCheck_PreservesAwkFindings`), as is AWK/AWD cross-preservation with drift/claims checks.
 - UserDeclared Pass still supports ValidationPassed (structured, labeled).
 
 Commit SHA (change): 9451849

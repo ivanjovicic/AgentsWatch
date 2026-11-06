@@ -45,8 +45,33 @@ public static class ClaimVerifier
         return (claims, findings);
     }
 
-    public static AgentClaim EvaluateOne(RunReceipt receipt, RunContract? contract, AgentClaim claim) =>
-        claim.ClaimType switch
+    public static bool TryParseBooleanValue(string? value, out bool asserted)
+    {
+        asserted = false;
+        switch (value?.Trim().ToLowerInvariant())
+        {
+            case "true":
+            case "yes":
+            case "1":
+                asserted = true;
+                return true;
+            case "false":
+            case "no":
+            case "0":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static AgentClaim EvaluateOne(RunReceipt receipt, RunContract? contract, AgentClaim claim)
+    {
+        if (!TryParseBooleanValue(claim.Value, out var asserted))
+        {
+            return Finish(claim, CriterionStatus.Unknown, $"claim value '{claim.Value}' is not a boolean (true/yes/1 or false/no/0).", ["receipt.claims"], []);
+        }
+
+        var affirmative = claim.ClaimType switch
         {
             ClaimTypes.TestsAdded => TestsAdded(receipt, claim),
             ClaimTypes.DocsOnly => DocsOnly(receipt, claim),
@@ -56,6 +81,25 @@ public static class ClaimVerifier
             ClaimTypes.NoUnrelatedChanges => NoUnrelatedChanges(receipt, contract, claim),
             _ => Finish(claim, CriterionStatus.Unknown, $"claim type '{claim.ClaimType}' is not in the v1 set.", ["receipt.claims"], [])
         };
+        return asserted ? affirmative : Negate(affirmative);
+    }
+
+    private static AgentClaim Negate(AgentClaim affirmative)
+    {
+        var status = affirmative.Status switch
+        {
+            CriterionStatus.Supported => CriterionStatus.Unsupported,
+            CriterionStatus.Unsupported => CriterionStatus.Supported,
+            _ => CriterionStatus.Unknown
+        };
+        var prefix = status switch
+        {
+            CriterionStatus.Supported => $"negated claim ({affirmative.ClaimType}=false) holds: ",
+            CriterionStatus.Unsupported => $"negated claim ({affirmative.ClaimType}=false) does not hold: ",
+            _ => $"negated claim ({affirmative.ClaimType}=false) remains unknown: "
+        };
+        return affirmative with { Status = status, Reason = prefix + affirmative.Reason };
+    }
 
     internal static IReadOnlyList<ClassifiedChange> Attributable(RunDelta delta) =>
         delta.RunIntervalChanges.Concat(delta.PreExistingChangedFurther).ToArray();
@@ -196,6 +240,11 @@ public sealed class ClaimsService(
             return loaded;
         }
 
+        if (!ClaimVerifier.TryParseBooleanValue(claim.Value, out _))
+        {
+            return new EvidenceCommandResult(false, loaded.Receipt, loaded.Path, $"claim value '{claim.Value}' is not a boolean (true/yes/1 or false/no/0).");
+        }
+
         var list = loaded.Receipt!.Claims.ToList();
         if (string.IsNullOrWhiteSpace(claim.ClaimId))
         {
@@ -212,18 +261,29 @@ public sealed class ClaimsService(
                 }
 
                 list[i] = claim;
-                return Persist(loaded.Receipt with { Claims = list, EvidenceDigest = null });
+                return WithRecordedClaim(Persist(loaded.Receipt with { Claims = list, EvidenceDigest = null }), claim.ClaimId);
             }
         }
 
         list.Add(claim);
-        return Persist(loaded.Receipt with { Claims = list, EvidenceDigest = null });
+        return WithRecordedClaim(Persist(loaded.Receipt with { Claims = list, EvidenceDigest = null }), claim.ClaimId);
     }
 
     public EvidenceCommandResult Check(string runId)
     {
         var loaded = Load(runId);
         return loaded.Ok ? Persist(loaded.Receipt!) : loaded;
+    }
+
+    private static EvidenceCommandResult WithRecordedClaim(EvidenceCommandResult result, string claimId)
+    {
+        if (!result.Ok || result.Receipt is null)
+        {
+            return result;
+        }
+
+        var recorded = result.Receipt.Claims.FirstOrDefault(c => c.ClaimId == claimId);
+        return result with { RecordedClaim = recorded };
     }
 
     private EvidenceCommandResult Load(string runId)

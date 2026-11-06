@@ -8,7 +8,7 @@ internal static class ClaimsCommand
 {
     public const string Usage = """
 Usage:
-  agentswatch claims record <run-id> --type <TestsAdded|DocsOnly|BackendUnchanged|MigrationAdded|ValidationPassed|NoUnrelatedChanges> --value <text> --source <text>
+  agentswatch claims record <run-id> --type <TestsAdded|DocsOnly|BackendUnchanged|MigrationAdded|ValidationPassed|NoUnrelatedChanges> --value <true|yes|1|false|no|0> --source <text>
       [--id <claim-id>] [--replace] [--text <raw-text>]
   agentswatch claims check <run-id>
 """;
@@ -71,9 +71,9 @@ Usage:
             return 1;
         }
 
-        var stored = result.Receipt!.Claims.Last();
+        var stored = result.RecordedClaim ?? result.Receipt!.Claims.First(c => c.ClaimType == type && c.Value == value);
         o.WriteLine("Claim recorded: " + stored.ClaimId + " " + stored.ClaimType + " [" + (stored.Status?.ToString() ?? "pending") + "]");
-        return Print(result.Receipt, o);
+        return Print(result.Receipt!, o);
     }
 
     private static int Check(ClaimsService service, string runId, TextWriter o, TextWriter e)

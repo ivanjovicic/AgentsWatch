@@ -24,6 +24,9 @@ public sealed class PathClassifierTests
     [InlineData("appsettings.json", PathKind.Config)]
     [InlineData("mystery.dat", PathKind.Other)]
     [InlineData("contest.cs", PathKind.Backend)]
+    [InlineData("tests\\FooTests.cs", PathKind.Test)]
+    [InlineData("src\\Services\\Billing.cs", PathKind.Backend)]
+    [InlineData("docs\\guide.md", PathKind.Docs)]
     public void Classify_UsesExplicitHeuristics(string path, PathKind kind) =>
         Assert.Equal(kind, PathClassifier.Classify(path));
 }
@@ -59,8 +62,8 @@ public sealed class ClaimVerificationTests
     private static AgentClaim C(string run, string type, string source = "user-declared", string value = "true") =>
         new("", run, type, source, value);
 
-    private static AgentClaim Eval(TempGitRepo repo, string run, string type, string source = "user-declared") =>
-        Assert.Single(Claims(repo.Root).Record(run, C(run, type, source)).Receipt!.Claims, c => c.ClaimType == type);
+    private static AgentClaim Eval(TempGitRepo repo, string run, string type, string source = "user-declared", string value = "true") =>
+        Assert.Single(Claims(repo.Root).Record(run, C(run, type, source, value)).Receipt!.Claims, c => c.ClaimType == type);
 
     [Fact]
     public async Task TestsAdded_SupportedUnsupportedUnknown()
@@ -243,6 +246,84 @@ public sealed class ClaimVerificationTests
     }
 
     [Fact]
+    public async Task FalseValue_IsEvaluatedAsNegatedClaim()
+    {
+        var (repo, run) = await RunAsync(during: r => r.Write("src/owned.cs", "no tests"));
+        using (repo)
+        {
+            var denied = Eval(repo, run, ClaimTypes.TestsAdded, value: "false");
+            Assert.Equal(CriterionStatus.Supported, denied.Status);
+            Assert.Contains("negated claim", denied.Reason, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("=false", denied.Reason);
+        }
+
+        (repo, run) = await RunAsync(during: r => r.Write("tests/FooTests.cs", "class FooTests {}"));
+        using (repo)
+        {
+            var contradicted = Claims(repo.Root).Record(run, C(run, ClaimTypes.TestsAdded, value: "false")).Receipt!.Claims.Single(c => c.ClaimType == ClaimTypes.TestsAdded);
+            Assert.Equal(CriterionStatus.Unsupported, contradicted.Status);
+            Assert.Contains("does not hold", contradicted.Reason);
+        }
+
+        (repo, run) = await RunAsync();
+        using (repo)
+        {
+            Assert.Equal(CriterionStatus.Unknown, Eval(repo, run, ClaimTypes.TestsAdded, value: "NO").Status);
+        }
+    }
+
+    [Fact]
+    public async Task NonBooleanValue_IsRejectedAtRecordAndUnknownAtEvaluate()
+    {
+        var (repo, run) = await RunAsync(during: r => r.Write("src/owned.cs", "x"));
+        using (repo)
+        {
+            var recorded = Claims(repo.Root).Record(run, C(run, ClaimTypes.TestsAdded, value: "maybe"));
+            Assert.False(recorded.Ok);
+            Assert.Contains("not a boolean", recorded.Error);
+
+            var evaluated = ClaimVerifier.EvaluateOne(new FileRunReceiptStore(repo.Root).Read(run), null, C(run, ClaimTypes.TestsAdded, value: "maybe"));
+            Assert.Equal(CriterionStatus.Unknown, evaluated.Status);
+            Assert.Contains("not a boolean", evaluated.Reason);
+        }
+    }
+
+    [Fact]
+    public async Task EvidenceCheck_AfterClaimsCheck_PreservesAwkFindings()
+    {
+        var (repo, run) = await RunAsync(during: r => r.Write("src/owned.cs", "x"));
+        using (repo)
+        {
+            var afterClaims = Claims(repo.Root).Record(run, C(run, ClaimTypes.DocsOnly));
+            Assert.Contains(afterClaims.Receipt!.Findings, f => f.RuleId == ClaimRules.Unsupported);
+            var afterEvidence = new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root), new FileReceiptProjectionWriter()).Check(run);
+            Assert.True(afterEvidence.Ok, afterEvidence.Error);
+            Assert.Contains(afterEvidence.Receipt!.Findings, f => f.RuleId == ClaimRules.Unsupported && f.Message.Contains("DocsOnly"));
+            Assert.Contains(afterEvidence.Receipt.Decision.Reasons, r => r.StartsWith(ClaimRules.Unsupported));
+        }
+    }
+
+    [Fact]
+    public async Task DriftCheck_AfterClaimsCheck_PreservesAwkAndClaimsCheckPreservesAwd()
+    {
+        var (repo, run) = await RunAsync(during: r => r.Write("a.txt", "outside"));
+        using (repo)
+        {
+            var afterClaims = Claims(repo.Root).Record(run, C(run, ClaimTypes.DocsOnly));
+            Assert.Contains(afterClaims.Receipt!.Findings, f => f.RuleId == ClaimRules.Unsupported);
+            var afterDrift = new DriftService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root), new FileReceiptProjectionWriter()).Check(run);
+            Assert.True(afterDrift.Ok, afterDrift.Error);
+            Assert.Contains(afterDrift.Receipt!.Findings, f => f.RuleId == ClaimRules.Unsupported && f.Message.Contains("DocsOnly"));
+            Assert.Contains(afterDrift.Receipt.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("a.txt"));
+
+            var afterClaimsAgain = Claims(repo.Root).Check(run);
+            Assert.True(afterClaimsAgain.Ok, afterClaimsAgain.Error);
+            Assert.Contains(afterClaimsAgain.Receipt!.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("a.txt"));
+            Assert.Contains(afterClaimsAgain.Receipt.Findings, f => f.RuleId == ClaimRules.Unsupported);
+        }
+    }
+
+    [Fact]
     public async Task Record_AllocatesIds_RefusesOverwrite_AndCliChecksFalseClaims()
     {
         var (repo, run) = await RunAsync(during: r => { r.Write("docs/guide.md", "d"); r.Write("src/owned.cs", "x"); });
@@ -253,7 +334,19 @@ public sealed class ClaimVerificationTests
             Assert.Equal("c1", first.Receipt!.Claims[0].ClaimId);
             var second = svc.Record(run, C(run, ClaimTypes.TestsAdded));
             Assert.Equal(["c1", "c2"], second.Receipt!.Claims.Select(c => c.ClaimId).ToArray());
-            Assert.Contains("already exists", svc.Record(run, first.Receipt.Claims[0] with { ClaimId = "c1", Value = "again" }).Error);
+            Assert.Contains("already exists", svc.Record(run, first.Receipt.Claims[0] with { ClaimId = "c1", Value = "false" }).Error);
+
+            var replaced = svc.Record(run, first.Receipt.Claims[0] with { ClaimId = "c1", ClaimType = ClaimTypes.TestsAdded, Value = "false" }, replace: true);
+            Assert.True(replaced.Ok, replaced.Error);
+            Assert.Equal("c1", replaced.RecordedClaim!.ClaimId);
+            Assert.Equal(ClaimTypes.TestsAdded, replaced.RecordedClaim.ClaimType);
+            Assert.Equal("false", replaced.RecordedClaim.Value);
+            Assert.Equal(CriterionStatus.Supported, replaced.RecordedClaim.Status);
+
+            var oReplace = new StringWriter();
+            var eReplace = new StringWriter();
+            Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["record", run, "--type", ClaimTypes.DocsOnly, "--value", "true", "--source", "user-declared", "--id", "c1", "--replace"], oReplace, eReplace));
+            Assert.Contains("Claim recorded: c1 DocsOnly", oReplace.ToString());
 
             var o = new StringWriter();
             var e = new StringWriter();

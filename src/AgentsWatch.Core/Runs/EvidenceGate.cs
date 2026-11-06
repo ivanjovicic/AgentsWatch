@@ -195,7 +195,7 @@ public static class EvidenceGate
     }
 }
 
-public sealed record EvidenceCommandResult(bool Ok, RunReceipt? Receipt, string? Path, string? Error, ValidationEvidence? Recorded = null);
+public sealed record EvidenceCommandResult(bool Ok, RunReceipt? Receipt, string? Path, string? Error, ValidationEvidence? Recorded = null, AgentClaim? RecordedClaim = null);
 
 /// <summary>Application use case: import labeled validation evidence and evaluate the Evidence Gate.</summary>
 public sealed class EvidenceService(
