@@ -90,7 +90,8 @@ public sealed record RunReceipt(
     RunDecision Decision,
     IReadOnlyList<string> MissedWork,
     string AttributionPolicy,
-    string? EvidenceDigest = null)
+    string? EvidenceDigest = null,
+    string? ContractDigest = null)
 {
     public const int CurrentSchemaVersion = 1;
 }
@@ -171,7 +172,8 @@ public static class RunReceiptBuilder
             findings,
             new RunDecision(DecisionStatus.NeedsEvidence, ["pending evidence check"]),
             [],
-            record.AttributionPolicy);
+            record.AttributionPolicy,
+            ContractDigest: contract is null ? null : RunContractJson.ComputeDigest(contract));
         return EvidenceGate.Apply(receipt, contract);
     }
 }

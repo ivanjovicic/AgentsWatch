@@ -161,6 +161,63 @@ public sealed class EvidenceGateTests
     }
 
     [Fact]
+    public async Task ValidContractChangedAfterFinish_IsRejected()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunContractStore(repo.Root);
+            var original = RunContractJson.Deserialize(store.ReadRaw("t"));
+            Assert.Contains(original.ValidationContract.Requirements, r => r.Mandatory && r.Command == "dotnet test");
+            store.Write(original with
+            {
+                ValidationContract = new ValidationContract([new ValidationRequirement("t", "echo ok")])
+            }, overwrite: true);
+            var edited = RunContractJson.Deserialize(store.ReadRaw("t"));
+            Assert.True(RunContractLinter.Check(edited).IsValid);
+            Assert.Equal(original.ContractId, edited.ContractId);
+            Assert.Equal(original.TaskId, edited.TaskId);
+            Assert.Equal(original.AcceptanceCriteria, edited.AcceptanceCriteria);
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo ok", summary: "test log"));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
+    public async Task EvidenceCheck_WithoutDriftCheck_DoesNotDone_WhenOutsideOwnedAndAvoidTouched()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["src/**"], ["docs/**"],
+                PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            Assert.True(created.Created, created.Error);
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            repo.Write("extra.txt", "outside owned");
+            repo.Write("docs/note.md", "avoided and outside owned");
+            var git2 = new GitRepositoryStateReader(new GitCommandRunner());
+            var finished = await new RunFinishService(new FileActiveRunStore(repo.Root), new FileRunRecordStore(repo.Root), git2, git2,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: new FileRunContractStore(repo.Root), projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, started.Baseline!.RunId);
+            Assert.True(finished.Finished, finished.Error);
+            var run = started.Baseline.RunId;
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("extra.txt"));
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == ScopeDriftRules.AvoidTouched && f.Paths.Contains("docs/note.md"));
+        }
+    }
+
+    [Fact]
     public async Task MissingValidation_CannotBeDone()
     {
         var (repo, run) = await StartedAndFinished();

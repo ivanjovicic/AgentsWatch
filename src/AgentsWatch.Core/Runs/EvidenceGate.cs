@@ -19,7 +19,9 @@ public static class EvidenceGate
 {
     public static RunReceipt Apply(RunReceipt receipt, RunContract? contract)
     {
-        var findings = (receipt.Findings ?? []).Where(f => !f.RuleId.StartsWith("AWE", StringComparison.Ordinal)).ToList();
+        var findings = (receipt.Findings ?? []).Where(f =>
+            !f.RuleId.StartsWith("AWE", StringComparison.Ordinal)
+            && !f.RuleId.StartsWith("AWD", StringComparison.Ordinal)).ToList();
         var n = 0;
         void Add(string rule, FindingCategory category, FindingSeverity severity, FindingStatus status, string message, IReadOnlyList<string> paths, IReadOnlyList<string> evidenceRefs) =>
             findings.Add(new Finding($"e{++n}", rule, category, severity, status, message, paths, evidenceRefs, receipt.RunId, receipt.ContractId));
@@ -83,6 +85,16 @@ public static class EvidenceGate
                 Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
                     "contract identity or mandatory contract fields are inconsistent with the receipt.", [], ["contract", "receipt"]);
             }
+
+            var observedDigest = RunContractJson.ComputeDigest(contract);
+            if (string.IsNullOrWhiteSpace(receipt.ContractDigest)
+                || !string.Equals(receipt.ContractDigest, observedDigest, StringComparison.Ordinal))
+            {
+                Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
+                    "stored contract does not match the digest captured when the run finished; a later edit cannot reinterpret this run's evidence.", [], ["contract", "receipt.contractDigest"]);
+            }
+
+            findings.AddRange(ScopeDriftChecker.Check(receipt, contract));
 
             var expectedCriteria = (contract.AcceptanceCriteria ?? []).Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
             var actualCriteria = receipt.AcceptanceCriteria ?? [];
