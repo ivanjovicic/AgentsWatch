@@ -128,9 +128,7 @@ public static class RunReceiptJson
 
 public static class RunReceiptBuilder
 {
-    public const string PendingGate = "Evidence Gate not implemented yet (AW-VFY-007); decision is a placeholder and cannot be Done.";
-
-    /// <summary>Builds a receipt from the finish record. Never marks Done; never invents validation results.</summary>
+    /// <summary>Builds a receipt from the finish record, then applies the Evidence Gate. Never invents validation results.</summary>
     public static RunReceipt Build(RunFinishRecord record, RunContract? contract)
     {
         var findings = new List<Finding>();
@@ -154,12 +152,6 @@ public static class RunReceiptBuilder
             .Select((c, i) => new AcceptanceCriterionResult($"ac{i + 1}", c, CriterionStatus.Unknown, [], "not evaluated; acceptance checks are not implemented yet"))
             .ToArray();
 
-        var reasons = new List<string> { "no validation evidence recorded", PendingGate };
-        if (record.Delta.AttributionAmbiguities.Count > 0)
-        {
-            reasons.Add($"{record.Delta.AttributionAmbiguities.Count} ambiguous change(s) need review");
-        }
-
         var baseline = record.StartBaseline;
         var receipt = new RunReceipt(
             RunReceipt.CurrentSchemaVersion,
@@ -177,10 +169,10 @@ public static class RunReceiptBuilder
             [],
             criteria,
             findings,
-            new RunDecision(DecisionStatus.NeedsEvidence, reasons),
+            new RunDecision(DecisionStatus.NeedsEvidence, ["pending evidence check"]),
             [],
             record.AttributionPolicy);
-        return RunReceiptJson.WithDigest(receipt);
+        return EvidenceGate.Apply(receipt, contract);
     }
 }
 
@@ -189,6 +181,7 @@ public interface IRunReceiptStore
     bool Exists(string runId);
     string PathFor(string runId);
     void WriteNew(RunReceipt receipt);
+    void Replace(RunReceipt receipt);
     RunReceipt Read(string runId);
 }
 
@@ -216,7 +209,26 @@ public sealed class FileRunReceiptStore(string workspaceRoot) : IRunReceiptStore
         File.WriteAllText(temp, RunReceiptJson.Serialize(receipt) + "\n");
         try
         {
-            File.Move(temp, path, overwrite: false);
+            File.Move(temp, path, overwrite: false); // WriteNew
+        }
+        finally
+        {
+            if (File.Exists(temp))
+            {
+                File.Delete(temp);
+            }
+        }
+    }
+
+    public void Replace(RunReceipt receipt)
+    {
+        var path = PathFor(receipt.RunId);
+        Directory.CreateDirectory(Dir);
+        var temp = Path.Combine(Dir, $".{receipt.RunId}.{Guid.NewGuid():N}.tmp");
+        File.WriteAllText(temp, RunReceiptJson.Serialize(receipt) + "\n");
+        try
+        {
+            File.Move(temp, path, overwrite: true);
         }
         finally
         {

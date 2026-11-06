@@ -21,22 +21,22 @@ Updated 2026-11-05 (local evidence, `.ai/runs/2026-11-05-aw-vfy-00[1-4]-evidence
 ```text
 restore: PASS
 build: PASS
-tests: PASS (69/69 local after AW-VFY-006; 47/47 CI-confirmed on 9d3f459)
+tests: PASS (79/79 local after AW-VFY-007; 47/47 CI-confirmed on 9d3f459)
 ```
 
-AW-VFY-001..006 done (005-006 local, not yet pushed) (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
+AW-VFY-001..007 done (005-007 local, not yet pushed) (parser fixed with NUL-delimited porcelain; CLI smoke/Gate 0 local; RunContract v1; start baseline).
 Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt
 
 ```text
-AW-VFY-007 - Evidence Gate v1
+AW-VFY-008 - Scope Drift v1
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-007-evidence-gate-v1.md
+docs/prompts/AW-VFY-008-scope-drift-v1.md
 ```
 ## Strict decision tree
 
