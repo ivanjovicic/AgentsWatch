@@ -173,7 +173,8 @@ public static class RunReceiptBuilder
             new RunDecision(DecisionStatus.NeedsEvidence, ["pending evidence check"]),
             [],
             record.AttributionPolicy,
-            ContractDigest: contract is null ? null : RunContractJson.ComputeDigest(contract));
+            // Preserve the start-time contract identity: a contract edited during the run must not be re-baselined at finish.
+            ContractDigest: baseline.ContractDigest);
         return EvidenceGate.Apply(receipt, contract);
     }
 }
