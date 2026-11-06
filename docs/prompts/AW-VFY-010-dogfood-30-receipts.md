@@ -88,6 +88,48 @@ Before declaring the MVP validated, obtain at least:
 - multiple dirty-at-start runs with no observed false attribution;
 - evidence that the receipt/handoff is useful without full chat history.
 
+## Mandatory adversarial QA before product claims
+
+Keep the **30 real receipts** target intact; synthetic unit/fixture cases do not count as
+external usage or evidence of willingness to pay. Run targeted regression and full
+Release CI on an exact SHA; independently adjudicate the expected decision for each case
+before reading AgentsWatch's output.
+
+Add a falsification matrix with at least these controls (reproduce, assert and link
+each result to a run/commit and an expected/actual decision):
+
+1. Remove an acceptance criterion from a previously passing receipt; no `Done`.
+2. Replace/reorder acceptance text or contract identity; no `Done`.
+3. Import a passing validation from another run; reject or block.
+4. Reuse the mandatory validation ID for an unrelated command; no `Done`.
+5. Supply `Pass` with nonzero exit code, then explicit `Fail`, `TimedOut`,
+   `BlockedByEnvironment` and no validation; no false `Done`.
+6. Claim `ValidationPassed` using only agent prose or `UserDeclared`; report
+   the actual trust limitation, not authenticated execution.
+7. Compare clean-start, dirty-unchanged and dirty-changed-further files, including
+   add/delete/rename, non-fast-forward HEAD, and simultaneous human/agent writes.
+8. Cross owned/avoid boundaries through renames and Windows separators;
+   no silent scope omission and no drift from pre-existing unchanged files.
+9. Replay `evidence check`, `drift check`, `claims check` in all orders;
+   findings, decisions and receipt digests must stay stable without duplicates.
+10. Replay corrupted/truncated JSON, unknown schema, forged digest, missing contract,
+    or stale contract; fail closed and preserve prior evidence where safe.
+11. Try secrets in file paths, command summaries and source references; confirm
+    the documented privacy boundary and no raw contents in default receipts.
+12. Test negative controls with *no* violations; calculate false positives as well
+    as catches, and reject rule changes that merely inflate finding counts.
+
+For each scenario record: fixture/setup, independent oracle, version/SHA,
+AgentsWatch output, TP/FP/TN/FN/Unknown, adjudicator, and reproduction command.
+Do not equate `ValidationSource.CI` supplied by a human with an authenticated CI
+execution; that trust boundary requires a separate provenance design and proof.
+Document limitations prominently in the final dogfood report.
+
+**Exit gate:** zero observed silent false-`Done` on the adversarial matrix, zero
+observed material false attribution, no unexplained false negatives, and a measured
+reviewer-benefit comparison against the team's normal Git+CI+PR workflow.
+Any repeatable unsafe `Done` finding blocks AW-VFY-011 until fixed and retested.
+
 ## Quality review
 
 Classify each notable finding as:

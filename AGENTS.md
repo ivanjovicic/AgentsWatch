@@ -49,25 +49,24 @@ docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
 
 Do not select an old `AW-VAL-*`, `AW-TOKEN-*`, productization, dashboard, or architecture-expansion prompt merely because its historical file says `Ready`.
 
-## Current Gate 0 evidence
+## Current implementation gate (2026-11-06)
 
-Latest known CI evidence:
+Gate 0 is closed. AW-VFY-001–009 are implemented on `main`, including
+Contract, baseline, finish, RunReceipt, Evidence Gate, Scope Drift and Claims.
+GitHub CI succeeded at `ab3ebe62f1a23fd19a87caff98f8a267e598920c`.
+Older notes claiming the Git parser/test gate is still failing are superseded.
 
-```text
-restore: pass
-build: pass
-tests: fail in GitStatusParserTests
-```
+Current canonical next step is **AW-VFY-010**: 30 adjudicated real-world receipts,
+with falsification/negative-control cases before external and commercial validation.
+Do not silently mark AW-VFY-010 Done based only on green unit tests.
 
-Known parser bug is documented in `docs/BOOTSTRAP_NEXT_STEPS.md`.
+Scope/claims verification is deterministic and bounded. `Pass` evidence imported
+through a user-controlled CLI is labeled by the declared source but is not authenticated
+against CI or agent provenance. Receipt hashes are checksums, not signed attestations.
+Never present this MVP as independently attesting to provenance or semantic acceptance.
 
-Current priority:
-
-1. `AW-VFY-001` — git parser/CI hardening;
-2. `AW-VFY-002` — CLI smoke/Gate 0 closure;
-3. then verification MVP prompts in strict dependency order.
-
-Do not add new runtime features before Gate 0 is green.
+For every runtime change, run targeted regression tests and the full .NET Release
+test gate on the **exact** resulting head. An unrun check is not PASS.
 
 ## Verification-first product rules
 

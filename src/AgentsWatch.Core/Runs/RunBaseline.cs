@@ -56,7 +56,8 @@ public sealed record RunBaseline(
     string Branch,
     string? HeadCommitSha,
     WorktreeState WorktreeState,
-    ExecutorMetadata? ExecutorMetadata)
+    ExecutorMetadata? ExecutorMetadata,
+    string? ContractDigest = null)
 {
     public const int CurrentSchemaVersion = 1;
 }
@@ -172,7 +173,7 @@ public sealed class RunStartService(
 
         var executorOrNull = executor is { Agent: null, Tool: null, Model: null } ? null : executor;
         var baseline = new RunBaseline(RunBaseline.CurrentSchemaVersion, runId, contract.ContractId, contract.TaskId, now,
-            state.Branch, state.HeadCommitSha, state.Worktree, executorOrNull);
+            state.Branch, state.HeadCommitSha, state.Worktree, executorOrNull, RunContractJson.ComputeDigest(contract));
 
         try
         {

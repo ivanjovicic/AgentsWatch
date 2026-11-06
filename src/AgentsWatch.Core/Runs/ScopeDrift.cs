@@ -24,12 +24,12 @@ public static class ScopeDriftChecker
         void Add(string rule, FindingCategory category, FindingSeverity severity, FindingStatus status, string message, IReadOnlyList<string> paths, IReadOnlyList<string> refs) =>
             findings.Add(new Finding($"d{++n}", rule, category, severity, status, message, paths, refs, receipt.RunId, receipt.ContractId));
 
-        foreach (var change in receipt.RunDelta.PreExistingUnchangedChanges)
+        foreach (var change in receipt.RunDelta.PreExistingUnchangedChanges ?? [])
         {
             _ = change; // never drift: dirty-before-start and unchanged during the run
         }
 
-        foreach (var change in receipt.RunDelta.AttributionAmbiguities.OrderBy(c => c.Path, StringComparer.Ordinal))
+        foreach (var change in (receipt.RunDelta.AttributionAmbiguities ?? []).OrderBy(c => c.Path, StringComparer.Ordinal))
         {
             if (!AffectsScope(change, owned, avoid))
             {
@@ -42,7 +42,7 @@ public static class ScopeDriftChecker
                 paths, ["runDelta.attributionAmbiguities"]);
         }
 
-        foreach (var change in receipt.RunDelta.RunIntervalChanges.Concat(receipt.RunDelta.PreExistingChangedFurther)
+        foreach (var change in (receipt.RunDelta.RunIntervalChanges ?? []).Concat(receipt.RunDelta.PreExistingChangedFurther ?? [])
                      .OrderBy(c => c.Path, StringComparer.Ordinal))
         {
             Evaluate(change, owned, avoid, Add);
@@ -154,6 +154,7 @@ public sealed class DriftService(
         try
         {
             receipt = receipts.Read(runId);
+            RunReceiptJson.EnsureStoredDigest(receipt);
         }
         catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException)
         {

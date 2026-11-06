@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using AgentsWatch.Cli;
 using AgentsWatch.Core.Contracts;
 using AgentsWatch.Core.Runs;
@@ -37,11 +38,256 @@ public sealed class EvidenceGateTests
     {
         var store = new FileRunReceiptStore(root);
         var receipt = store.Read(runId);
-        store.Replace(receipt with
+        // Test-only: simulate a locally edited receipt whose checksum is also recomputed.
+        // This does not authenticate the manual acceptance claim.
+        store.Replace(RunReceiptJson.WithDigest(receipt with
         {
             AcceptanceCriteria = receipt.AcceptanceCriteria.Select(a => a with { Status = CriterionStatus.Supported, Reason = "marked supported in test" }).ToArray(),
             EvidenceDigest = null
-        });
+        }));
+    }
+
+
+    [Fact]
+    public async Task RemovedAcceptanceCriteria_CannotTurnEvidenceGateGreen()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var store = new FileRunReceiptStore(repo.Root);
+            store.Replace(RunReceiptJson.WithDigest(store.Read(run) with { AcceptanceCriteria = [], EvidenceDigest = null }));
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("acceptance criteria"));
+        }
+    }
+
+    [Fact]
+    public async Task SubstitutedAcceptanceCriteria_CannotTurnEvidenceGateGreen()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunReceiptStore(repo.Root);
+            var receipt = store.Read(run);
+            store.Replace(RunReceiptJson.WithDigest(receipt with
+            {
+                AcceptanceCriteria = receipt.AcceptanceCriteria.Select(c => c with { Text = "different condition" }).ToArray(),
+                EvidenceDigest = null
+            }));
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
+    public async Task CrossRunEvidence_IsRejectedAtImport_AndIgnoredIfAlreadyStored()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var wrongRun = Ev("unrelated-run", ValidationStatus.Pass, ValidationSource.CI);
+            var imported = Service(repo.Root).Record(run, wrongRun);
+            Assert.False(imported.Ok);
+            Assert.Contains("does not match", imported.Error);
+            Assert.Empty(new FileRunReceiptStore(repo.Root).Read(run).Validations);
+
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunReceiptStore(repo.Root);
+            store.Replace(RunReceiptJson.WithDigest(store.Read(run) with { Validations = [wrongRun], EvidenceDigest = null }));
+            var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
+            Assert.Equal(DecisionStatus.NeedsEvidence, checkedReceipt.Decision.Status);
+            Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("belongs to run"));
+            Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(checkedReceipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task MatchingIdWithDifferentCommand_DoesNotSatisfyMandatoryValidation()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo skipped tests"));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task PassingStatusWithNonzeroExitCode_IsContradictoryEvidence()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var inconsistent = Ev(run, ValidationStatus.Pass, ValidationSource.CI) with { ExitCode = 7 };
+            var result = Service(repo.Root).Record(run, inconsistent);
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("nonzero exit code"));
+            var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
+            Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
+        }
+    }
+
+    [Fact]
+    public async Task InvalidContractModifiedAfterFinish_CannotProduceDone()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunContractStore(repo.Root);
+            var original = RunContractJson.Deserialize(store.ReadRaw("t"));
+            store.Write(original with { ValidationContract = new ValidationContract([]) }, overwrite: true);
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("mandatory contract fields"));
+        }
+    }
+
+    [Fact]
+    public async Task ValidContractChangedDuringRun_MustNotBeCertified()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var contracts = new FileRunContractStore(repo.Root);
+            var draft = new ContractDraft("T", null, "intent", ["feature works"], ["src/**"], [],
+                PermissionMode.WorkspaceWrite, RunMode.Implementation,
+                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null);
+            var created = new ContractService(contracts).Create(draft);
+            Assert.True(created.Created, created.Error);
+
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var active = new FileActiveRunStore(repo.Root);
+            var started = await new RunStartService(contracts, active, git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var run = started.Baseline!.RunId;
+
+            var original = RunContractJson.Deserialize(contracts.ReadRaw("t"));
+            var altered = original with { ValidationContract = new ValidationContract([new ValidationRequirement("t", "echo ok")]) };
+            Assert.True(RunContractLinter.Check(altered).IsValid);
+            contracts.Write(altered, overwrite: true);
+
+            var finished = await new RunFinishService(active, new FileRunRecordStore(repo.Root), git, git,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: contracts, projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, run);
+            Assert.True(finished.Finished, finished.Error);
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo ok"));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
+                && f.Message.Contains("contract", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public async Task LegacyActiveRunWithoutStartContractDigest_CannotBeCertified()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var contracts = new FileRunContractStore(repo.Root);
+            var created = new ContractService(contracts).Create(new ContractDraft("T", null, "intent",
+                ["feature works"], ["**"], [], PermissionMode.WorkspaceWrite, RunMode.Implementation,
+                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            Assert.True(created.Created, created.Error);
+
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var active = new FileActiveRunStore(repo.Root);
+            var started = await new RunStartService(contracts, active, git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var run = started.Baseline!.RunId;
+            File.WriteAllText(active.PathFor(run), RunBaselineJson.Serialize(started.Baseline with { ContractDigest = null }));
+
+            var finished = await new RunFinishService(active, new FileRunRecordStore(repo.Root), git, git,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: contracts, projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, run);
+            Assert.True(finished.Finished, finished.Error);
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
+    public async Task ValidContractChangedAfterFinish_IsRejected()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            SupportAcceptance(repo.Root, run);
+            var store = new FileRunContractStore(repo.Root);
+            var original = RunContractJson.Deserialize(store.ReadRaw("t"));
+            Assert.Contains(original.ValidationContract.Requirements, r => r.Mandatory && r.Command == "dotnet test");
+            store.Write(original with
+            {
+                ValidationContract = new ValidationContract([new ValidationRequirement("t", "echo ok")])
+            }, overwrite: true);
+            var edited = RunContractJson.Deserialize(store.ReadRaw("t"));
+            Assert.True(RunContractLinter.Check(edited).IsValid);
+            Assert.Equal(original.ContractId, edited.ContractId);
+            Assert.Equal(original.TaskId, edited.TaskId);
+            Assert.Equal(original.AcceptanceCriteria, edited.AcceptanceCriteria);
+
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo ok", summary: "test log"));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
+        }
+    }
+
+    [Fact]
+    public async Task EvidenceCheck_WithoutDriftCheck_DoesNotDone_WhenOutsideOwnedAndAvoidTouched()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["src/**"], ["docs/**"],
+                PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            Assert.True(created.Created, created.Error);
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            repo.Write("extra.txt", "outside owned");
+            repo.Write("docs/note.md", "avoided and outside owned");
+            var git2 = new GitRepositoryStateReader(new GitCommandRunner());
+            var finished = await new RunFinishService(new FileActiveRunStore(repo.Root), new FileRunRecordStore(repo.Root), git2, git2,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: new FileRunContractStore(repo.Root), projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, started.Baseline!.RunId);
+            Assert.True(finished.Finished, finished.Error);
+            var run = started.Baseline.RunId;
+
+            SupportAcceptance(repo.Root, run);
+            var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
+            Assert.True(result.Ok, result.Error);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == ScopeDriftRules.OutsideOwned && f.Paths.Contains("extra.txt"));
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == ScopeDriftRules.AvoidTouched && f.Paths.Contains("docs/note.md"));
+        }
     }
 
     [Fact]
@@ -161,7 +407,7 @@ public sealed class EvidenceGateTests
         {
             var store = new FileRunReceiptStore(repo.Root);
             var receipt = store.Read(run);
-            store.Replace(receipt with { Claims = [new AgentClaim("c1", run, "ValidationPassed", "agent-prose", "all tests pass")], EvidenceDigest = null });
+            store.Replace(RunReceiptJson.WithDigest(receipt with { Claims = [new AgentClaim("c1", run, "ValidationPassed", "agent-prose", "all tests pass")], EvidenceDigest = null }));
             var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
             Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
             Assert.NotEqual(DecisionStatus.Done, checkedReceipt.Decision.Status);
@@ -282,6 +528,85 @@ public sealed class EvidenceGateTests
             e = new StringWriter();
             Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["record", run, "--id", "v1", "--command", "dotnet test", "--status", "pass", "--source", "ci", "--summary", "test log"], o, e));
             Assert.Contains("already exists", e.ToString());
+        }
+    }
+
+    [Fact]
+    public async Task MissingAcceptanceStatus_WithStaleDigest_CannotProduceDoneOrRewrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var path = new FileRunReceiptStore(repo.Root).PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            Assert.False(string.IsNullOrWhiteSpace(node["evidenceDigest"]?.GetValue<string>()));
+            Assert.True(node["acceptanceCriteria"]![0]!.AsObject().Remove("status"));
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+            Assert.DoesNotContain("status", node["acceptanceCriteria"]![0]!.ToJsonString());
+
+            var o = new StringWriter();
+            var e = new StringWriter();
+            var code = EvidenceCommand.Run(repo.Root, ["record", run, "--command", "dotnet test", "--status", "pass", "--source", "user-declared", "--summary", "test log"], o, e);
+            Assert.NotEqual(0, code);
+            Assert.NotEqual(DecisionStatus.Done, Service(repo.Root).Check(run).Receipt?.Decision.Status);
+            Assert.Equal(tampered, File.ReadAllText(path));
+            Assert.DoesNotContain("\"done\"", File.ReadAllText(path), StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingReceiptEvidenceDigest_CannotReblessTamperedAcceptanceOrRewrite(bool explicitNull)
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var store = new FileRunReceiptStore(repo.Root);
+            var path = store.PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            node["acceptanceCriteria"]![0]!["status"] = "supported";
+            node["acceptanceCriteria"]![0]!["reason"] = "manually marked supported";
+            if (explicitNull)
+            {
+                node["evidenceDigest"] = null;
+            }
+            else
+            {
+                Assert.True(node.AsObject().Remove("evidenceDigest"));
+            }
+
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+
+            var evidence = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.UserDeclared));
+            Assert.False(evidence.Ok);
+            Assert.Contains("digest", evidence.Error!, StringComparison.OrdinalIgnoreCase);
+            Assert.False(new ClaimsService(repo.Root, store, new FileRunContractStore(repo.Root)).Check(run).Ok);
+            Assert.False(new DriftService(repo.Root, store, new FileRunContractStore(repo.Root)).Check(run).Ok);
+            Assert.Equal(tampered, File.ReadAllText(path));
+        }
+    }
+
+    [Fact]
+    public async Task EmptyRunDeltaObject_DoesNotThrow_AndIsRejectedWithoutRewrite()
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var path = new FileRunReceiptStore(repo.Root).PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            node["runDelta"] = new JsonObject();
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+
+            var o = new StringWriter();
+            var err = new StringWriter();
+            var thrown = Record.Exception(() => EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Null(thrown);
+            Assert.Contains("invalid", err.ToString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(tampered, File.ReadAllText(path));
         }
     }
 }

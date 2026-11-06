@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -218,6 +220,10 @@ public static class RunContractJson
     };
 
     public static string Serialize(RunContract contract) => JsonSerializer.Serialize(contract, Options);
+
+    public static string ComputeDigest(RunContract contract) =>
+        "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Serialize(contract)))).ToLowerInvariant();
+
 
     /// <summary>Reads schemaVersion first so unsupported versions fail clearly before shape binding.</summary>
     public static RunContract Deserialize(string json)
