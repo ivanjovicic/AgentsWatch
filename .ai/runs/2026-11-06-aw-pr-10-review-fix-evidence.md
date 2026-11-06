@@ -46,3 +46,36 @@ restore exit 0; build Release 0 warnings 0 errors; test Release: Failed 0, Passe
 - `ExpectedEvidence` matching remains substring-based.
 - Receipts finished before this change have no `ContractDigest` and cannot reach Done (fail-closed).
 - Falsification coverage still belongs in AW-VFY-010. No claim of independently trusted agent execution.
+
+## Second review — start-time contract identity (2026-11-06)
+
+The first fix bound the receipt to the contract loaded **at finish**, but did not detect a
+still-valid contract edit **after start and before finish**. The verifier must preserve
+the contract that governed the delegated task when execution began.
+
+Additional tests:
+- `ValidContractChangedDuringRun_MustNotBeCertified`
+- `LegacyActiveRunWithoutStartContractDigest_CannotBeCertified`
+
+Red-before proof: GitHub Actions [run 42227580359](https://github.com/ivanjovicic/AgentsWatch/actions/runs/42227580359) on intermediate `cb0054621e10`:
+Ubuntu Release build successful; 158 passed, 2 failed (both new cases), 160 total.
+Both new tests observed `Done` where the expected result was `NeedsEvidence` or at least not `Done`.
+
+Targeted fix:
+- `RunStartService.StartAsync` stores `RunContractJson.ComputeDigest(contract)` in
+  `RunBaseline.ContractDigest` at run start.
+- `RunReceiptBuilder.Build` carries **the stored start digest**, never recomputes
+  it from the potentially edited contract at finish.
+- `EvidenceGate.Apply` compares receipt digest with the currently loaded contract;
+  missing or mismatching digests remain `NeedsEvidence`.
+- An active run created before start-digest capture (legacy baseline) is safely
+  finished but cannot be certified `Done`; no silent backfill.
+
+Final exact-head Linux/Windows CI result must be recorded in the PR review/body;
+previous successful runs do not prove subsequent commits. This document is an
+intermediate trace, not a claim of green final CI.
+
+Residual trust limits: a digest stored in locally writable JSON can be modified by
+its controller, and changes reverted before finish are not detectable without an
+independent timestamped/attested record. The current product is local deterministic
+verification, not cryptographic provenance attestation.
