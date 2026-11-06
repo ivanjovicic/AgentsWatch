@@ -553,6 +553,40 @@ public sealed class EvidenceGateTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingReceiptEvidenceDigest_CannotReblessTamperedAcceptanceOrRewrite(bool explicitNull)
+    {
+        var (repo, run) = await StartedAndFinished();
+        using (repo)
+        {
+            var store = new FileRunReceiptStore(repo.Root);
+            var path = store.PathFor(run);
+            var node = JsonNode.Parse(File.ReadAllText(path))!;
+            node["acceptanceCriteria"]![0]!["status"] = "supported";
+            node["acceptanceCriteria"]![0]!["reason"] = "manually marked supported";
+            if (explicitNull)
+            {
+                node["evidenceDigest"] = null;
+            }
+            else
+            {
+                Assert.True(node.AsObject().Remove("evidenceDigest"));
+            }
+
+            File.WriteAllText(path, node.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            var tampered = File.ReadAllText(path);
+
+            var evidence = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.UserDeclared));
+            Assert.False(evidence.Ok);
+            Assert.Contains("digest", evidence.Error!, StringComparison.OrdinalIgnoreCase);
+            Assert.False(new ClaimsService(repo.Root, store, new FileRunContractStore(repo.Root)).Check(run).Ok);
+            Assert.False(new DriftService(repo.Root, store, new FileRunContractStore(repo.Root)).Check(run).Ok);
+            Assert.Equal(tampered, File.ReadAllText(path));
+        }
+    }
+
     [Fact]
     public async Task EmptyRunDeltaObject_DoesNotThrow_AndIsRejectedWithoutRewrite()
     {
