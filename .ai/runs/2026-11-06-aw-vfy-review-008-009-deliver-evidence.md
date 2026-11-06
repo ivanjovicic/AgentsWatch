@@ -49,4 +49,8 @@ Counts vs previous 143: +4 claim facts (false value, non-boolean reject, AWK aft
 
 ## Queue / router
 
-AW-VFY-001..009 treated as Done after this delivery commit. AW-VFY-010 remains Ready now (requires dogfood) and was not started. CI on the pushed head is recorded after `git push` (not claimed here).
+AW-VFY-001..009 treated as Done. AW-VFY-010 remains Ready now (requires dogfood) and was not started.
+
+## CI (executed)
+
+Push `d078295..ab3ebe6` to origin/main. GitHub Actions run 42201075461 (https://github.com/ivanjovicic/AgentsWatch/actions/runs/42201075461) on `ab3ebe6`: conclusion success. Job build-test Test step: Failed 0, Passed 150, Skipped 0, Total 150 (Europe/Belgrade 2026-11-06 11:14).

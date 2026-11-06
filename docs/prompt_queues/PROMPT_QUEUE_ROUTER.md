@@ -21,10 +21,10 @@ Updated 2026-11-06 (local evidence, `.ai/runs/2026-11-06-aw-vfy-review-008-009-d
 ```text
 restore: PASS
 build: PASS
-tests: PASS (150/150 local after 008/009 review-fix; previous CI 79/79 on d078295, run 42192082705)
+tests: PASS (150/150 CI-confirmed on ab3ebe6, run 42201075461)
 ```
 
-AW-VFY-001..009 done locally (150/150 after review-fix of value:false, finding preservation, replace-middle display). 001-007 CI-confirmed on d078295 (42192082705). 008/009 + follow-up + this review-fix are in the delivery push; CI on new HEAD pending. Next: AW-VFY-010 dogfood (requires real runs). Not started.
+AW-VFY-001..009 done (CI run 42201075461 on ab3ebe6, 150/150). Follow-up + 008 + 009 + review-fix are on origin/main. Next: AW-VFY-010 dogfood (requires real runs). Not started.
 Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
 
 ## Current next prompt

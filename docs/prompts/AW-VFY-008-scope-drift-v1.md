@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Done (2026-11-06; review-fix delivery, CI pending on push)  
+Status: Done (2026-11-06; CI run 42201075461 success 150/150 on ab3ebe6)  
 Run mode: implementation  
 Budget: medium  
 Gate: Evidence Gate proven
