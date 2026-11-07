@@ -58,7 +58,7 @@ and “AW-VFY-010 not started”):
 
 AW-VFY-010 is **in progress and not complete**. Unit tests, merged corrective
 PRs, and a successful privacy check do not close the 30-receipt program.
-Existing batches and checks were inventoried in `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 11 of 30 after B3). The next slice is a further AW-VFY-010 batch (B4) named in that ledger; do not start it automatically. Do not invent run counts, customer feedback, or
+Existing batches and checks were inventoried in `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 12 of 30 after B4). The next slice is a further AW-VFY-010 batch (B5) named in that ledger; do not start it automatically. Do not invent run counts, customer feedback, or
 independent approvals. Planning documents are not completion evidence.
 
 The attached planning file `AgentsWatch_Operativni_Backlog_2026-11-07.md` was
@@ -71,24 +71,25 @@ binds a command to a criterion and does not independently certify `Done`.
 ## Current next prompt
 
 ```text
-Further AW-VFY-010 batch (B4) - named in the ledger; do not start automatically
+Further AW-VFY-010 batch (B5) - named in the ledger; do not start automatically
 ```
 
 Prompt file:
 
 ```text
-docs/evidence/aw-vfy-010-ledger.md (Recommended B4 slots)
+docs/evidence/aw-vfy-010-ledger.md (Recommended B5 slots)
 ```
 
 Immediate order after that:
 
 ```text
 1. AW-VFY-010-B3         (executed; ledger updated)
-2. Further AW-VFY-010 batch / B4 (NEXT; proposal only in the ledger; do not start automatically)
-3. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
-4. (AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears)
-5. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
-6. AW-VFY-012            (HOLD until AW-VFY-011 passes)
+2. AW-VFY-010-B4         (executed one legitimate REAL; remaining 3-5 slots not padded)
+3. Further AW-VFY-010 batch / B5 (NEXT; proposal only in the ledger; do not start automatically)
+4. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
+5. (AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears)
+6. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
+7. AW-VFY-012            (HOLD until AW-VFY-011 passes)
 ```
 
 Parent prompt (program, not the next single-session task):
@@ -105,7 +106,7 @@ Are AW-VFY-001..009 done on current origin/main?
   yes -> Is the AW-VFY-010 30-run proof complete (exit gate in the parent prompt)?
           no  -> Has AW-VFY-010-LEDGER produced a sanitized inventory of existing evidence?
                   no  -> AW-VFY-010-LEDGER
-                  yes -> Run the next small named batch (B4 per ledger; not started) <== CURRENT NEXT TASK
+                  yes -> Run the next small named batch (B5 per ledger; not started) <== CURRENT NEXT TASK
                          then only further 010 batches the ledger still shows as open
           yes -> Is external value proven (AW-VFY-011)?
                   no  -> AW-VFY-011            (HOLD until 010 is complete and reviewed)

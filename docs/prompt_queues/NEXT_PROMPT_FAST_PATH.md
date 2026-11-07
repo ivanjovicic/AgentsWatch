@@ -13,7 +13,7 @@ not the next claimable task unless the owner explicitly redirects.
 ## Current next prompt
 
 ```text
-Further AW-VFY-010 batch (B4) — Next small dogfood batch
+Further AW-VFY-010 batch (B5) — Next small dogfood batch
 ```
 
 Prompt file:
@@ -44,19 +44,19 @@ docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 ## Why this is next
 
 B3 executed three useful REAL runs on `origin/main`
-`8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809`. Useful REAL count is 11 of 30
-(gap 19). AW-VFY-010 remains in progress and not complete.
+`8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809`. Useful REAL count is 12 of 30
+(gap 18). AW-VFY-010 remains in progress and not complete.
 
-Do not start B4 automatically from this pointer.
+Do not start B5 automatically from this pointer.
 Do not mark AW-VFY-010 complete from unit tests, a plan, or green CI.
 Do not pick AW-VFY-011 or AW-VFY-012 (HOLD).
-Do not pad the remaining 19 with extra synthetic N2/privacy variations.
+Do not pad the remaining 18 with extra synthetic N2/privacy variations.
 
 ## Copy-ready instruction
 
 ```text
 Repository: ivanjovicic/AgentsWatch
-Prompt ID: AW-VFY-010-B4 (named in ledger; do not start automatically)
+Prompt ID: AW-VFY-010-B5 (named in ledger; do not start automatically)
 Queue: docs/prompt_queues/verification_mvp_2026_08_25.md
 Run mode: small real dogfood batch
 Budget: one small batch; only useful REAL rows advance the 30
