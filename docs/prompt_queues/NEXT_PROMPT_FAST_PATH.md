@@ -13,13 +13,13 @@ not the next claimable task unless the owner explicitly redirects.
 ## Current next prompt
 
 ```text
-AW-VFY-010-B3 — Next small dogfood batch
+Further AW-VFY-010 batch (B4) — Next small dogfood batch
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md
+docs/evidence/aw-vfy-010-ledger.md
 ```
 
 Queue:
@@ -43,20 +43,20 @@ docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 
 ## Why this is next
 
-AW-VFY-010-LEDGER inventoried existing evidence on `origin/main`
-`d1028b357fa7ea7002aa5ce2e155d295a99c54f6`. Useful REAL count is 8 of 30
-(gap 22). AW-VFY-010 remains in progress and not complete.
+B3 executed three useful REAL runs on `origin/main`
+`8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809`. Useful REAL count is 11 of 30
+(gap 19). AW-VFY-010 remains in progress and not complete.
 
-Do not re-run the ledger inventory unless new evidence appears.
+Do not start B4 automatically from this pointer.
 Do not mark AW-VFY-010 complete from unit tests, a plan, or green CI.
 Do not pick AW-VFY-011 or AW-VFY-012 (HOLD).
-Do not pad the remaining 22 with extra synthetic N2/privacy variations.
+Do not pad the remaining 19 with extra synthetic N2/privacy variations.
 
 ## Copy-ready instruction
 
 ```text
 Repository: ivanjovicic/AgentsWatch
-Prompt ID: AW-VFY-010-B3
+Prompt ID: AW-VFY-010-B4 (named in ledger; do not start automatically)
 Queue: docs/prompt_queues/verification_mvp_2026_08_25.md
 Run mode: small real dogfood batch
 Budget: one small batch; only useful REAL rows advance the 30

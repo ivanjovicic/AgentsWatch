@@ -3,6 +3,7 @@
 Date: 2026-11-07 (Europe/Belgrade)  
 Inventory SHA: `origin/main` `d1028b357fa7ea7002aa5ce2e155d295a99c54f6` (merge of PR #14)  
 Main CI on that SHA: run `42369838859`, 193/193 Linux and Windows  
+B3 update (2026-11-07, Europe/Belgrade): executed on approved `origin/main` `8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809` (merge of PR #15). Main CI after PR #15: run `42371110378`, 193/193 Linux and Windows.  
 Parent program: `docs/prompts/AW-VFY-010-dogfood-30-receipts.md` — **in progress, not complete**
 
 This file is a sanitized public inventory. It does not reproduce invented sentinel
@@ -32,20 +33,20 @@ in their originals and are annotated here.
 
 | Kind | Rows | Count toward the 30? |
 |---|---|---|
-| `REAL` (useful) | 8 | Yes |
+| `REAL` (useful) | 11 | Yes |
 | `NEGATIVE_CONTROL` | 9 | No |
 | `REPLAY` | 6 | No |
 | `FIXTURE` | 0 separate run rows | No |
 | `DUPLICATE` | 0 counted run rows | No |
 | `UNKNOWN` | 0 executed rows | No |
-| **Useful REAL total** | **8** | **Gap to 30: 22** |
+| **Useful REAL total** | **11** | **Gap to 30: 19** |
 
 Planning templates (`aw-vfy-010-setup.md`, `aw-vfy-010-adversarial-matrix.md`)
 are not runs. Flutter/Mobile planned items #5 (GRX84) and #6 (MOB80) were never
 started (owner HOLD). Discarded operator setups for the finish-CLI check (stale
 CLI, wrong working directory, dirty-at-start) are noted under that control and
 are not extra rows. Corrective PRs #11, #12, #13 and docs PR #14 are product/docs
-changes, not dogfood receipts.
+changes, not dogfood receipts. Docs PR #15 recorded the pre-B3 ledger. Batch 3 added three useful REAL rows below. Retainable product edits from B3 are separate draft PRs and were not merged from this batch.
 
 ## Inventory table
 
@@ -69,6 +70,9 @@ changes, not dogfood receipts.
 | PM-N2A | NEGATIVE_CONTROL | no | 2026-11-07 09:56 | AgentsWatch | `04d064f` | NeedsReview | AWE009 (no `--accept-validation`) | TP | same file, run `aw-vfy-010-pm-n2a-20261107t085644z-85b2ff` | Correct block is TP, not TN | N2 unbound |
 | PM-N2B | NEGATIVE_CONTROL | no | 2026-11-07 09:56 | AgentsWatch | `04d064f` | NeedsReview | AWE009 (with `--accept-validation`) | TP | same file, run `aw-vfy-010-pm-n2b-20261107t085647z-37a07c` | Correct block is TP, not TN | N2 bound |
 | PM-FINISH | NEGATIVE_CONTROL | no | 2026-11-07 11:04 | AgentsWatch | `edbbbe4` (post-PR #13) | NeedsReview | AWD004, AWE007; sentinel hits 0 on finish stdout/stderr and stored artifacts; digest `sha256:44e729e48a1215742060f44e3189f7f3325e6accbe0625f4b97a3f9a0ea1a507` stable | TP for non-Done / leak-closed on checked surfaces | `.ai/runs/2026-11-07-aw-vfy-010-finish-output-final-check.md` run `aw-vfy-010-pm-finish-20261107t100415z-f67129` | Discarded operator retries are not extra rows. Residual limits: unexpected `Program.Main` exceptions; out-of-repo artifact paths | finish-CLI privacy after #13 |
+| B3-R1 | REAL | yes | 2026-11-07 13:24 | AgentsWatch | start/end `8e0bd8e` (interval uncommitted at finish) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 x2; AWE006 x2 warnings on expectedEvidence phrase match | TP | run `aw-vfy-010-b3-r1-20261107t122421z-e6589a`; digest `sha256:0042bd8d4ba88e7b4967bb6ffbea9a82a816315d1ae2c2de09e5ef86dd117b15` | Documented Program.Main last-resort catch now wraps exception text through ReceiptRedaction; focused test plus full suite 194/194 locally. Manual Supported stays unverified. No independently verified Done | small bug fix / .NET+test |
+| B3-R2 | REAL | yes | 2026-11-07 13:26 | MathLearning | start/end `b8acd22` (no product commit) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 | TP | run `aw-vfy-010-b3-r2-20261107t122625z-de848e`; digest `sha256:4855bebb8554a65c158b0e9b65b68ba4b7cfa4353da130379466557accf39dda` | Not issue #47. Guide hourly-reset claim does not match GetDelayUntilNextUtcBoundary; Monday week start matches StartOfWeekUtc/GetWeekStart; LeaderboardJobs stubs are not Hangfire-registered. Init files stayed pre-existing unchanged | investigation |
+| B3-R3 | REAL | yes | 2026-11-07 13:27 | MathLearning | start/end `b8acd22` (interval uncommitted at finish) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 | TP | run `aw-vfy-010-b3-r3-20261107t122746z-d47952`; digest `sha256:402b026ae7634891a9dfd29a6f34880fd12d7e04f83db184b13ab4de822b8a88` | Distinct dirty-start: planted tracked comment on LeaderboardJobs.cs stayed pre-existing unchanged; interval edit was LEADERBOARD_SYSTEM_GUIDE.md only. No production SQL/Fly | docs correction + tracked dirty-at-start |
 
 Six Batch 1 replay rows are summarized on one table line above; they are six
 `REPLAY` rows, not one.
@@ -79,16 +83,16 @@ Six Batch 1 replay rows are summarized on one table line above; they are six
 |---|---|---|
 | docs-only | yes | B1-1, B2-R1; also B1-4 / B2-R4 / B2-R5 as docs tasks |
 | test-only | yes | B1-2 |
-| small bug fix | no | — |
+| small bug fix | yes | B3-R1 Program.Main unexpected-exception redaction + test |
 | .NET endpoint/service change | no | — |
 | Flutter widget change | no | planned #5 HOLD, not run |
 | Flutter provider/state change | no | planned #6 HOLD, not run |
-| investigation/fix split | partial | B1-3 investigation only; production apply still HOLD |
+| investigation/fix split | partial | B1-3 and B3-R2 investigation only; production apply still HOLD |
 | drifting change | control only | B1-7 |
 | missing validation | control only | B1-8 |
-| pre-existing dirty worktree | yes | B1-4, B2-R5 |
+| pre-existing dirty worktree | yes | B1-4, B2-R5 (planted untracked); B3-R3 (planted tracked file left unchanged) |
 
-## Recommended B3 slots (proposal only; not executed here)
+## B3 execution (completed this update; historical B3 proposal kept as context below)
 
 Prefer `REAL` tasks. Do not pad the remaining 22 with extra synthetic variations
 of N2 or privacy sentinels (those controls are already covered after PRs #12/#13).
@@ -117,11 +121,29 @@ of N2 or privacy sentinels (those controls are already covered after PRs #12/#13
    had an unstored format-verifier exit 2, so Fail-vs-Done is not yet a stored
    control. Include only after the REAL slots, not instead of them.
 
+## Recommended B4 slots (proposal only; not executed here)
+
+Prefer more useful REAL tasks. Do not start this batch automatically. Do not
+open AW-VFY-011 or AW-VFY-012. Do not pad with extra N2 or privacy-sentinel
+variations. Reviewer overhead remains Unknown unless independently timed.
+
+1. REAL - .NET endpoint/service change if a genuine needed edit exists
+   (still uncovered as a parent sample class). Do not invent one.
+2. HOLD-gated REAL - Flutter widget (GRX84 / #5) or QuizProvider (MOB80 / #6)
+   only if the owner lifts that HOLD.
+3. Optional NEGATIVE_CONTROL (does not count toward 30) - structured Fail
+   recorded through evidence record, expect not-Done / AWE003. Still not a
+   stored Fail-vs-Done control.
+4. Another independent MathLearning or other .NET scoped task that is not
+   issue #47 residual and not a repeat of the leaderboard-guide cadence fix.
+5. Continue to treat manual Supported as AWE009 / NeedsReview. There is
+   still no independently verified Done path.
+
 ## Explicit statement
 
-AW-VFY-010 is **not complete**. Useful REAL count is 8 of 30. Several parent
+AW-VFY-010 is **not complete**. Useful REAL count is 11 of 30. Several parent
 sample classes and most of the adversarial catalog remain open or are covered
 only by controls. There is no reviewed 30-run exit-gate report, and reviewer
 benefit was not measured.
 
-Next claimable task: `AW-VFY-010-B3`.
+Next claimable task: a further AW-VFY-010 batch (B4) as named in the recommended slots above. Do not start it automatically. AW-VFY-010 remains In progress.

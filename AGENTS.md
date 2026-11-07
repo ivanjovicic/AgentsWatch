@@ -61,7 +61,7 @@ failing, or that CI last stopped at 150/150 on `ab3ebe6`, are superseded.
 AW-VFY-010 is **in progress and not complete**. Corrective PRs #11, #12 and
 #13 merged during dogfood; the post-merge finish-output privacy check after
 #13 succeeded. The ledger inventory exists at `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 8 of 30).
-The next claimable slice is **AW-VFY-010-B3**. Do not silently mark AW-VFY-010 Done based only on green
+The next claimable slice is a further **AW-VFY-010** batch (B4) named in `docs/evidence/aw-vfy-010-ledger.md`. B3 has been executed. Do not silently mark AW-VFY-010 Done based only on green
 unit tests, merged fixes, or a plan.
 
 Manual `Supported` validation stays `AWE009` / `NeedsReview`. There is no
