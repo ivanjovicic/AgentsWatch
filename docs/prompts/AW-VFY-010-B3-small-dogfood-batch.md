@@ -7,7 +7,8 @@ Status: Ready after `AW-VFY-010-LEDGER`
 Depends on: completed sanitized ledger at `docs/evidence/aw-vfy-010-ledger.md`  
 Run mode: small real dogfood batch + honest evidence; targeted fix only if a
 high-confidence defect invalidates the next receipt  
-Budget: one small batch (5–7 receipts max); do not run the rest of the 30
+Budget: one small batch (at most 5–7 new rows); only useful `REAL` rows advance
+the parent 30-receipt target
 
 ## Purpose
 
@@ -30,6 +31,37 @@ Start each receipt from current `origin/main` (expected post-PR #13:
 main). Rebuild the CLI used for the run from that SHA. Do not reuse a stale
 CLI from an older worktree.
 
+## Counting kinds and positive class
+
+Use the same kind table and TP/FP/FN/TN convention as
+`docs/prompts/AW-VFY-010-LEDGER.md`.
+
+Kinds: `REAL`, `FIXTURE`, `NEGATIVE_CONTROL`, `REPLAY`, `DUPLICATE`, `UNKNOWN`.
+Only useful `REAL` runs count toward the 30. Controls, fixtures, replays,
+duplicates and unknowns are tracked and may be necessary quality checks, but
+they do not increment the 30. Do not pad the remaining 30 with several
+variations of the same synthetic test.
+
+Positive class (historical Batch 2 matrix): **unsafe to complete / violation
+requiring intervention**.
+
+- TP: correctly non-Done / correctly rejected unsafe completion
+- FN: false Done (or unsafe Supported accepted as Done)
+- TN: correctly Done when the independent oracle says completion is justified
+- FP: incorrectly non-Done / rejected when the oracle says Done is justified
+
+N2-class (unrelated passing validation + manual `Supported`):
+
+- Expected current-main outcome: `NeedsReview` and `AWE009` (not trustworthy
+  `Done`).
+- If the product correctly blocks Done, classify **TP**, not TN.
+- Historical Batch 2 N2 that reached `Done` is **FN** and must not be rewritten.
+- The row kind is `NEGATIVE_CONTROL` (or `REPLAY` if repeating the historical
+  control on a later SHA). It does not count toward the 30.
+
+Do not claim reviewer benefit was measured unless an independent reviewer
+actually timed the work in this batch.
+
 ## Trust-boundary rules
 
 - Write independent expected outcomes **before** reading AgentsWatch output.
@@ -49,24 +81,31 @@ CLI from an older worktree.
 ## Default slots if the ledger still lists them as open
 
 Keep the batch to at most these classes (skip any the ledger already covers
-with current-main semantics):
+with current-main semantics). Prefer `REAL` slots that close parent-prompt
+sample gaps over extra controls.
 
-1. **Docs-only / unknown acceptance** on AgentsWatch itself: expect
-   `NeedsEvidence` (or clearer missing-evidence block), not `Done`.
-2. **Unrelated passing validation + manual `Supported`** (N2-class): expect
-   `NeedsReview` and `AWE009`. This is a true negative for silent `Done`, not
-   a product failure.
-3. **Structured `Fail` validation**: expect not-`Done` (typically `Failed` /
-   AWE003). Record TP if the gate holds.
-4. **Dirty-unchanged file plus a later allowed edit**: the unchanged dirty
-   file must not be attributed as a run-interval change; allowed interval
-   edits may be attributed or marked ambiguous per current rules (`AWD004`
-   when a path is or will be `[redacted]`).
-5. **Optional privacy regression** only if the ledger does not already count
-   the post-#13 finish-output check: one real finish with a new invented
-   sentinel; stored artifacts and finish stdout/stderr must show 0 hits.
-6. **Optional docs-owned scoped change** that stays `NeedsReview` after
-   manual `Supported` (do not “force Done”).
+1. **Docs-only / unknown acceptance** on AgentsWatch itself (`REAL` if it is an
+   independent meaningful docs task): expect `NeedsEvidence` (or a clearer
+   missing-evidence block), not `Done`. If the oracle says unsafe-to-complete
+   and the product blocks Done, that is TP.
+2. **Unrelated passing validation + manual `Supported`** (N2-class;
+   `NEGATIVE_CONTROL` or `REPLAY`): expect `NeedsReview` and `AWE009`. A
+   correct block is TP, not TN. Does not count toward the 30.
+3. **Structured `Fail` validation** (`NEGATIVE_CONTROL`): expect not-`Done`
+   (typically `Failed` / AWE003). A correct block is TP. Does not count toward
+   the 30.
+4. **Dirty-unchanged file plus a later allowed edit** (`REAL` if the edit is an
+   independent meaningful task): the unchanged dirty file must not be
+   attributed as a run-interval change; allowed interval edits may be
+   attributed or marked ambiguous per current rules (`AWD004` when a path is
+   or will be `[redacted]`).
+5. **Optional privacy regression** (`NEGATIVE_CONTROL` or `REPLAY`) only if the
+   ledger does not already count the post-#13 finish-output check: one real
+   finish with a new invented sentinel; stored artifacts and finish
+   stdout/stderr must show 0 hits. Does not count toward the 30.
+6. **Optional docs-owned scoped change** (`REAL` if independent and not a
+   `DUPLICATE` of slot 1) that stays `NeedsReview` after manual `Supported`
+   (do not “force Done”).
 
 Do not include Flutter / MathLearning-Mobile #5/#6 unless the owner has
 explicitly lifted that HOLD.
@@ -97,21 +136,25 @@ Do not start a second parallel batch or a third full dogfood tour.
 1. Read the ledger, parent prompt, `DECISION_ORDERING.md`, and
    `RECEIPT_REDACTION.md`.
 2. Confirm `origin/main` SHA and rebuild the CLI.
-3. For each slot: create a clean dedicated worktree, write expected outcomes,
-   start, perform only the intended action, finish, adjudicate TP/FP/TN/FN/Unknown.
+3. For each slot: label its kind first, create a clean dedicated worktree,
+   write expected outcomes, start, perform only the intended action, finish,
+   adjudicate TP/FP/TN/FN/Unknown using the positive class above.
 4. After the small batch, review false findings, attribution ambiguity, and
    user friction. Fix only a high-confidence defect that would invalidate the
    next receipt.
 5. Write local evidence and, if anything is published, a sanitized summary.
 6. Update the ledger with the new rows (append; do not rewrite old rows except
-   to add a “superseded by later check” note).
+   to add a “superseded by later check” note). Increment the 30-count only for
+   new useful `REAL` rows.
 
 ## Acceptance criteria
 
 - Ledger existed first.
-- At most 5–7 new real receipts/checks, each with pre-declared expected outcomes.
-- No invented counts or customer feedback.
+- At most 5–7 new rows, each with a kind and pre-declared expected outcomes.
+- Only useful `REAL` rows are counted toward the 30.
+- No invented counts, customer feedback, or unmeasured reviewer-benefit claims.
 - No independently verified `Done` claimed from manual `Supported`.
+- N2-class correct block is recorded as TP, not TN.
 - Historical evidence files unchanged.
 - Parent AW-VFY-010 remains In progress unless the parent exit gate is
   genuinely met (it will not be met by B3 alone).

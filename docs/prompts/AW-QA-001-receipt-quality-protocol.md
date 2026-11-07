@@ -11,13 +11,13 @@ Budget: medium
 ## Purpose
 
 Write a reviewable quality protocol for the current RunContract / baseline /
-delta / receipt / evidence-gate / scope / claims spine. Use it to judge later
-dogfood batches and any schema change. This prompt does not execute the
+delta / receipt / evidence-gate / scope / claims spine so later dogfood
+batches are rigorous rather than anecdotal. This prompt does not execute the
 30-receipt dogfood and does not mark AW-VFY-010 complete.
 
-Earlier drafts of this prompt said the protocol had to finish before AW-VFY-010
-started. That timing is obsolete: AW-VFY-010 is already in progress. Align the
-protocol to the code now on `main` and to remaining ledger/B3 work.
+Earlier drafts said the protocol had to finish before AW-VFY-010 started.
+That timing is obsolete: AW-VFY-010 is already in progress. Align the protocol
+to the code now on `main` and to remaining ledger/B3 work.
 
 ## Current semantics that the protocol must encode
 
@@ -40,6 +40,46 @@ protocol to the code now on `main` and to remaining ledger/B3 work.
 - `AWD004` when a scoped path is or will be stored as `[redacted]`.
 - `ValidationSource.CI` supplied by a human is not authenticated CI provenance.
 
+Use the same TP/FP/FN/TN positive class as the historical Batch 2 matrix:
+**unsafe completion / violation requiring intervention**. A correctly blocked
+N2-class case is TP, not TN. See `docs/prompts/AW-VFY-010-LEDGER.md`.
+
+## Adversarial and measurement requirements (restored from PR #9)
+
+Include all of these must-catch cases in the protocol catalog, mapped to
+expected current-main decisions/codes: pre-existing dirty unchanged; dirty
+changed-further; existing/new untracked; add/delete/rename; same-path
+staged+unstaged; branch/HEAD switch; concurrent writer ambiguity; missing test
+run; test failure; CI evidence for wrong SHA; blocked environment; out-of-scope
+path; avoid-path touch; false DocsOnly; false TestsAdded; false
+ValidationPassed; unsupported broad BugFixed claim; N2-class unrelated passing
+validation + manual Supported.
+
+Specify for every protocol slot: baseline repo state, RunContract requirements,
+agent task, expected machine evidence, expected run decision, privacy/cleanup
+controls, independent reviewer judgment, and baseline workflow result
+(Git+CI+PR+native/Qodo if available).
+
+Define measurement: high-confidence true/false findings, material attribution
+errors, Unknown/Ambiguous, receipt capture overhead, reviewer minutes used or
+saved, changed decision, setup friction and repeat use. Missing measurement is
+Unknown, not success. Do not invent token savings or claim reviewer benefit
+was measured when it was not.
+
+Specify failure severity: any material false attribution or unsupported Done
+is release-blocking; benign ambiguity must not be counted as a false author
+claim. Include a 5–10 run batch review cadence, independent adjudication of
+disagreements and a stop rule for excessive false-positive burden. Separate
+product failures from fixture mistakes.
+
+Use disposable branches/temporary repos and synthetic files for deliberate
+failures. No destructive operations in Trendplus/MathLearning or production
+data. Label each slot REAL / FIXTURE / NEGATIVE_CONTROL so it cannot be
+confused with the 30-REAL dogfood denominator owned by LEDGER/B3.
+
+A 30-row protocol matrix is a design aid for later batches. It does not
+execute AW-VFY-010 and does not invent run results.
+
 ## Owned paths
 
 - `docs/qa/RECEIPT_EVIDENCE_PROTOCOL.md` (create if absent)
@@ -57,24 +97,11 @@ protocol to the code now on `main` and to remaining ledger/B3 work.
 - claiming customer findings or independently verified `Done`
 - creating another active queue
 
-## Work steps
-
-1. Read current `docs/DATA_MODEL.md`, `docs/COMMAND_CONTRACTS.md`,
-   `docs/DECISION_ORDERING.md`, `docs/RECEIPT_REDACTION.md`, and the parent
-   AW-VFY-010 adversarial list.
-2. Catalog predicates the product actually implements (decision codes, status
-   promotions that are illegal, attribution classes, redaction surfaces).
-3. Map each parent-prompt adversarial case and the N2-class unrelated
-   validation case to an expected decision/code under current semantics.
-4. Note which cases LEDGER/B3 already cover versus which remain protocol-only
-   until a real run exists. Do not invent run results.
-5. List schema stability rules: any future runtime change needs targeted tests
-   and must not silently reintroduce unverified `Done`.
-
 ## Acceptance criteria
 
 - Protocol document exists and matches current `main` behavior, including
   AWE009 / NeedsReview for manual `Supported`.
+- The restored adversarial catalog and measurement rubric are present.
 - No duplicated next-task instructions that compete with the router.
 - No invented dogfood outcomes.
 - Explicit statement that this work does not complete AW-VFY-010.

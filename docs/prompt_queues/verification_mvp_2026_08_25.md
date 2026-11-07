@@ -115,10 +115,10 @@ do not invent its contents. Plans are not completion evidence.
 
 | ID | Status | Prompt file | Purpose |
 |---|---|---|---|
-| AW-QA-001 | Parallel support | `../prompts/AW-QA-001-receipt-quality-protocol.md` | Quality protocol for current receipt/evidence-gate semantics. |
-| AW-SEC-001 | Parallel support | `../prompts/AW-SEC-001-receipt-trust-boundary.md` | Privacy/trust-boundary review of persist and display surfaces. |
-| AW-RES-001 | Parallel research | `../prompts/AW-RES-001-external-value-protocol.md` | Interview protocol required later by AW-VFY-011. |
-| AW-RES-002 | Parallel research | `../prompts/AW-RES-002-commercial-design-partner-protocol.md` | Buyer-commitment protocol required later by AW-VFY-012. |
+| AW-QA-001 | Parallel support | `../prompts/AW-QA-001-receipt-quality-protocol.md` | Quality protocol, adversarial catalog, and measurement rubric for current receipt/evidence-gate semantics. |
+| AW-SEC-001 | Parallel support | `../prompts/AW-SEC-001-receipt-trust-boundary.md` | OSS/licensing/distribution/privacy preflight and receipt persist/display review. |
+| AW-RES-001 | Parallel research | `../prompts/AW-RES-001-external-value-protocol.md` | Competitive baseline (>=8 scenarios) and interview protocol required later by AW-VFY-011. |
+| AW-RES-002 | Parallel research | `../prompts/AW-RES-002-commercial-design-partner-protocol.md` | ICP/ROI/pricing prep and buyer-commitment protocol required later by AW-VFY-012. |
 
 Open PRs #4, #5, #6, #8, and #9 are classified in `SUPPORT_PROMPT_COVERAGE.md`.
 Do not change, merge, or close them from queue work.

@@ -13,16 +13,91 @@ outrank the router.
 
 ## Support-prompt coverage matrix
 
-| Prompt | File | Primary coverage | Current-semantics adaptations | Overlap / non-duplication | Next-task eligible? |
-|---|---|---|---|---|---|
-| AW-QA-001 | `../prompts/AW-QA-001-receipt-quality-protocol.md` | Quality protocol and predicate catalog for contract, receipt, evidence gate, scope, claims | Manual `Supported` = AWE009 / NeedsReview; `--accept-validation` binds but does not certify Done; finish CLI uses the redacted receipt; start baselines are not a redacted persistence surface; `AWD004` when a path is or will be `[redacted]` | Complements the parent AW-VFY-010 adversarial list. Does not inventory existing runs (LEDGER) and does not execute batches (B3) | No (parallel support) |
-| AW-SEC-001 | `../prompts/AW-SEC-001-receipt-trust-boundary.md` | Privacy and trust-boundary review of persist/display surfaces | Records PR #12/#13 controls and documented residual limits without exploit steps; distinguishes heuristic redaction from independent verification | Complements `RECEIPT_REDACTION.md`; does not replace it | No (parallel support) |
-| AW-RES-001 | `../prompts/AW-RES-001-external-value-protocol.md` | Interview/comparison protocol for later AW-VFY-011 | No invented customer feedback; AWE009 / NeedsReview must appear in the script; baselines are Git+CI+PR+native/Qodo | Does not start AW-VFY-011 | No (parallel research; 011 remains HOLD) |
-| AW-RES-002 | `../prompts/AW-RES-002-commercial-design-partner-protocol.md` | Buyer-commitment protocol for later AW-VFY-012 | No invented commitments or pricing wins; polite interest does not count | Does not start AW-VFY-012; does not implement SaaS/billing | No (parallel research; 012 remains HOLD) |
+| Prompt | File | Primary coverage now | Next-task eligible? |
+|---|---|---|---|
+| AW-QA-001 | `../prompts/AW-QA-001-receipt-quality-protocol.md` | Quality protocol, current-semantics predicate catalog, restored adversarial must-catch list and measurement rubric | No (parallel support) |
+| AW-SEC-001 | `../prompts/AW-SEC-001-receipt-trust-boundary.md` | OSS/licensing/distribution/privacy preflight **and** receipt persist/display review | No (parallel support) |
+| AW-RES-001 | `../prompts/AW-RES-001-external-value-protocol.md` | Dated competitive baseline, >=8 falsifiable scenarios, copy/kill tests, **and** later interview script | No (parallel research; 011 remains HOLD) |
+| AW-RES-002 | `../prompts/AW-RES-002-commercial-design-partner-protocol.md` | ICP (5–30 developers), >=15-candidate framework, ROI formula, two pricing hypotheses, **and** commitment definition | No (parallel research; 012 remains HOLD) |
 
-Useful content from draft PR #9 was preserved and rewritten against current
-receipt/trust-boundary semantics. Do not merge PR #9 as-is; its router/queue
-text still presents AW-VFY-001 as next and predates Gates 0–4 closing.
+These prompts are not a second runtime queue. They do not change Gate 6 or
+Gate 7 thresholds and do not start AW-VFY-011 or AW-VFY-012.
+
+## What the first PR #14 draft actually carried vs dropped
+
+Compared with PR #9 files
+`AW-QA-001-receipt-benchmark-preflight.md`,
+`AW-SEC-001-oss-license-and-privacy-preflight.md`,
+`AW-RES-001-competitive-baseline-verification.md` and
+`AW-RES-002-buyer-discovery-preflight.md` (branch
+docs/aw-queue-precision-2026-11-05 @ `66ec1409010e7e21ae47eeb8b73bbd3b004cb00b`).
+The first PR #14 commit (`4057da827c2bb118736961f5a8d7163494f52532`) did **not**
+preserve all useful PR #9 content. This corrective commit restores the gaps
+called out in review `5811734643`. Honesty below is about both drafts.
+
+### AW-QA-001
+
+Carried in the first draft and kept: support-track placement; no runtime
+expansion; protocol aligned to current AWE009 / NeedsReview,
+`--accept-validation` binding, finish-CLI redaction, and `AWD004`; explicit
+statement that this does not replace or complete AW-VFY-010.
+
+Restored here from PR #9: adversarial must-catch catalog; per-slot expected
+evidence/decision/baseline-workflow fields; measurement list (including
+reviewer minutes as Unknown if unmeasured); 5–10 run batch cadence;
+independent adjudication; fixture-vs-product-failure split; disposable-repo
+rule.
+
+Intentionally not restored: “must be complete before AW-VFY-010 executes”
+(obsolete; 010 is already in progress). Optional `tests/**` fixture
+implementation remains unauthorized here (protocol/docs only). Output path
+stays `docs/qa/RECEIPT_EVIDENCE_PROTOCOL.md` rather than
+`docs/research/agentswatch_market_validation_2026_11/adversarial_30_run_protocol.md`
+to avoid a second queue-like research tree for QA.
+
+### AW-SEC-001
+
+Carried in the first draft and kept: receipt persist/display review against
+`RECEIPT_REDACTION.md`; PR #12/#13 controls; residual `Program.Main` and
+out-of-repo path limits; no exploit steps.
+
+Dropped by the first draft and restored here from PR #9: LICENSE existence
+check (public repo ≠ OSS); owner distribution decision
+(closed/permissive/copyleft/open-core) without auto-selecting a license;
+consent/retention defaults; exfiltration and command-execution threat model;
+tool install/sharing safeguards; 8–12 point external-evaluation safety
+checklist; required-before-public-installer / before AW-VFY-011
+repository-evidence collection.
+
+### AW-RES-001
+
+Carried in the first draft and kept: later interview/comparison script;
+AWE009 / NeedsReview questions; no invented customer feedback; 011 HOLD.
+
+Dropped by the first draft and restored here from PR #9: dated primary-source
+competitor matrix (Confirmed/Partial/Unknown/Contradicted; no inferred “No”);
+at least eight falsifiable baseline scenarios (dirty unchanged,
+dirty changed-further, untracked/rename, missing mandatory tests, stale
+validation after HEAD change, forbidden path, unsupported “all tests pass”,
+concurrent writer ambiguity); copyability / simplest competing implementation;
+kill/stop rule if the baseline already catches the issue at equal or lower
+reviewer effort; required outputs `competitive_baseline.md` and `sources.md`.
+
+### AW-RES-002
+
+Carried in the first draft and kept: definition of a concrete later
+commitment vs polite interest; no invented quotes or pricing wins; 012 HOLD;
+no SaaS/billing implementation.
+
+Dropped by the first draft and restored here from PR #9: 5–30 developer ICP
+screen; >=15-candidate outreach framework across >=2 ecosystems (no invented
+names); neutral buyer interview; blinded/side-by-side evaluation worksheet;
+ROI formula with labeled inputs; two pricing hypotheses (team flat-rate and
+per-seat; €79–199/team/month as hypothesis only); privacy/consent notes;
+kill rules; explicit consistency with unchanged AW-VFY-011/012 thresholds.
+
+Do not merge PR #9 as-is; its router/queue text still presents AW-VFY-001 as
+next and predates Gates 0–4 closing.
 
 ## Open PR classification (do not change, merge, or close these PRs)
 
@@ -47,3 +122,4 @@ are cited as corrective dogfood-era product work. They are not open.
 - Merge/close of PRs #4, #5, #6, #8, #9
 - SaaS / Gateway / Team Server / billing implementation
 - Cloud-agent execution, production SQL, deploy, and direct pushes to `main`
+- Public installer / LICENSE selection until the owner explicitly decides
