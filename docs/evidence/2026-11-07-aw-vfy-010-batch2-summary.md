@@ -46,7 +46,7 @@ Combined: TP 2, FN 1, TN 4, FP 0. False-Done count: 1 (N2).
 ## Findings that this pull request addresses
 
 1. **Projection leak (R2).** An invented sentinel appeared in canonical JSON, the Markdown receipt, the handoff, and CLI output because command display text and change paths were stored and printed verbatim. The corrective change redacts sentinel-like values after evaluation and before the evidence digest is computed. See `docs/RECEIPT_REDACTION.md`.
-2. **Trust boundary (N2).** A manual `Supported` mark could be linked to any passing validation, including a validation that was only an unrelated environment probe declared at run level. The corrective change requires a per-criterion declared validation in the contract (`--accept-validation` bound to the preceding `--accept`). If that binding is missing, or a linked validation is not declared for that criterion, the gate records `AWE009` and the decision is `NeedsReview` (unverified), not trustworthy `Done`. Run-level `--validate` alone is not enough; implicit 1:1 pairing would have treated N2 as Done.
+2. **Trust boundary (N2).** A manual `Supported` mark could be linked to any passing validation, including a validation that was only an unrelated environment probe declared at run level. Historically that produced a false Done (see the matrix above). This pull request records `AWE009` and keeps manual `Supported` as `NeedsReview` (unverified). Declaring `--accept-validation` is still required for a structurally linked mark, but it does not make a manual assessment into trustworthy `Done`; there is not yet a separately verified acceptance mechanism. Run-level `--validate` alone is not enough.
 
 ## R3 structured-validation check
 

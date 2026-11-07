@@ -281,6 +281,51 @@ public sealed class TrustBoundaryAndRedactionTests
     }
 
     [Fact]
+    public async Task P1_AllowedRedactedPath_FinishAndReplay_AreStableNeedsReview()
+    {
+        var repo = new TempGitRepo();
+        using (repo)
+        {
+            var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft(
+                "T", null, "docs audit", [], ["notes/**"], [],
+                PermissionMode.WorkspaceWrite, RunMode.Docs,
+                [], ["stop"], [], null));
+            Assert.True(created.Created, created.Error);
+            var git = new GitRepositoryStateReader(new GitCommandRunner());
+            var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git)
+                .StartAsync(repo.Root, "t");
+            Assert.True(started.Started, started.Error);
+            var run = started.Baseline!.RunId;
+            repo.Write("notes/AWSENTINEL-TOKEN-fake123.txt", "payload");
+            var git2 = new GitRepositoryStateReader(new GitCommandRunner());
+            var finished = await new RunFinishService(new FileActiveRunStore(repo.Root), new FileRunRecordStore(repo.Root), git2, git2,
+                receipts: new FileRunReceiptStore(repo.Root), contracts: new FileRunContractStore(repo.Root),
+                projections: new FileReceiptProjectionWriter())
+                .FinishAsync(repo.Root, run);
+            Assert.True(finished.Finished, finished.Error);
+
+            var store = new FileRunReceiptStore(repo.Root);
+            var first = store.Read(run);
+            Assert.Equal(DecisionStatus.NeedsReview, first.Decision.Status);
+            Assert.Contains(first.Findings, f => f.RuleId == ScopeDriftRules.AmbiguousScope);
+            Assert.DoesNotContain("AWSENTINEL-TOKEN-fake123", File.ReadAllText(store.PathFor(run)));
+            Assert.True(RunReceiptJson.VerifyDigest(first));
+
+            var replay1 = Evidence(repo.Root).Check(run);
+            Assert.True(replay1.Ok, replay1.Error);
+            var replay2 = Evidence(repo.Root).Check(run);
+            Assert.True(replay2.Ok, replay2.Error);
+            Assert.Equal(first.Decision.Status, replay1.Receipt!.Decision.Status);
+            Assert.Equal(first.EvidenceDigest, replay1.Receipt.EvidenceDigest);
+            Assert.Equal(replay1.Receipt.Decision.Status, replay2.Receipt!.Decision.Status);
+            Assert.Equal(replay1.Receipt.EvidenceDigest, replay2.Receipt.EvidenceDigest);
+            Assert.Equal(DecisionStatus.NeedsReview, replay1.Receipt.Decision.Status);
+            Assert.Contains(replay1.Receipt.Findings, f => f.RuleId == ScopeDriftRules.AmbiguousScope);
+            Assert.Contains(replay2.Receipt.Findings, f => f.RuleId == ScopeDriftRules.AmbiguousScope);
+        }
+    }
+
+    [Fact]
     public async Task P2_DeltaSidecar_DoesNotPersistRawSentinelPaths()
     {
         var (repo, run) = await StartedAndFinished(bindings: BindAc1());

@@ -39,7 +39,7 @@ Only the matching span is replaced, so a path such as `notes/<token>.txt` become
 
 ## Scope replay after path redaction
 
-Scope drift is evaluated on raw paths, then paths are stored in redacted form. A later `evidence check` recomputes scope from the stored (redacted) paths, which may no longer match a narrow `avoidPaths` or `ownedPaths` pattern. When a stored change path contains `[redacted]`, the gate fail-closes with `AWD004` (`NeedsReview`) so an original avoid/owned violation cannot silently disappear and promote the run toward `Done`. Raw paths are not persisted as the fix.
+Scope drift is evaluated on raw paths, then paths are stored in redacted form. A later `evidence check` recomputes scope from the stored (redacted) paths, which may no longer match a narrow `avoidPaths` or `ownedPaths` pattern. When a run-interval or further-changed path already contains `[redacted]`, or will after redaction, the first gate fail-closes with `AWD004` (`NeedsReview`) so finish and later checks stay aligned. Pre-existing unchanged dirty paths are still excluded from scope drift. Raw paths are not persisted as the fix.
 
 ## Digest semantics
 

@@ -140,8 +140,18 @@ public static class ScopeDriftChecker
         return !newOwned || !oldOwned;
     }
 
-    private static bool ContainsRedactedSegment(string? path) =>
-        path is not null && path.Contains(ReceiptRedaction.Placeholder, StringComparison.Ordinal);
+    private static bool ContainsRedactedSegment(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        // First finish still sees raw paths; treat a path as ambiguous if it already
+        // contains the placeholder or will after redaction, so AWD004 is stable.
+        return path.Contains(ReceiptRedaction.Placeholder, StringComparison.Ordinal)
+            || !string.Equals(path, ReceiptRedaction.RedactText(path), StringComparison.Ordinal);
+    }
 
     private static string Context(ClassifiedChange change) =>
         $"attribution: {change.Classification}; status: {change.Status}";
