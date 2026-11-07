@@ -508,4 +508,47 @@ public sealed class TrustBoundaryAndRedactionTests
         var relative = FinishCommand.DisplayArtifactPath(root, inside);
         Assert.Equal(".agentwatch/runs/demo.json", relative);
     }
+
+
+    [Fact]
+    public void P1_DisplayArtifactPath_PrefixSibling_IsOutside()
+    {
+        var parent = Path.Combine(Path.GetTempPath(), "aw-b4-r1-pfx-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(parent, "repo");
+        var outside = Path.Combine(parent, "repo2", "receipt.json");
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(Path.GetDirectoryName(outside)!);
+
+        var shown = FinishCommand.DisplayArtifactPath(root, outside);
+        Assert.Equal("[outside-workspace]", shown);
+        Assert.DoesNotContain(outside, shown);
+        Assert.DoesNotContain("repo2", shown);
+
+        var inside = Path.Combine(root, ".agentwatch", "runs", "demo.json");
+        Assert.Equal(".agentwatch/runs/demo.json", FinishCommand.DisplayArtifactPath(root, inside));
+    }
+
+    [Fact]
+    public void P1_DisplayArtifactPath_CaseVariantSibling_IsOutsideOnCaseSensitiveOs()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var parent = Path.Combine(Path.GetTempPath(), "aw-b4-r1-case-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(parent, "AWRoot");
+        var outside = Path.Combine(parent, "awroot", "receipt.json");
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(Path.GetDirectoryName(outside)!);
+
+        var shown = FinishCommand.DisplayArtifactPath(root, outside);
+        Assert.Equal("[outside-workspace]", shown);
+        Assert.DoesNotContain(outside, shown);
+        Assert.DoesNotContain("awroot", shown);
+        Assert.DoesNotContain("../", shown);
+
+        var inside = Path.Combine(root, ".agentwatch", "runs", "demo.json");
+        Assert.Equal(".agentwatch/runs/demo.json", FinishCommand.DisplayArtifactPath(root, inside));
+    }
 }

@@ -68,38 +68,61 @@ internal static class FinishCommand
             return string.Empty;
         }
 
-        var display = path;
-        var insideWorkspace = false;
         try
         {
             var fullRoot = Path.GetFullPath(root);
             var fullPath = Path.GetFullPath(path);
-            var prefix = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                         + Path.DirectorySeparatorChar;
-            if (fullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(fullPath, fullRoot, StringComparison.OrdinalIgnoreCase))
+            if (TryGetWorkspaceRelativeDisplay(fullRoot, fullPath, out var display))
             {
-                display = Path.GetRelativePath(fullRoot, fullPath);
-                insideWorkspace = true;
+                return SafeText(display);
             }
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            display = path;
-            insideWorkspace = false;
+            // Fail closed: never echo the unresolved raw path.
         }
 
-        if (!insideWorkspace)
+        return SafeText("[outside-workspace]");
+    }
+
+    internal static bool TryGetWorkspaceRelativeDisplay(string fullRoot, string fullPath, out string display)
+    {
+        display = string.Empty;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        var normalizedRoot = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.Equals(fullPath, fullRoot, comparison) || string.Equals(fullPath, normalizedRoot, comparison))
         {
-            return SafeText("[outside-workspace]");
+            display = ".";
+            return true;
         }
 
-        display = display.Replace('\\', '/');
-        if (display.StartsWith("./", StringComparison.Ordinal))
+        var prefix = normalizedRoot + Path.DirectorySeparatorChar;
+        if (!fullPath.StartsWith(prefix, comparison))
         {
-            display = display[2..];
+            return false;
         }
 
-        return SafeText(display);
+        var relative = Path.GetRelativePath(fullRoot, fullPath);
+        if (string.IsNullOrEmpty(relative) || Path.IsPathRooted(relative))
+        {
+            return false;
+        }
+
+        var slashRelative = relative.Replace('\\', '/');
+        if (slashRelative == ".." || slashRelative.StartsWith("../", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (slashRelative.StartsWith("./", StringComparison.Ordinal))
+        {
+            slashRelative = slashRelative[2..];
+        }
+
+        display = slashRelative;
+        return true;
     }
 }
