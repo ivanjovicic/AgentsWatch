@@ -1,4 +1,4 @@
-using AgentsWatch.Core.Runs;
+﻿using AgentsWatch.Core.Runs;
 using AgentsWatch.Core.Contracts;
 using AgentsWatch.Git;
 using AgentsWatch.Reports;
@@ -23,36 +23,75 @@ internal static class FinishCommand
         var result = await service.FinishAsync(root, args[0]);
         if (!result.Finished)
         {
-            e.WriteLine("error: " + result.Error);
+            e.WriteLine("error: " + SafeText(result.Error));
             return 1;
         }
 
-        var r = result.Record!;
-        var d = r.Delta;
-        o.WriteLine($"Run finished: {r.RunId}");
-        o.WriteLine($"Receipt: {result.ReceiptPath}");
+        // Render from the already-redacted receipt. Do not print result.Record (raw) or recompute the digest.
+        var receipt = result.Receipt!;
+        var d = receipt.RunDelta;
+        var t = receipt.HeadTransition;
+        o.WriteLine($"Run finished: {receipt.RunId}");
+        o.WriteLine($"Receipt: {DisplayArtifactPath(root, result.ReceiptPath)}");
         foreach (var p in result.ProjectionPaths ?? [])
         {
-            o.WriteLine($"Projection: {p}");
+            o.WriteLine($"Projection: {DisplayArtifactPath(root, p)}");
         }
 
         if (result.ProjectionError is not null)
         {
-            e.WriteLine("warning: " + result.ProjectionError);
+            e.WriteLine("warning: " + SafeText(result.ProjectionError));
         }
 
-        o.WriteLine($"Decision: {result.Receipt!.Decision.Status}");
-        o.WriteLine($"HEAD: {r.HeadTransition.Kind}{(r.HeadTransition.BranchChanged ? $" (branch {r.HeadTransition.FromBranch} -> {r.HeadTransition.ToBranch})" : string.Empty)}");
+        o.WriteLine($"Decision: {receipt.Decision.Status}");
+        o.WriteLine($"HEAD: {t.Kind}{(t.BranchChanged ? $" (branch {SafeText(t.FromBranch)} -> {SafeText(t.ToBranch)})" : string.Empty)}");
         o.WriteLine($"Run-interval changes: {d.RunIntervalChanges.Count}");
         o.WriteLine($"Pre-existing unchanged: {d.PreExistingUnchangedChanges.Count}");
         o.WriteLine($"Pre-existing changed further: {d.PreExistingChangedFurther.Count}");
         o.WriteLine($"Ambiguous: {d.AttributionAmbiguities.Count}");
         foreach (var c in d.RunIntervalChanges.Concat(d.PreExistingChangedFurther).Concat(d.AttributionAmbiguities))
         {
-            o.WriteLine($"- [{c.Classification}] {c.Status} {c.Path}{(c.OldPath is null ? "" : $" (from {c.OldPath})")}: {c.ClassificationReason}");
+            var from = c.OldPath is null ? "" : $" (from {SafeText(c.OldPath)})";
+            o.WriteLine($"- [{c.Classification}] {c.Status} {SafeText(c.Path)}{from}: {SafeText(c.ClassificationReason)}");
         }
 
         o.WriteLine("Note: interval changes are observations, not proof of executor authorship.");
         return 0;
+    }
+
+    private static string SafeText(string? value) => ReceiptRedaction.RedactText(value) ?? string.Empty;
+
+    private static string DisplayArtifactPath(string root, string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return string.Empty;
+        }
+
+        var display = path;
+        try
+        {
+            var fullRoot = Path.GetFullPath(root);
+            var fullPath = Path.GetFullPath(path);
+            var prefix = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                         + Path.DirectorySeparatorChar;
+            if (fullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fullPath, fullRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                display = Path.GetRelativePath(fullRoot, fullPath);
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            display = path;
+        }
+
+        display = display.Replace('\\', '/');
+        if (display.StartsWith("./", StringComparison.Ordinal))
+        {
+            display = display[2..];
+        }
+
+        return SafeText(display);
     }
 }
