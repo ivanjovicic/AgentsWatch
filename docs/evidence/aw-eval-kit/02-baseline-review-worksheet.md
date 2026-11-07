@@ -35,22 +35,24 @@ Obrazloženje na osnovu **samo** Git/CI/PR (bez AW):
 
 ```
 
-Da li bi recenzent i bez AgentsWatch-a već video isti nalaz u diff-u ili CI? (da/ne/unknown)
+Nalazi koje je recenzent **stvarno uočio i ovde zapisao** (konkretno; prazno = ništa nije zapisano kao uočeno). Samo ovo kasnije važi kao „već viđeno u baseline-u“. Nagađanje šta je recenzent *mogao* da primeti čitanjem diff-a ovde se ne upisuje.
 
-## 3. Pečat (pre bilo kog AgentsWatch nalaza)
+```text
+
+```
+
+## 3. Zamrzavanje i pečat (pre bilo kog AgentsWatch nalaza)
+
+Ovaj list posle zamrzavanja se ne sme menjati. Ako treba ispravka, napraviti novu verziju; stara ostaje sačuvana.
 
 Postupak:
 
-1. Sačuvati ovaj fajl kao potpun (odluka + obrazloženje + timestampi).
-2. Izračunati SHA-256 kanonskog sadržaja fajla (UTF-8, kako je sačuvan).
-3. Poželjno: commitovati **samo** ovaj list (i predregistraciju) u evidencioni zapis, pre otvaranja receipta. Git commit daje nezavisni timestamp.
-4. Upisati heš ispod. Tek tada sme da se otvori AgentsWatch izlaz.
+1. Popuniti odluku, obrazloženje, stvarno uočene nalaze i timestamp-e. **Ne upisivati heš u ovaj fajl.**
+2. Sačuvati fajl i prestati da ga menjate (zamrznuti bajtovi).
+3. Izračunati SHA-256 tih tačnih bajtova (UTF-8, kako je sačuvan).
+4. Upisati putanju i heš u zaseban [05-seal-manifest-template.md](05-seal-manifest-template.md). Adjudikator kasnije hešira **originalne zamrznute bajtove**, nikad fajl izmenjen posle računanja heša.
+5. Za dokaz da je pečat nastao **pre** AgentsWatch izlaza potreban je proverljiv redosled: git commit **gurnut na remote** (vidljiv u PR timeline-u) ili drugi potpisan / na remote-u zabeležen zapis. Tek posle toga sme da se generiše ili otvori AgentsWatch izlaz.
 
-| Polje | Upis |
-|---|---|
-| SHA-256 pečata | |
-| Način pečata (fajl heš / git commit SHA) | |
-| Git commit SHA pečata, ako postoji | |
-| Potvrda: AgentsWatch findings još nisu čitani | da / ne |
+Lokalni timestamp u odeljku 1 i lokalni (nepohranjeni) git commit **nisu** nezavisni dokaz redosleda: oboje se mogu nazadovati.
 
-Ako je AgentsWatch izlaz viđen pre pečata, run je **kontaminiran**. Može ostati tehnički zabeležen, ali **ne ulazi** u GO brojač decision change slučajeva.
+Ako je AgentsWatch izlaz viđen ili generisan pre pečata i remote dokaza redosleda, run je **kontaminiran**. Može ostati tehnički zabeležen, ali **ne ulazi** u GO brojač decision change slučajeva.

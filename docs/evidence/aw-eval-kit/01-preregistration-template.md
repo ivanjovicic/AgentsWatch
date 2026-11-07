@@ -33,9 +33,14 @@ Potvrde pre starta (obavezno `da`):
 - [ ] Nije preuzet tuđi claim / tuđi PR / tuđi queue lock.
 - [ ] Adjudikator nije ista osoba kao recenzent. Ako druga osoba ne postoji, run se ne sme tretirati kao nezavisno potvrđen.
 - [ ] Niko još nije otvorio AgentsWatch receipt / findings za ovaj run.
+- [ ] Ovaj list je potpun i **ne sadrži** sopstveni heš (heš ide samo u zaseban manifest).
 
-SHA-256 ovog popunjenog lista (posle čuvanja, pre AW pregleda):
+## Zamrzavanje (pre heširanja)
 
-```text
-(upisati hex)
-```
+1. Popuniti sva polja iznad. Ne ostavljati prazninu „za heš“ u ovom fajlu.
+2. Sačuvati fajl i **prestati da ga menjate**. To su zamrznuti bajtovi.
+3. Izračunati SHA-256 tih tačnih bajtova (UTF-8, kako je sačuvan).
+4. Upisati putanju i heš u zaseban [05-seal-manifest-template.md](05-seal-manifest-template.md). **Ne vraćati heš u ovaj fajl** — to bi promenilo bajtove i oborilo pečat.
+5. Ispravke idu u novu verziju lista; stara zamrznuta kopija ostaje sačuvana.
+
+Lokalni datum u tabeli iznad **nije** nezavisni dokaz da je predregistracija nastala pre AgentsWatch izlaza. Za redosled vidi manifest (remote commit / PR timeline / drugi proverljivi zapis).

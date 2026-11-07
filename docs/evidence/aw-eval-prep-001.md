@@ -29,29 +29,40 @@ Cilj buduće evaluacije (kad je vlasnik odobri i kad padnu blocker-i): utvrditi 
 | [aw-eval-kit/02-baseline-review-worksheet.md](aw-eval-kit/02-baseline-review-worksheet.md) | Git/CI/PR odluka i pečat |
 | [aw-eval-kit/03-independent-oracle-worksheet.md](aw-eval-kit/03-independent-oracle-worksheet.md) | druga osoba potvrđuje pripisivost |
 | [aw-eval-kit/04-final-comparison-worksheet.md](aw-eval-kit/04-final-comparison-worksheet.md) | posle pečata, posle AW pregleda |
+| [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md) | sidecar: SHA-256 zamrznutog lista; heš nije u heširanom fajlu |
 
 ## 2. Kako se beleži početna Git/CI/PR odluka pre AgentsWatch nalaza
 
-Redosled je obavezan (protokol, odeljci 2–3):
+Redosled je obavezan (protokol, odeljci 2–3), uz ispravljen pečat:
 
-1. Popuniti predregistraciju (očekivani ishod, zašto je posao legitiman, da/ne za očekivani decision change).
+1. Popuniti predregistraciju (očekivani ishod, zašto je posao legitiman, da/ne za očekivani decision change). List ne sadrži sopstveni heš.
 2. Recenzent pregleda **samo** Git diff, dostupni CI i/ili PR kontekst.
-3. Recenzent upisuje privremenu odluku (merge / ne merge / izmena / close ili ekvivalent) i stvarne timestamp-e početka i kraja u baseline list.
-4. **Pečat:** sačuvati list, izračunati SHA-256 sadržaja, i poželjno ga commitovati u evidencioni zapis *pre* otvaranja receipta. Git commit daje nezavisni timestamp. Heš se upisuje u sam list.
-5. Tek posle pečata sme da se pokrene `agentswatch finish` pregled ili otvori već postojeći receipt.
+3. Recenzent upisuje privremenu odluku (merge / ne merge / izmena / close ili ekvivalent), stvarne timestamp-e i **nalaze koje je stvarno uočio**. Ne upisuje nagađanje šta je *mogao* da vidi u diff-u.
+4. **Zamrzavanje:** sačuvati predregistraciju i baseline kao konačne fajlove i prestati da ih menjate.
+5. **Heš:** izračunati SHA-256 tih tačnih bajtova i upisati ga samo u zaseban [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md). Heš se **ne** vraća u zamrznuti list — to bi promenilo bajtove i oborilo pečat. Adjudikator kasnije hešira originalne zamrznute bajtove.
+6. **Dokaz redosleda:** commitovati zamrznute listove i manifest i **gurnuti ih na remote** (PR timeline / commit URL) ili napraviti drugi potpisan / na remote-u zabeležen zapis **pre** generisanja ili otvaranja AgentsWatch izlaza.
+7. Tek posle toga sme da se generiše ili otvori AgentsWatch receipt.
 
-Ako operator CLI-ja i recenzent nisu ista osoba, operator ne sme da prikaže nalaze recenzentu pre pečata. Ako je receipt već nastao, putanja i sadržaj ostaju zatvoreni do pečata.
+Lokalni timestamp na radnom listu i lokalni git commit koji nije na remote-u **nisu** nezavisni dokaz redosleda: oboje se mogu nazadovati. Oni ostaju korisni kao operativna beleška, ne kao audit dokaz da je pečat bio pre AW-a.
 
-Kršenje redosleda = `CONTAMINATED`. Run se ne broji kao decision change case.
+Ako operator CLI-ja i recenzent nisu ista osoba, operator ne sme da prikaže nalaze recenzentu pre pečata. Ako je receipt već nastao, putanja i sadržaj ostaju zatvoreni do pečata i remote dokaza redosleda.
+
+Ispravke: nova verzija lista + novi red u manifestu; stari zamrznuti fajl ostaje. Kršenje redosleda = `CONTAMINATED`. Run se ne broji kao decision change case.
 
 ## 3. Nezavisni adjudikator
 
 Adjudikator proverava dva uslova zajedno:
 
 - da je promena odluke stvarna (zapečaćena privremena ≠ konačna);
-- da je pripisiva **novom** AgentsWatch dokazu, a ne nalazu koji je već bio u diff-u, testu ili CI.
+- da je pripisiva AgentsWatch dokazu koji recenzent **nije već uočio i zapisao** u zamrznutom baseline-u.
 
-To nije isto što i potvrda da je Evidence Gate tehnički ispravan (`AWE009` / `NeedsReview` samo po sebi nije decision change).
+AgentsWatch nalazi skoro uvek potiču iz Git/CI materijala, pa „moglo se videti u diff-u“ nije isto što i „recenzent je to već koristio“. Tri klase:
+
+- `ALREADY_NOTICED_IN_BASELINE` — zapisano u pečatu kao stvarno uočeno. Broji **protiv** incremental AW vrednosti.
+- `DISCOVERABLE_IN_DIFF_BUT_NOT_NOTICED` — teoretski otkrivivo pažljivim čitanjem, ali nije zapisano kao uočeno. Ne broji se automatski kao AW decision change i ne diskvalifikuje automatski AW; treba potvrda adjudikatora.
+- `NEWLY_SURFACED` — nije restatement već zabeleženog nalaza.
+
+Hindsight pristrasnost („sada je očigledno iz diff-a“) nije dovoljna ni za prihvatanje ni za odbacivanje. `AWE009` / `NeedsReview` samo po sebi nije decision change.
 
 ### Iskrena napomena o nezavisnosti (blokator)
 
@@ -161,11 +172,12 @@ Repo ima formalni queue/claim protokol (`docs/ai/PROMPT_QUEUE_PROTOCOL.md`). Akt
 
 ### Šta inventar ne sadrži
 
-Nije nađen nijedan slobodan, već odobren, ne-HOLD, ne-istorijski .NET ili Flutter zadatak koji bi se smeo označiti `READY_FOR_OWNER_REVIEW` bez nagađanja o tuđim claim-ovima. Namerno nije izmišljen novi tiket da bi se popunio brojač 10–15.
+Nije nađen nijedan slobodan, već odobren, ne-HOLD, ne-istorijski .NET ili Flutter zadatak koji bi se smeo označiti `READY_FOR_OWNER_REVIEW` bez nagađanja o tuđim claim-ovima. Namerno nije izmišljen novi tiket da bi se popunila buduća kohorta. Cilj od 10–15 evaluiranih slučajeva nije razlog da se danas izmisle zadaci, niti uslov da svi postoje pre prvog odobrenog runa.
 
 ## 8. Sprečavanje kontaminacije, naknadnog orakla i dvostrukog brojanja
 
-- Pečat pre AW izlaza (odeljak 2). Viđen receipt pre pečata = kontaminacija.
+- Zamrzavanje, heš u sidecar manifestu i proverljiv remote dokaz redosleda pre AW izlaza (odeljak 2). Lokalni timestamp nije nezavisni dokaz. Viđen ili generisan receipt pre pečata = kontaminacija.
+- Nalaz koji je recenzent već zapisao u baseline-u ne broji se kao incremental AW vrednost. Nalaz koji je samo otkriviv u diff-u, a nije bio uočen, ne broji se automatski kao decision change bez potvrde adjudikatora.
 - Očekivani ishod se piše u predregistraciji **pre** čitanja AW izlaza. Orakl se ne bira posle rezultata.
 - Dvanaest istorijskih REAL runova ostaju kako jesu i ne ulaze u novi GO brojač. MathLearning #49 i B2-R5/consume_tx preklapanja su primer zabranjenog reuse-a.
 - Isti diff, isti PR ili ista ispravka ne smeju se brojati dva puta (ni kao stari REAL, ni kao dva nova runa).
@@ -179,21 +191,24 @@ Nije nađen nijedan slobodan, već odobren, ne-HOLD, ne-istorijski .NET ili Flut
 Ovo je redosled za **budućnost**, posle novog izričitog vlasničkog OK-a i posle uklanjanja blocker-a. Ovaj dokument ga ne pokreće.
 
 1. Vlasnik imenuje drugog čoveka-adjudikatora (inače ostaje BLOCKED za nezavisne potvrde).
-2. Vlasnik bira i izričito odobrava 10–15 podobnih `REAL` slučajeva sa inventara ili kasnije nastalog legitimnog posla. HOLD ostaje HOLD dok se posebno ne podigne.
-3. Za svaki slučaj, u disposable worktree-u: predregistracija → Git/CI/PR pregled → pečat baseline lista → tek onda AgentsWatch start/finish ili otvaranje receipta → comparison list → adjudikator.
-4. Zaustaviti čitav pilot odmah ako nastupi STOP uslov (materijalni false Done, ozbiljno curenje, materijalna pogrešna atribucija).
-5. Posle kohorte izračunati medijane (samo nad izmerenim, ne nad Unknown) i primeniti GO/NARROW/STOP.
-6. Ne puniti preostalih 18 istorijskih mesta do 30. Ne startovati B5 ni AW-VFY-011 iz ovog reda.
+2. Vlasnik izričito odobrava **prvi** legitiman, slobodan zadatak (nije HOLD, nije tuđi claim, nije jedan od 12 istorijskih REAL). HOLD ostaje HOLD dok se posebno ne podigne.
+3. Cilj kohorte za GO prag je 10–15 evaluiranih podobnih slučajeva. To **nije** preduslov da svih 10–15 zadataka bude spremno pre prvog odobrenog runa. Posle izričitog odobrenja starta pilota, slučajevi mogu da se skupljaju redom, svaki pojedinačno predregistrovan i odobren.
+4. Za svaki slučaj, u disposable worktree-u: predregistracija i njeno zamrzavanje + red u manifestu → Git/CI/PR pregled → zamrzavanje baseline lista + red u manifestu → remote dokaz redosleda (push / PR timeline) → tek onda AgentsWatch start/finish ili otvaranje receipta → comparison list → adjudikator.
+5. Zaustaviti čitav pilot odmah ako nastupi STOP uslov (materijalni false Done, ozbiljno curenje, materijalna pogrešna atribucija).
+6. Posle kohorte izračunati medijane (samo nad izmerenim, ne nad Unknown) i primeniti GO/NARROW/STOP.
+7. Ne puniti preostalih 18 istorijskih mesta do 30. Ne startovati B5 ni AW-VFY-011 iz ovog reda.
 
 ## 10. Blocker-i i presuda spremnosti
 
 **Presuda: BLOCKED**
 
-Konkretni blocker-i:
+Presuda ostaje BLOCKED dok ne postoje **oba**: (a) nezavisni adjudikator koji je druga osoba od recenzenta, i (b) prvi legitiman, slobodan i vlasnikom odobren zadatak. Nije blocker to što svih 10–15 slučajeva kohorte još nisu spremni unapred; 10–15 je cilj evaluacione kohorte za kasniju GO presudu.
+
+Konkretni blocker-i danas:
 
 1. **Nema nezavisnog adjudikatora.** Dostupan je samo vlasnik na istom nalogu. Bez druge osobe nema *nezavisno potvrđenih* decision change slučajeva, a GO to zahteva.
-2. **Nema vlasnikom odobrenog skupa od 10–15 podobnih zadataka.** Read-only inventar nije našao stavke `READY_FOR_OWNER_REVIEW`. Najkonkretniji stvarni defekti su HOLD (#47, #906, GRX84/#901, MOB80/#865). Trendplus P0/CI ticketi su `UNKNOWN` zbog neverifikovanog queue claim-a i mogućeg produkcijskog rizika. AgentsWatch nema otvorenih issue-a.
+2. **Nema prvog legitimnog, slobodnog i odobrenog zadatka.** Read-only inventar nije našao stavke `READY_FOR_OWNER_REVIEW`. Najkonkretniji stvarni defekti su HOLD (#47, #906, GRX84/#901, MOB80/#865). Trendplus P0/CI ticketi su `UNKNOWN` zbog neverifikovanog queue claim-a i mogućeg produkcijskog rizika. AgentsWatch nema otvorenih issue-a.
 3. **Istorijskih 12 runova se ne sme reuse-ovati**, pa #49 i srodni već izvršeni poslovi ne popunjavaju kohortu.
 4. **Postojeći HOLD-ovi ostaju aktivni** (uključujući AW-VFY-011/012, deploy, produkcioni SQL, cloud agents, outreach). Ovaj dokument ih ne diže.
 
-Pilot se ne sme startovati dok vlasnik ne ukloni ove blocker-e (druga osoba + izričito odobreni legitimni zadaci, bez izmišljanja poslova). Čak i tada treba novo, odvojeno odobrenje za izvršenje — ova priprema to nije.
+Pilot se ne sme startovati dok padnu blocker-i (a) i (b), i dok vlasnik dodatno, odvojeno, ne odobri samo izvršenje. Ova priprema to nije. Skupljanje do 10–15 slučajeva ide redom posle tog starta, ne kao uslov da svi zadaci postoje pre prvog runa.

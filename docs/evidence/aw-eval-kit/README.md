@@ -18,5 +18,6 @@ Radni listovi (prazni šabloni, bez izmišljenih merenja):
 2. [02-baseline-review-worksheet.md](02-baseline-review-worksheet.md)
 3. [03-independent-oracle-worksheet.md](03-independent-oracle-worksheet.md)
 4. [04-final-comparison-worksheet.md](04-final-comparison-worksheet.md)
+5. [05-seal-manifest-template.md](05-seal-manifest-template.md) — sidecar za SHA-256; heš se ne upisuje u heširani fajl
 
-Redosled: prvo predregistracija, zatim Git/CI/PR pregled i **pečet** baseline lista, tek potom otvaranje AgentsWatch nalaza, zatim poređenje, zatim nezavisni adjudikator.
+Redosled: prvo predregistracija (zamrznuti sadržaj, zatim heš u manifest), zatim Git/CI/PR pregled i isto tako zamrznuti baseline, zatim manifest i proverljiv remote dokaz redosleda, tek potom generisanje ili otvaranje AgentsWatch nalaza, zatim poređenje, zatim nezavisni adjudikator. Lokalni timestamp nije nezavisni dokaz redosleda.

@@ -15,7 +15,9 @@ Otvoriti tek **posle** pečata baseline lista.
 | Konačna recenzentska odluka | |
 | Da li se razlikuje od zapečaćene privremene odluke? | da / ne |
 | Koji tačan AW nalaz je promenio odluku? | |
-| Da li bi isti nalaz bio vidljiv i bez AW? | da / ne / unknown |
+| Klasifikacija tog nalaza (`ALREADY_NOTICED_IN_BASELINE` / `DISCOVERABLE_IN_DIFF_BUT_NOT_NOTICED` / `NEWLY_SURFACED`) | |
+| Ako je uočen u baseline-u, ne brojiti kao incremental AW vrednost | |
+| Ako je samo otkriviv u diff-u a nije bio uočen, ne brojiti automatski kao decision change — čeka adjudikatora | |
 | Materijalni lažni alarmi u ovom runu (broj; 0 ako nijedan) | |
 | False Done / curenje / pogrešna atribucija? | ne / da (STOP) / unknown |
 
