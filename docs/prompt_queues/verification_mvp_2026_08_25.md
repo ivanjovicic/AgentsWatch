@@ -79,7 +79,7 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-007 | **Done** (CI run 42192082705 on d078295; AWE006-per-item + unique evidence IDs follow-up 2026-11-06, evidence `.ai/runs/2026-11-06-aw-vfy-006-007-followup-evidence.md`) | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | **Done** (2026-11-06; CI run 42201075461 success 150/150 on ab3ebe6; evidence `.ai/runs/2026-11-06-aw-vfy-008-evidence.md`; review `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`) | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify high-confidence run-interval changes against owned/avoid paths; surface ambiguity separately. |
 | AW-VFY-009 | **Done** (2026-11-06; CI run 42201075461 success 150/150 on ab3ebe6; evidence `.ai/runs/2026-11-06-aw-vfy-009-evidence.md`; review `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`) | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify narrow structured claims against diff/validation evidence. |
-| AW-VFY-010 | **In progress — not complete** (2026-11-07). Batches and corrective PRs #11/#12/#13 exist; post-merge privacy/finish check after #13 succeeded. Unit tests and green CI do not close this program. Inventory first via AW-VFY-010-LEDGER. | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
+| AW-VFY-010 | **In progress — not complete** (2026-11-07). Batches and corrective PRs #11/#12/#13 exist; post-merge privacy/finish check after #13 succeeded. Unit tests and green CI do not close this program. Ledger inventory recorded 8 useful REAL of 30; next slice is AW-VFY-010-B3. | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
 | AW-VFY-011 | Ready after 010 + dogfood review | `../prompts/AW-VFY-011-external-value-validation.md` | Test value with 10+ external agent-heavy users/teams against Git/CI/PR/native/Qodo baselines. |
 | AW-VFY-012 | Ready after 011 passes | `../prompts/AW-VFY-012-commercial-design-partner-validation.md` | Obtain 3+ concrete commercial commitments before SaaS/team expansion. |
 
@@ -88,17 +88,17 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 
 There is one active queue (this file). Do not create another.
 
-1. **AW-VFY-010-LEDGER** — NEXT claimable task (`../prompts/AW-VFY-010-LEDGER.md`).
-2. **AW-VFY-010-B3** — next small dogfood batch after the ledger (`../prompts/AW-VFY-010-B3-small-dogfood-batch.md`).
-3. Further AW-VFY-010 batches named by the ledger, until the parent exit gate.
+1. **AW-VFY-010-B3** — NEXT claimable task (`../prompts/AW-VFY-010-B3-small-dogfood-batch.md`).
+2. Further AW-VFY-010 batches named by `../evidence/aw-vfy-010-ledger.md`.
+3. AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears.
 4. **AW-VFY-011** — HOLD until AW-VFY-010 is complete and reviewed.
 5. **AW-VFY-012** — HOLD until AW-VFY-011 passes.
 
 Parallel support prompts (not next, not a second queue): see
 `SUPPORT_PROMPT_COVERAGE.md`.
 
-As of 2026-11-07, `origin/main` after merged PR #13 is
-`edbbbe4a3e2962a8b20f7536d4a106420ff8492f` (CI run `42361996228`, 193/193).
+As of 2026-11-07, `origin/main` after merged PR #14 is
+`d1028b357fa7ea7002aa5ce2e155d295a99c54f6` (CI run `42369838859`, 193/193).
 Manual `Supported` remains AWE009 / NeedsReview. No independently verified
 `Done` path exists from human-typed `Supported`. The planning file
 `AgentsWatch_Operativni_Backlog_2026-11-07.md` was not found during AW-DOC-001;
@@ -108,8 +108,8 @@ do not invent its contents. Plans are not completion evidence.
 
 | ID | Status | Prompt file | Purpose |
 |---|---|---|---|
-| AW-VFY-010-LEDGER | **Ready now / NEXT** | `../prompts/AW-VFY-010-LEDGER.md` | Inventory existing dogfood evidence and corrective PRs without modifying historical receipts. |
-| AW-VFY-010-B3 | Ready after LEDGER | `../prompts/AW-VFY-010-B3-small-dogfood-batch.md` | Next small real dogfood batch against ledger gaps (5–7 receipts max). |
+| AW-VFY-010-LEDGER | **Done** (2026-11-07; useful REAL 8 of 30; `../evidence/aw-vfy-010-ledger.md`) | `../prompts/AW-VFY-010-LEDGER.md` | Inventory existing dogfood evidence and corrective PRs without modifying historical receipts. |
+| AW-VFY-010-B3 | **Ready now / NEXT** | `../prompts/AW-VFY-010-B3-small-dogfood-batch.md` | Next small real dogfood batch against ledger gaps. Only useful REAL rows count toward 30. |
 
 ## Support track (parallel, not claimable as next)
 
