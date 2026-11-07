@@ -61,7 +61,7 @@ internal static class FinishCommand
 
     private static string SafeText(string? value) => ReceiptRedaction.RedactText(value) ?? string.Empty;
 
-    private static string DisplayArtifactPath(string root, string? path)
+    internal static string DisplayArtifactPath(string root, string? path)
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -69,6 +69,7 @@ internal static class FinishCommand
         }
 
         var display = path;
+        var insideWorkspace = false;
         try
         {
             var fullRoot = Path.GetFullPath(root);
@@ -79,11 +80,18 @@ internal static class FinishCommand
                 || string.Equals(fullPath, fullRoot, StringComparison.OrdinalIgnoreCase))
             {
                 display = Path.GetRelativePath(fullRoot, fullPath);
+                insideWorkspace = true;
             }
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
             display = path;
+            insideWorkspace = false;
+        }
+
+        if (!insideWorkspace)
+        {
+            return SafeText("[outside-workspace]");
         }
 
         display = display.Replace('\\', '/');

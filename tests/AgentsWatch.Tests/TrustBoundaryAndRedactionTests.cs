@@ -491,4 +491,21 @@ public sealed class TrustBoundaryAndRedactionTests
         Assert.DoesNotContain(sentinel, text);
         Assert.Contains(ReceiptRedaction.Placeholder, text);
     }
+
+
+    [Fact]
+    public void P1_DisplayArtifactPath_OutsideWorkspace_IsNotAbsolute()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "aw-b4-r1-root");
+        var outside = Path.Combine(Path.GetTempPath(), "aw-b4-r1-outside", "receipt.json");
+        var shown = FinishCommand.DisplayArtifactPath(root, outside);
+        Assert.Equal("[outside-workspace]", shown);
+        Assert.DoesNotContain(outside, shown);
+        Assert.DoesNotContain(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), shown);
+
+        Directory.CreateDirectory(root);
+        var inside = Path.Combine(root, ".agentwatch", "runs", "demo.json");
+        var relative = FinishCommand.DisplayArtifactPath(root, inside);
+        Assert.Equal(".agentwatch/runs/demo.json", relative);
+    }
 }
