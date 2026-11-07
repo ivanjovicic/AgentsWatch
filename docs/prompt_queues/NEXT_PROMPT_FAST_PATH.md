@@ -43,9 +43,9 @@ docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 
 ## Why this is next
 
-B3 executed three useful REAL runs on `origin/main`
-`8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809`. Useful REAL count is 12 of 30
-(gap 18). AW-VFY-010 remains in progress and not complete.
+B3 executed three useful REAL runs and raised the useful REAL total from 8 to 11 of 30.
+B4 added one legitimate REAL and raised the total to 12 of 30 (gap 18).
+AW-VFY-010 remains in progress and not complete.
 
 Do not start B5 automatically from this pointer.
 Do not mark AW-VFY-010 complete from unit tests, a plan, or green CI.
