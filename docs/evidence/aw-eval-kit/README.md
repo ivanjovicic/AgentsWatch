@@ -20,4 +20,4 @@ Radni listovi (prazni šabloni, bez izmišljenih merenja):
 4. [04-final-comparison-worksheet.md](04-final-comparison-worksheet.md)
 5. [05-seal-manifest-template.md](05-seal-manifest-template.md) — sidecar za SHA-256; heš se ne upisuje u heširani fajl
 
-Redosled: prvo predregistracija (zamrznuti sadržaj, zatim heš u manifest), zatim Git/CI/PR pregled i isto tako zamrznuti baseline, zatim manifest i proverljiv remote dokaz redosleda, tek potom generisanje ili otvaranje AgentsWatch nalaza, zatim poređenje, zatim nezavisni adjudikator. Lokalni timestamp nije nezavisni dokaz redosleda.
+Redosled (usklađen sa CLI-jem): odobren zadatak → predregistracija, zamrzavanje i remote dokaz → `agentswatch start` pre bilo koje izmene (operator sakriva izlaz od recenzenta) → agent radi zadatak → Git/CI/PR pregled, zamrzavanje baseline odluke i remote dokaz bez AW informacija → `agentswatch finish` i prikaz receipta tek posle tog pečata → poređenje, merenje vremena i nezavisni adjudikator. Lokalni timestamp nije nezavisni dokaz redosleda.

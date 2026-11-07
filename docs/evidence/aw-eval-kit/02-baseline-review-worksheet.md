@@ -1,7 +1,8 @@
-# Baseline Git/CI/PR pregled (pre AgentsWatch nalaza)
+# Baseline Git/CI/PR pregled (pre prikaza AgentsWatch receipta)
 
-Ovaj list je **zapečaćeni** zapis privremene odluke. Posle pečata se ne sme menjati.
-Ako treba ispravka slova, napraviti novi list sa novim pečatom i objasniti razlog; stari ostaje sačuvan.
+Ovaj list je **zapečaćeni** zapis privremene odluke posle izvršenog zadatka. `agentswatch start` je smeo i mora da se desi **ranije**, pre izmena koda; recenzent ipak **ne sme** da vidi start izlaz, dirty-at-start brojeve, putanju ili sadržaj baseline fajla, findings ili receipt.
+
+Posle pečata se list ne sme menjati. Ako treba ispravka slova, napraviti novi list sa novim pečatom i objasniti razlog; stari ostaje sačuvan.
 
 ## 1. Kontekst
 
@@ -41,18 +42,23 @@ Nalazi koje je recenzent **stvarno uočio i ovde zapisao** (konkretno; prazno = 
 
 ```
 
-## 3. Zamrzavanje i pečat (pre bilo kog AgentsWatch nalaza)
+## 3. Zamrzavanje i pečat (pre `agentswatch finish` i pre prikaza receipta)
 
 Ovaj list posle zamrzavanja se ne sme menjati. Ako treba ispravka, napraviti novu verziju; stara ostaje sačuvana.
+
+Potvrde recenzenta (obavezno `da`):
+
+- [ ] Nisam video izlaz `agentswatch start` (uključujući „Dirty at start“ / „Worktree clean at start“).
+- [ ] Nisam video AW baseline metapodatke, findings ni receipt.
 
 Postupak:
 
 1. Popuniti odluku, obrazloženje, stvarno uočene nalaze i timestamp-e. **Ne upisivati heš u ovaj fajl.**
 2. Sačuvati fajl i prestati da ga menjate (zamrznuti bajtovi).
 3. Izračunati SHA-256 tih tačnih bajtova (UTF-8, kako je sačuvan).
-4. Upisati putanju i heš u zaseban [05-seal-manifest-template.md](05-seal-manifest-template.md). Adjudikator kasnije hešira **originalne zamrznute bajtove**, nikad fajl izmenjen posle računanja heša.
-5. Za dokaz da je pečat nastao **pre** AgentsWatch izlaza potreban je proverljiv redosled: git commit **gurnut na remote** (vidljiv u PR timeline-u) ili drugi potpisan / na remote-u zabeležen zapis. Tek posle toga sme da se generiše ili otvori AgentsWatch izlaz.
+4. Upisati putanju i heš u zaseban [05-seal-manifest-template.md](05-seal-manifest-template.md) kao pečat vrste `baseline-pregled`. Adjudikator kasnije hešira **originalne zamrznute bajtove**, nikad fajl izmenjen posle računanja heša.
+5. Objaviti remote dokaz (git commit gurnut na remote / PR timeline ili drugi potpisan remote zapis). Tek posle toga operator sme da pokrene `agentswatch finish` i da prikaže receipt. Podrazumevano se `finish` čeka do ovog trenutka.
 
-Lokalni timestamp u odeljku 1 i lokalni (nepohranjeni) git commit **nisu** nezavisni dokaz redosleda: oboje se mogu nazadovati.
+Lokalni timestamp u odeljku 1 i lokalni (nepohranjeni) git commit **nisu** nezavisni dokaz redosleda: oboje se mogu nazadovati. Remote push dokazuje kada je ovaj list postao remote-vidljiv; sam ne dokazuje kada je lokalni `finish` izvršen, osim uz pouzdan operativni redosled.
 
-Ako je AgentsWatch izlaz viđen ili generisan pre pečata i remote dokaza redosleda, run je **kontaminiran**. Može ostati tehnički zabeležen, ali **ne ulazi** u GO brojač decision change slučajeva.
+Ako je recenzent video start izlaz ili receipt pre ovog pečata, run je **kontaminiran**. Može ostati tehnički zabeležen, ali **ne ulazi** u GO brojač decision change slučajeva.

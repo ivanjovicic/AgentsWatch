@@ -43,8 +43,10 @@ Pitanja (odgovoriti da / ne / unknown uz razlog):
 | Klasifikacija ključnog nalaza: `ALREADY_NOTICED_IN_BASELINE` / `DISCOVERABLE_IN_DIFF_BUT_NOT_NOTICED` / `NEWLY_SURFACED` | | |
 | Ako je `DISCOVERABLE_IN_DIFF_BUT_NOT_NOTICED`, da li adjudikator potvrđuje da je AW to akciono izneo i da je to promenilo odluku? | | |
 | Da li se heš u manifestu poklapa sa originalnim zamrznutim bajtovima (fajl nije menjan posle heša)? | | |
-| Da li postoji proverljiv remote/potpisan dokaz da je pečat pre AW izlaza? Lokalni timestamp nije dovoljan. | | |
-| Da li je recenzent video AW izlaz pre pečata (kontaminacija)? | | |
+| Da li je `agentswatch start` pokrenut pre izmena koda (inače atribucija nije validna)? | | |
+| Da li postoji odvojeni remote dokaz za predregistraciju (pre starta) i za baseline pregled (pre finish-a)? Lokalni timestamp nije dovoljan. | | |
+| Da li je recenzent video start izlaz, dirty-at-start brojeve, baseline metapodatke ili receipt pre pečata baseline pregleda? | | |
+| Da li je `finish` / prikaz receipta usledio tek posle remote dokaza baseline pečata (podrazumevano da)? | | |
 | Da li je ovo jedan od 12 istorijskih REAL runova ili isti njihov posao? | | |
 | Da li je tvrdnja lažni alarm (AW je upozorio, recenzent i adjudikator odbacuju kao neosnovano)? | | |
 | Da li postoji materijalni false Done, curenje privatnosti ili pogrešna atribucija? | | |

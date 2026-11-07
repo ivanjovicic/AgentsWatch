@@ -1,6 +1,6 @@
-# Konačno poređenje (posle pečata i posle AgentsWatch pregleda)
+# Konačno poređenje (posle pečata baseline pregleda i posle `finish`)
 
-Otvoriti tek **posle** pečata baseline lista.
+Otvoriti tek **posle** remote dokaza baseline pečata i tek pošto operator pokrene `agentswatch finish` i prikaže receipt. Incremental AW minuti se mere od tog trenutka, ne od skrivenog `start`-a.
 
 | Polje | Upis |
 |---|---|

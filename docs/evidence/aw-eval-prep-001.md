@@ -25,29 +25,32 @@ Cilj buduće evaluacije (kad je vlasnik odobri i kad padnu blocker-i): utvrditi 
 
 | List | Ulaz |
 |---|---|
-| [aw-eval-kit/01-preregistration-template.md](aw-eval-kit/01-preregistration-template.md) | pre starta / pre čitanja AW izlaza |
-| [aw-eval-kit/02-baseline-review-worksheet.md](aw-eval-kit/02-baseline-review-worksheet.md) | Git/CI/PR odluka i pečat |
+| [aw-eval-kit/01-preregistration-template.md](aw-eval-kit/01-preregistration-template.md) | pre `agentswatch start` i pre bilo koje izmene koda |
+| [aw-eval-kit/02-baseline-review-worksheet.md](aw-eval-kit/02-baseline-review-worksheet.md) | posle izvršenog zadatka; Git/CI/PR odluka, bez AW start/finish izlaza |
 | [aw-eval-kit/03-independent-oracle-worksheet.md](aw-eval-kit/03-independent-oracle-worksheet.md) | druga osoba potvrđuje pripisivost |
-| [aw-eval-kit/04-final-comparison-worksheet.md](aw-eval-kit/04-final-comparison-worksheet.md) | posle pečata, posle AW pregleda |
-| [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md) | sidecar: SHA-256 zamrznutog lista; heš nije u heširanom fajlu |
+| [aw-eval-kit/04-final-comparison-worksheet.md](aw-eval-kit/04-final-comparison-worksheet.md) | posle pečata baseline pregleda i posle `finish` / prikaza receipta |
+| [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md) | sidecar: SHA-256 zamrznutog lista; heš nije u heširanom fajlu; odvojeni pečati za predregistraciju i za baseline pregled |
 
-## 2. Kako se beleži početna Git/CI/PR odluka pre AgentsWatch nalaza
+## 2. Kanonski redosled (usklađen sa `agentswatch start` / `finish`)
 
-Redosled je obavezan (protokol, odeljci 2–3), uz ispravljen pečat:
+`agentswatch start` mora da snimi početno stanje **pre** nego što agent menja kod. U kodu `StartCommand` poziva `RunStartService.StartAsync`, koji čita trenutni git worktree (`repository.ReadAsync`) i upisuje `RunBaseline` (granu, HEAD, prljavo stanje) u active-run store. Sve što već postoji u tom trenutku kasnije se tretira kao pre-existing, ne kao run-interval izmena. Ako se `start` pokrene posle izmena, atribucija i evaluacija intervala nisu validne.
 
-1. Popuniti predregistraciju (očekivani ishod, zašto je posao legitiman, da/ne za očekivani decision change). List ne sadrži sopstveni heš.
-2. Recenzent pregleda **samo** Git diff, dostupni CI i/ili PR kontekst.
-3. Recenzent upisuje privremenu odluku (merge / ne merge / izmena / close ili ekvivalent), stvarne timestamp-e i **nalaze koje je stvarno uočio**. Ne upisuje nagađanje šta je *mogao* da vidi u diff-u.
-4. **Zamrzavanje:** sačuvati predregistraciju i baseline kao konačne fajlove i prestati da ih menjate.
-5. **Heš:** izračunati SHA-256 tih tačnih bajtova i upisati ga samo u zaseban [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md). Heš se **ne** vraća u zamrznuti list — to bi promenilo bajtove i oborilo pečat. Adjudikator kasnije hešira originalne zamrznute bajtove.
-6. **Dokaz redosleda:** commitovati zamrznute listove i manifest i **gurnuti ih na remote** (PR timeline / commit URL) ili napraviti drugi potpisan / na remote-u zabeležen zapis **pre** generisanja ili otvaranja AgentsWatch izlaza.
-7. Tek posle toga sme da se generiše ili otvori AgentsWatch receipt.
+`agentswatch finish` (`FinishCommand` → `RunFinishService.FinishAsync`) čita krajnje stanje, računa deltu naspram baseline-a sa starta i tek tada upisuje receipt (`RunReceiptBuilder` + `receipts.WriteNew`). Receipt ne postoji dok `finish` uspešno ne završi. CLI `start` štampa broj staged/unstaged/untracked fajlova („Dirty at start: …“) ili „Worktree clean at start.“ Taj izlaz, putanja baseline fajla i ostali start metapodaci moraju ostati skriveni od baseline recenzenta.
 
-Lokalni timestamp na radnom listu i lokalni git commit koji nije na remote-u **nisu** nezavisni dokaz redosleda: oboje se mogu nazadovati. Oni ostaju korisni kao operativna beleška, ne kao audit dokaz da je pečat bio pre AW-a.
+Dva odvojena pečata (isti sidecar mehanizam, različiti trenuci):
 
-Ako operator CLI-ja i recenzent nisu ista osoba, operator ne sme da prikaže nalaze recenzentu pre pečata. Ako je receipt već nastao, putanja i sadržaj ostaju zatvoreni do pečata i remote dokaza redosleda.
+1. Vlasnik odobri legitiman, slobodan zadatak. Popuniti predregistraciju, zamrznuti je (bez heša u samom listu), upisati SHA-256 u [aw-eval-kit/05-seal-manifest-template.md](aw-eval-kit/05-seal-manifest-template.md) i objaviti remote dokaz **pre izvršenja**.
+2. Operator/izvršilac u odobrenom disposable worktree-u pokrene `agentswatch start` **pre bilo koje izmene koda**. Izlaz `start`-a, baseline metapodaci i kasniji findings ostaju skriveni od baseline recenzenta.
+3. Agent izvršava stvarni zadatak (izgradnja, testovi, PR/CI po pravilima tog posla).
+4. Recenzent radi običan Git/CI/PR pregled, upisuje privremenu odluku i nalaze koje je **stvarno uočio**, zamrzava baseline list i objavljuje remote dokaz **bez** uvida u bilo koju AgentsWatch informaciju (start izlaz, dirty-at-start brojeve, baseline fajl, receipt, findings).
+5. Tek posle tog pečata operator pokreće `agentswatch finish` i prikazuje receipt. Podrazumevano se `finish` odlaže do pečata. Ako je izolovani operator ipak već napravio receipt, recenzent do pečata ne sme da mu pristupi.
+6. Završno poređenje, merenje vremena i nezavisna adjudikacija.
 
-Ispravke: nova verzija lista + novi red u manifestu; stari zamrznuti fajl ostaje. Kršenje redosleda = `CONTAMINATED`. Run se ne broji kao decision change case.
+Heš se i dalje **ne** vraća u zamrznuti list. Ispravke = nova verzija lista + novi red u manifestu; stari fajl ostaje.
+
+Remote push dokazuje kada je zapečaćeni fajl postao javno/remote vidljiv. **Sam** remote push ne dokazuje da je lokalni AgentsWatch izlaz nastao kasnije, osim ako je operativni redosled ili drugi nezavisni zapis pouzdan. Lokalni timestamp i lokalni (nepohranjeni) git commit nisu nezavisni dokaz redosleda: mogu se nazadovati. Ovaj komplet ne uvodi novu platformu za kriptografsku attestaciju.
+
+Kršenje redosleda (start posle izmena; recenzent vidi start izlaz ili receipt pre pečata baseline pregleda) = `CONTAMINATED` i/ili nevalidna atribucija. Takav run se ne broji kao decision change case.
 
 ## 3. Nezavisni adjudikator
 
@@ -176,7 +179,7 @@ Nije nađen nijedan slobodan, već odobren, ne-HOLD, ne-istorijski .NET ili Flut
 
 ## 8. Sprečavanje kontaminacije, naknadnog orakla i dvostrukog brojanja
 
-- Zamrzavanje, heš u sidecar manifestu i proverljiv remote dokaz redosleda pre AW izlaza (odeljak 2). Lokalni timestamp nije nezavisni dokaz. Viđen ili generisan receipt pre pečata = kontaminacija.
+- Dva pečata: predregistracija pre `start`-a, baseline pregled pre `finish`-a / prikaza receipta (odeljak 2). Sidecar heš ostaje van heširanog fajla. Lokalni timestamp nije nezavisni dokaz. Recenzent koji vidi start izlaz (uključujući dirty-at-start brojeve) ili receipt pre pečata baseline pregleda = kontaminacija. `start` posle izmena koda = nevalidna atribucija.
 - Nalaz koji je recenzent već zapisao u baseline-u ne broji se kao incremental AW vrednost. Nalaz koji je samo otkriviv u diff-u, a nije bio uočen, ne broji se automatski kao decision change bez potvrde adjudikatora.
 - Očekivani ishod se piše u predregistraciji **pre** čitanja AW izlaza. Orakl se ne bira posle rezultata.
 - Dvanaest istorijskih REAL runova ostaju kako jesu i ne ulaze u novi GO brojač. MathLearning #49 i B2-R5/consume_tx preklapanja su primer zabranjenog reuse-a.
@@ -193,7 +196,7 @@ Ovo je redosled za **budućnost**, posle novog izričitog vlasničkog OK-a i pos
 1. Vlasnik imenuje drugog čoveka-adjudikatora (inače ostaje BLOCKED za nezavisne potvrde).
 2. Vlasnik izričito odobrava **prvi** legitiman, slobodan zadatak (nije HOLD, nije tuđi claim, nije jedan od 12 istorijskih REAL). HOLD ostaje HOLD dok se posebno ne podigne.
 3. Cilj kohorte za GO prag je 10–15 evaluiranih podobnih slučajeva. To **nije** preduslov da svih 10–15 zadataka bude spremno pre prvog odobrenog runa. Posle izričitog odobrenja starta pilota, slučajevi mogu da se skupljaju redom, svaki pojedinačno predregistrovan i odobren.
-4. Za svaki slučaj, u disposable worktree-u: predregistracija i njeno zamrzavanje + red u manifestu → Git/CI/PR pregled → zamrzavanje baseline lista + red u manifestu → remote dokaz redosleda (push / PR timeline) → tek onda AgentsWatch start/finish ili otvaranje receipta → comparison list → adjudikator.
+4. Za svaki slučaj, u disposable worktree-u, ovim redom: predregistracija + zamrzavanje + manifest + remote dokaz → `agentswatch start` (operator; izlaz sakriven od recenzenta; pre bilo koje izmene) → agent izvršava zadatak → Git/CI/PR pregled i zamrzavanje baseline odluke + manifest + remote dokaz (recenzent ne vidi AW informacije) → tek onda `agentswatch finish` i prikaz receipta → comparison list i merenje vremena → nezavisni adjudikator.
 5. Zaustaviti čitav pilot odmah ako nastupi STOP uslov (materijalni false Done, ozbiljno curenje, materijalna pogrešna atribucija).
 6. Posle kohorte izračunati medijane (samo nad izmerenim, ne nad Unknown) i primeniti GO/NARROW/STOP.
 7. Ne puniti preostalih 18 istorijskih mesta do 30. Ne startovati B5 ni AW-VFY-011 iz ovog reda.

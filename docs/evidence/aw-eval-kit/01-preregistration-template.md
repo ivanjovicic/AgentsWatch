@@ -1,7 +1,9 @@
 # Predregistracija evaluacionog runa
 
-Popuniti **pre** `agentswatch start` i pre čitanja bilo kog AgentsWatch nalaza.
-Ako je AW već završen, ovaj list i baseline list se i dalje popunjavaju i pečate pre otvaranja receipta.
+Popuniti **pre** `agentswatch start` i pre bilo koje izmene koda.
+`start` mora da uhvati početni worktree; zato se ne pokreće posle izmena. Posle zamrzavanja ove predregistracije i njenog remote dokaza operator sme da pokrene `start`, ali taj izlaz ostaje sakriven od baseline recenzenta.
+
+Podrazumevano se `agentswatch finish` **ne** pokreće dok recenzent ne zapečati baseline Git/CI/PR odluku. Ne završavati run unapred da bi se „imao receipt na čekanju“, osim ako izolovani operator može da garantuje da recenzent nema pristup.
 
 Jezik zapisa: srpski (latinica) ili engleski, konzistentno unutar runa.
 Vremenska zona zapisa: Europe/Belgrade, uz UTC ako izvor nije lokalni.
@@ -32,6 +34,7 @@ Potvrde pre starta (obavezno `da`):
 - [ ] Nije HOLD stavka.
 - [ ] Nije preuzet tuđi claim / tuđi PR / tuđi queue lock.
 - [ ] Adjudikator nije ista osoba kao recenzent. Ako druga osoba ne postoji, run se ne sme tretirati kao nezavisno potvrđen.
+- [ ] `agentswatch start` još nije pokrenut; ova predregistracija se zamrzava pre starta i pre izmena koda.
 - [ ] Niko još nije otvorio AgentsWatch receipt / findings za ovaj run.
 - [ ] Ovaj list je potpun i **ne sadrži** sopstveni heš (heš ide samo u zaseban manifest).
 
@@ -43,4 +46,4 @@ Potvrde pre starta (obavezno `da`):
 4. Upisati putanju i heš u zaseban [05-seal-manifest-template.md](05-seal-manifest-template.md). **Ne vraćati heš u ovaj fajl** — to bi promenilo bajtove i oborilo pečat.
 5. Ispravke idu u novu verziju lista; stara zamrznuta kopija ostaje sačuvana.
 
-Lokalni datum u tabeli iznad **nije** nezavisni dokaz da je predregistracija nastala pre AgentsWatch izlaza. Za redosled vidi manifest (remote commit / PR timeline / drugi proverljivi zapis).
+Lokalni datum u tabeli iznad **nije** nezavisni dokaz redosleda. Za predregistraciju je remote dokaz potreban **pre** `agentswatch start`. Posle ovog pečata ide `start` (sakriven od recenzenta), ne `finish`.
