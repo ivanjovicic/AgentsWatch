@@ -49,7 +49,7 @@ Važne napomene koje ledger već beleži i koje se ovde ne prepisuju unazad:
 
 - Posle PR #12 ručni `Supported` je `AWE009` / `NeedsReview` i nije samostalno verifikovani `Done`. Istorijski B2 Done/TN redovi ostaju kako su zapisani.
 - Među kontrolama, ne među REAL redovima, B2-N2 ostaje istorijski **FN**. Kasniji ispravni blokovi (PM-N2A/N2B) su odvojeni TP redovi, ne TN.
-- Atribucija u izvršenim B3/B4 REAL redovima odgovara očekivanju iz predhodno zapisanih ishoda (interval izmene naspram prethodno prljavih fajlova). Nije zabeležena materijalna greška atribucije koja je zaustavila batch.
+- Atribucija u izvršenim B3/B4 REAL redovima odgovara očekivanju iz prethodno zapisanih ishoda (interval izmene naspram prethodno prljavih fajlova). Nije zabeležena materijalna greška atribucije koja je zaustavila batch.
 - Privatnost: redakcija recepta i finish banera zatvorena je kroz PR #12/#13; `Program.Main` last-resort poruka je urađena u PR #17; prikaz putanja van workspace-a je B4-R1 (draft PR #18). Nije zabeležen ozbiljan privacy leak kao razlog za STOP u B3 ili B4.
 - Nema nezavisno verifikovanog `Done` puta iz ručno prijavljenog `Supported`.
 
