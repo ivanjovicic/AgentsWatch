@@ -213,7 +213,7 @@ Purpose: mark one acceptance criterion `Supported`, `NotSupported`, or `Unknown`
 Rules:
 
 - `Supported` requires `--evidence <validation-id>` pointing at a recorded passing validation (exit 0 or no exit code) and a non-empty `--reason`. Evidence-free or unexplained `Supported` is rejected. The receipt records a manual assessment (declared, not attested), the reason, and the declared evidence ids, and the banner/CLI output shows that provenance.
-- Trustworthy `Done` additionally requires that the linked validation’s command was declared for that criterion via `--accept-validation` on `contract create`. Otherwise the gate records `AWE009` and the decision is `NeedsReview` (unverified). See `docs/DECISION_ORDERING.md` and `docs/RECEIPT_REDACTION.md`.
+- A manual `Supported` mark is not independently verified acceptance. Linked evidence must be a recorded passing validation whose command was declared for that criterion via `--accept-validation`. Missing or non-passing refs, and the absence of a separately verified acceptance mechanism, produce `AWE009` / `NeedsReview` (unverified) rather than ordinary trustworthy `Done`. See `docs/DECISION_ORDERING.md` and `docs/RECEIPT_REDACTION.md`.
 - `NotSupported` also requires a recorded validation id.
 - `Unknown` may omit `--evidence`.
 - Digest and integrity checks are the same as `evidence`/`claims`: tampered or invalid receipts are rejected and not rewritten.

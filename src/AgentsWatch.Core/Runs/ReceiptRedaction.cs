@@ -1,11 +1,12 @@
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace AgentsWatch.Core.Runs;
 
 /// <summary>
-/// Redacts sentinel-like secrets from a receipt after evaluation and before digest.
-/// The stored canonical JSON (and therefore the evidence digest) covers the redacted form.
-/// Evaluation sees in-memory values first; projections and CLI print the stored receipt.
+/// Redacts sentinel-like secrets from stored JSON string values after evaluation and before digest.
+/// Walks a JSON DOM so assignment patterns cannot consume structural quotes or commas.
 /// </summary>
 public static class ReceiptRedaction
 {
@@ -39,11 +40,54 @@ public static class ReceiptRedaction
         string.Equals(left, right, StringComparison.Ordinal)
         || string.Equals(RedactText(left), RedactText(right), StringComparison.Ordinal);
 
+    /// <summary>Redact string values in a JSON document. Property names and punctuation are left intact.</summary>
+    public static string RedactJsonDocument(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+        {
+            WriteRedacted(doc.RootElement, writer);
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
     public static RunReceipt Apply(RunReceipt receipt)
     {
-        // Serialize the whole receipt so nested worktree entries, deltas, findings,
-        // and future string fields cannot bypass redaction. Patterns do not match JSON syntax.
         var json = RunReceiptJson.Serialize(receipt with { EvidenceDigest = null });
-        return RunReceiptJson.Deserialize(RedactText(json)!);
+        return RunReceiptJson.Deserialize(RedactJsonDocument(json));
+    }
+
+    private static void WriteRedacted(JsonElement element, Utf8JsonWriter writer)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                writer.WriteStartObject();
+                foreach (var property in element.EnumerateObject())
+                {
+                    writer.WritePropertyName(property.Name);
+                    WriteRedacted(property.Value, writer);
+                }
+
+                writer.WriteEndObject();
+                break;
+            case JsonValueKind.Array:
+                writer.WriteStartArray();
+                foreach (var item in element.EnumerateArray())
+                {
+                    WriteRedacted(item, writer);
+                }
+
+                writer.WriteEndArray();
+                break;
+            case JsonValueKind.String:
+                writer.WriteStringValue(RedactText(element.GetString()));
+                break;
+            default:
+                element.WriteTo(writer);
+                break;
+        }
     }
 }

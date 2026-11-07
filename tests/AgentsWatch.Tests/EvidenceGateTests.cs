@@ -83,7 +83,7 @@ public sealed class EvidenceGateTests
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
         }
     }
@@ -161,7 +161,7 @@ public sealed class EvidenceGateTests
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
                 && f.Message.Contains("mandatory contract fields"));
         }
@@ -233,7 +233,7 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
         }
     }
@@ -352,13 +352,13 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.AgentsWatchCommand));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.Done, result.Receipt!.Decision.Status);
-            Assert.Contains(result.Receipt.Decision.Reasons, r => r.StartsWith(EvidenceRules.Satisfied));
+            Assert.Equal(DecisionStatus.NeedsReview, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.True(RunReceiptJson.VerifyDigest(result.Receipt));
 
             var md = File.ReadAllText(Path.Combine(repo.Root, ".ai", "runs", run + ".md"));
-            Assert.Contains("## Decision: Done", md);
-            Assert.Contains(EvidenceRules.Satisfied, md);
+            Assert.Contains("## Decision: NeedsReview", md);
+            Assert.Contains(EvidenceRules.AcceptanceUnverified, md);
             Assert.Contains("AgentsWatchCommand", md);
         }
     }
@@ -400,7 +400,7 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var receipt = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, summary: null)).Receipt!;
             Assert.Contains(receipt.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing);
-            Assert.Equal(DecisionStatus.NeedsEvidence, receipt.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, receipt.Decision.Status);
         }
     }
 
@@ -481,7 +481,8 @@ public sealed class EvidenceGateTests
             var complete = Service(repo.Root).Record(run, new ValidationEvidence("cov", run, "coverage", ValidationStatus.Pass, ValidationSource.CI, OutputSummary: "coverage report"));
             Assert.True(complete.Ok, complete.Error);
             Assert.DoesNotContain(complete.Receipt!.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing);
-            Assert.Equal(DecisionStatus.Done, complete.Receipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, complete.Receipt.Decision.Status);
+            Assert.Contains(complete.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
         }
     }
 

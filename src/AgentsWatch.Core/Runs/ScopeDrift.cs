@@ -48,6 +48,21 @@ public static class ScopeDriftChecker
             Evaluate(change, owned, avoid, Add);
         }
 
+        foreach (var change in (receipt.RunDelta.RunIntervalChanges ?? [])
+                     .Concat(receipt.RunDelta.PreExistingChangedFurther ?? [])
+                     .Concat(receipt.RunDelta.AttributionAmbiguities ?? [])
+                     .OrderBy(c => c.Path, StringComparer.Ordinal))
+        {
+            if (!ContainsRedactedSegment(change.Path) && !ContainsRedactedSegment(change.OldPath))
+            {
+                continue;
+            }
+
+            Add(ScopeDriftRules.AmbiguousScope, FindingCategory.AttributionAmbiguous, FindingSeverity.Warning, FindingStatus.NeedsReview,
+                "stored path contains redacted segments; original filename cannot be replayed against owned/avoid patterns.",
+                PathsOf(change), ["runDelta"]);
+        }
+
         return findings;
     }
 
@@ -124,6 +139,9 @@ public static class ScopeDriftChecker
         var oldOwned = change.OldPath is null || RepositoryPath.FirstMatchingPattern(owned, change.OldPath) is not null;
         return !newOwned || !oldOwned;
     }
+
+    private static bool ContainsRedactedSegment(string? path) =>
+        path is not null && path.Contains(ReceiptRedaction.Placeholder, StringComparison.Ordinal);
 
     private static string Context(ClassifiedChange change) =>
         $"attribution: {change.Classification}; status: {change.Status}";

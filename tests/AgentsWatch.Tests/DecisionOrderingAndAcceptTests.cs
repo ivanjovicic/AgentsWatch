@@ -185,7 +185,7 @@ public sealed class DecisionOrderingAndAcceptTests
             o = new StringWriter();
             err = new StringWriter();
             const string reason = "the recorded test log shows the feature works";
-            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", reason], o, err));
+            Assert.Equal(1, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", reason], o, err));
             Assert.Contains("Acceptance recorded: ac1 [Supported]", o.ToString());
             Assert.Contains("manual assessment", o.ToString(), StringComparison.OrdinalIgnoreCase);
             Assert.Contains("declared", o.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -198,7 +198,8 @@ public sealed class DecisionOrderingAndAcceptTests
             Assert.Contains("declared, not attested", ac.Reason, StringComparison.OrdinalIgnoreCase);
             Assert.Contains(reason, ac.Reason);
             Assert.Contains("t", ac.Reason);
-            Assert.Equal(DecisionStatus.Done, receipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, receipt.Decision.Status);
+            Assert.Contains(receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.True(RunReceiptJson.VerifyDigest(receipt));
             var md = File.ReadAllText(Path.Combine(repo.Root, ".ai", "runs", run + ".md"));
             Assert.Contains("manual assessment", md, StringComparison.OrdinalIgnoreCase);
@@ -290,13 +291,14 @@ public sealed class DecisionOrderingAndAcceptTests
 
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
+            Assert.Equal(1, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
 
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
             var afterEvidenceCheck = new FileRunReceiptStore(repo.Root).Read(run);
-            Assert.Equal(DecisionStatus.Done, afterEvidenceCheck.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, afterEvidenceCheck.Decision.Status);
+            Assert.Contains(afterEvidenceCheck.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.DoesNotContain(afterEvidenceCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
             Assert.Equal(CriterionStatus.Supported, Assert.Single(afterEvidenceCheck.Claims).Status);
             Assert.Contains("manual assessment", Assert.Single(afterEvidenceCheck.AcceptanceCriteria).Reason, StringComparison.OrdinalIgnoreCase);
@@ -304,10 +306,11 @@ public sealed class DecisionOrderingAndAcceptTests
             var decision = afterEvidenceCheck.Decision.Status;
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
             var afterClaimsCheck = new FileRunReceiptStore(repo.Root).Read(run);
             Assert.Equal(decision, afterClaimsCheck.Decision.Status);
-            Assert.Equal(DecisionStatus.Done, afterClaimsCheck.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, afterClaimsCheck.Decision.Status);
+            Assert.Contains(afterClaimsCheck.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.DoesNotContain(afterClaimsCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
             Assert.Equal(CriterionStatus.Supported, Assert.Single(afterClaimsCheck.Claims).Status);
         }
@@ -327,17 +330,18 @@ public sealed class DecisionOrderingAndAcceptTests
             Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["record", run, "--type", "ValidationPassed", "--value", "true", "--source", "agent-prose"], o, err));
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
+            Assert.Equal(1, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Equal(1, EvidenceCommand.Run(repo.Root, ["check", run], o, err));
             var afterEvidenceCheck = new FileRunReceiptStore(repo.Root).Read(run);
-            Assert.Equal(DecisionStatus.Done, afterEvidenceCheck.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, afterEvidenceCheck.Decision.Status);
+            Assert.Contains(afterEvidenceCheck.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.DoesNotContain(afterEvidenceCheck.Findings, f => f.RuleId == ClaimRules.Unsupported);
 
             o = new StringWriter();
             err = new StringWriter();
-            Assert.Equal(0, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
+            Assert.Equal(1, ClaimsCommand.Run(repo.Root, ["check", run], o, err));
             Assert.Equal(afterEvidenceCheck.Decision.Status, new FileRunReceiptStore(repo.Root).Read(run).Decision.Status);
         }
     }

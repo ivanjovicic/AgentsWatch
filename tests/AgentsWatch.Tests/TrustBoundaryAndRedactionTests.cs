@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AgentsWatch.Cli;
 using AgentsWatch.Core.Contracts;
 using AgentsWatch.Core.Runs;
@@ -17,11 +18,12 @@ public sealed class TrustBoundaryAndRedactionTests
     private static async Task<(TempGitRepo Repo, string RunId)> StartedAndFinished(
         IReadOnlyList<CriterionValidationBinding>? bindings = null,
         string validateCommand = "dotnet test",
-        string acceptText = "feature works")
+        string acceptText = "feature works",
+        IReadOnlyList<string>? avoidPaths = null)
     {
         var repo = new TempGitRepo();
         var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft(
-            "T", null, "intent", [acceptText], ["**"], [],
+            "T", null, "intent", [acceptText], ["**"], avoidPaths ?? [],
             PermissionMode.WorkspaceWrite, RunMode.Implementation,
             [new ValidationRequirement("t", validateCommand)], ["stop"], ["test log"], null,
             bindings));
@@ -80,9 +82,10 @@ public sealed class TrustBoundaryAndRedactionTests
             Assert.True(Evidence(repo.Root).Record(run, Ev(run, "dotnet test")).Ok);
             var o = new StringWriter();
             var err = new StringWriter();
-            Assert.Equal(0, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
+            Assert.Equal(1, AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "recorded test log backs the criterion"], o, err));
             var receipt = new FileRunReceiptStore(repo.Root).Read(run);
-            Assert.Equal(DecisionStatus.Done, receipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, receipt.Decision.Status);
+            Assert.Contains(receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
         }
     }
 
@@ -179,5 +182,138 @@ public sealed class TrustBoundaryAndRedactionTests
         var binding = Assert.Single(contract.CriterionValidationBindings!);
         Assert.Equal("ac1", binding.CriterionId);
         Assert.Equal("dotnet test", Assert.Single(binding.Commands));
+    }
+
+    [Fact]
+    public async Task P1_AssignmentSecrets_AsLastCommandToken_DoNotBreakJson_AndAreRedacted()
+    {
+        var secrets = new (string Command, string Secret)[]
+        {
+            ("echo token=demo123", "demo123"),
+            ("echo password=demoPass1", "demoPass1"),
+            ("echo api_key=demoKey1", "demoKey1")
+        };
+        foreach (var (command, secret) in secrets)
+        {
+            var (repo, run) = await StartedAndFinished(bindings: BindAc1(), validateCommand: "dotnet test");
+            using (repo)
+            {
+                var result = Evidence(repo.Root).Record(run, Ev(run, command));
+                Assert.True(result.Ok, result.Error);
+                Assert.NotNull(result.Receipt);
+                var jsonPath = new FileRunReceiptStore(repo.Root).PathFor(run);
+                var json = File.ReadAllText(jsonPath);
+                var parsed = JsonDocument.Parse(json);
+                Assert.Equal(JsonValueKind.Object, parsed.RootElement.ValueKind);
+                Assert.DoesNotContain(secret, json);
+                Assert.DoesNotContain(secret, result.Receipt!.Validations.Single().CommandDisplay);
+                Assert.Contains(ReceiptRedaction.Placeholder, result.Receipt.Validations.Single().CommandDisplay);
+                Assert.True(RunReceiptJson.VerifyDigest(result.Receipt));
+                var o = new StringWriter();
+                var err = new StringWriter();
+                EvidenceCommand.Run(repo.Root, ["check", run], o, err);
+                Assert.DoesNotContain(secret, o.ToString());
+                Assert.DoesNotContain(secret, err.ToString());
+            }
+        }
+    }
+
+    [Fact]
+    public async Task P1_RedactedAvoidPath_ReplayKeepsNonDoneAndScopeFinding()
+    {
+        var avoided = "notes/" + InventedSentinel + ".txt";
+        var (repo, run) = await StartedAndFinished(bindings: BindAc1(), avoidPaths: [avoided]);
+        using (repo)
+        {
+            var first = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.NotEqual(DecisionStatus.Done, first.Decision.Status);
+            Assert.Contains(first.Findings, f => f.RuleId == ScopeDriftRules.AvoidTouched);
+            SupportAndPass(repo.Root, run);
+            var after = Evidence(repo.Root).Check(run);
+            Assert.True(after.Ok, after.Error);
+            Assert.NotEqual(DecisionStatus.Done, after.Receipt!.Decision.Status);
+            Assert.Contains(after.Receipt.Findings, f =>
+                f.RuleId == ScopeDriftRules.AvoidTouched
+                || f.RuleId == ScopeDriftRules.AmbiguousScope
+                || f.RuleId == ScopeDriftRules.OutsideOwned
+                || f.RuleId == ScopeDriftRules.RenameCrosses);
+            Assert.DoesNotContain(InventedSentinel, File.ReadAllText(new FileRunReceiptStore(repo.Root).PathFor(run)));
+        }
+    }
+
+    [Fact]
+    public async Task P1_PreboundUnrelatedValidation_DoesNotYieldTrustworthyDone()
+    {
+        var (repo, run) = await StartedAndFinished(bindings: BindAc1("dotnet --info"), validateCommand: "dotnet --info");
+        using (repo)
+        {
+            Assert.True(Evidence(repo.Root).Record(run, Ev(run, "dotnet --info")).Ok);
+            var o = new StringWriter();
+            var err = new StringWriter();
+            AcceptCommand.Run(repo.Root, ["record", run, "--id", "ac1", "--status", "supported", "--evidence", "t", "--reason", "environment probe passed"], o, err);
+            var receipt = new FileRunReceiptStore(repo.Root).Read(run);
+            Assert.Equal(CriterionStatus.Supported, Assert.Single(receipt.AcceptanceCriteria).Status);
+            Assert.NotEqual(DecisionStatus.Done, receipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, receipt.Decision.Status);
+            Assert.Contains(receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified
+                && f.Message.Contains("unverified", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public async Task P1_LinkedMissingOrFailedRef_IsUnverified_EvenIfAnotherDeclaredPassExists()
+    {
+        var (repo, run) = await StartedAndFinished(bindings: BindAc1("dotnet test"), validateCommand: "dotnet test");
+        using (repo)
+        {
+            Assert.True(Evidence(repo.Root).Record(run, Ev(run, "dotnet test", id: "t")).Ok);
+            Assert.True(Evidence(repo.Root).Record(run, Ev(run, "dotnet test", ValidationStatus.Fail, id: "bad", summary: "Failed")).Ok);
+            StampSupported(repo.Root, run, ["validations[missing]"]);
+            var missing = Evidence(repo.Root).Check(run).Receipt!;
+            Assert.NotEqual(DecisionStatus.Done, missing.Decision.Status);
+            Assert.Contains(missing.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
+
+            StampSupported(repo.Root, run, ["validations[bad]"]);
+            var linkedFail = Evidence(repo.Root).Check(run).Receipt!;
+            Assert.NotEqual(DecisionStatus.Done, linkedFail.Decision.Status);
+            Assert.Contains(linkedFail.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
+        }
+    }
+
+    [Fact]
+    public async Task P2_DeltaSidecar_DoesNotPersistRawSentinelPaths()
+    {
+        var (repo, run) = await StartedAndFinished(bindings: BindAc1());
+        using (repo)
+        {
+            var deltaPath = new FileRunRecordStore(repo.Root).PathFor(run);
+            Assert.True(File.Exists(deltaPath));
+            var delta = File.ReadAllText(deltaPath);
+            JsonDocument.Parse(delta);
+            Assert.DoesNotContain(InventedSentinel, delta);
+            Assert.Contains(ReceiptRedaction.Placeholder, delta);
+        }
+    }
+
+    private static void SupportAndPass(string root, string run)
+    {
+        StampSupported(root, run, []);
+        Assert.True(Evidence(root).Record(run, Ev(run, "dotnet test")).Ok);
+    }
+
+    private static void StampSupported(string root, string run, IReadOnlyList<string> evidenceRefs)
+    {
+        var store = new FileRunReceiptStore(root);
+        var receipt = store.Read(run);
+        store.Replace(RunReceiptJson.WithDigest(receipt with
+        {
+            AcceptanceCriteria = receipt.AcceptanceCriteria.Select(a => a with
+            {
+                Status = CriterionStatus.Supported,
+                Reason = "manual assessment (declared, not attested); marked in test",
+                EvidenceRefs = evidenceRefs
+            }).ToArray(),
+            EvidenceDigest = null
+        }));
     }
 }

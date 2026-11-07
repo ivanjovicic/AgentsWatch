@@ -242,19 +242,15 @@ public static class EvidenceGate
             return;
         }
 
-        var passingDeclared = (receipt.Validations ?? []).Where(v =>
-            string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal)
-            && v.Status == ValidationStatus.Pass
-            && v.ExitCode is null or 0
-            && declared.Any(d => ReceiptRedaction.CommandsMatch(v.CommandDisplay, d))).ToList();
-        if (passingDeclared.Count == 0)
+        var evidenceRefs = (ac.EvidenceRefs ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).ToArray();
+        if (evidenceRefs.Length == 0)
         {
             add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
-                $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: no passing recorded validation matches a command declared for this criterion.", [], refs);
+                $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: no linked validation reference is recorded for this criterion.", [], refs);
             return;
         }
 
-        foreach (var evRef in ac.EvidenceRefs ?? [])
+        foreach (var evRef in evidenceRefs)
         {
             var id = evRef.StartsWith("validations[", StringComparison.Ordinal) && evRef.EndsWith(']')
                 ? evRef["validations[".Length..^1]
@@ -263,16 +259,26 @@ public static class EvidenceGate
                 string.Equals(v.ValidationId, id, StringComparison.Ordinal));
             if (linked is null)
             {
-                continue;
+                add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+                    $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: a linked validation reference does not resolve to a recorded validation.", [], refs.Concat([evRef]).ToArray());
+                return;
             }
 
-            if (!declared.Any(d => ReceiptRedaction.CommandsMatch(linked.CommandDisplay, d)))
+            if (!string.Equals(linked.RunId, receipt.RunId, StringComparison.Ordinal)
+                || linked.Status != ValidationStatus.Pass
+                || linked.ExitCode is not null and not 0
+                || !declared.Any(d => ReceiptRedaction.CommandsMatch(linked.CommandDisplay, d)))
             {
                 add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
-                    $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: a linked validation is not declared for this criterion.", [], refs.Concat([$"validations[{linked.ValidationId}]"]).ToArray());
+                    $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: a linked validation is not a passing, criterion-declared validation.", [], refs.Concat([$"validations[{linked.ValidationId}]"]).ToArray());
                 return;
             }
         }
+
+        // No independently verified/authorized acceptance mechanism exists yet: a manual
+        // Supported mark (including a predeclared command string) is not trustworthy Done.
+        add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+            $"acceptance criterion '{ac.CriterionId}' is Supported by a manual assessment (declared, not attested) and is unverified; independently verified acceptance is required for trustworthy Done.", [], refs);
     }
 }
 
