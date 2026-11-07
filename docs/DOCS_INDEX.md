@@ -88,7 +88,7 @@ Most important decisions:
 | `prompt_queues/verification_mvp_2026_08_25.md` | Active queue AW-VFY-001..012. |
 | `prompt_queues/SUPPORT_PROMPT_COVERAGE.md` | Support-prompt matrix and open-PR classification. |
 
-Current next implementation task is a further `AW-VFY-010` batch (B5) named in the ledger. B4 has been executed. Ledger: `evidence/aw-vfy-010-ledger.md`. AW-VFY-001..009 are Done and Gate 0 is closed.
+AW-VFY-010 is ADJUST / PAUSE (not Done); original 30/30 goal unmet at 12/30. B5 is not started. Ledger: `evidence/aw-vfy-010-ledger.md`. Gate 5 interim: `evidence/aw-vfy-010-gate5-interim.md`. Competitive addendum: `evidence/aw-vfy-010-competitive-baseline-2026-11-07.md`. Benefit protocol: `evidence/aw-vfy-010-benefit-measurement-protocol.md`. AW-VFY-001..009 are Done and Gate 0 is closed.
 `BOOTSTRAP_NEXT_STEPS.md` is historical context after Gate 0; it must not be read as the current next task.
 
 ## Core technical contracts

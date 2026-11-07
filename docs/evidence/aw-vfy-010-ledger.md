@@ -163,4 +163,21 @@ sample classes and most of the adversarial catalog remain open or are covered
 only by controls. There is no reviewed 30-run exit-gate report, and reviewer
 benefit was not measured.
 
-Next claimable task: a further AW-VFY-010 batch (B5) as named in the recommended slots above. Do not start it automatically. AW-VFY-010 remains In progress.
+Original 30/30 goal remains unmet at 12/30. Program status after the 2026-11-07 product decision: **ADJUST / PAUSE** (not Done). B5 is not started and must not be started automatically. See the Gate 5 decision section below.
+
+
+## Gate 5 decision (2026-11-07): ADJUST / PAUSE
+
+Recorded after the owner accepted the interim Gate 5 assessment and asked that
+this decision be written down. This section does not rewrite historical ledger
+rows or original receipts. The twelve existing useful REAL runs stay as written
+and are **not** to be reused retroactively as proof of the new product goal.
+
+- Original Gate 5 numerator/denominator of **30 useful REAL receipts remains unmet** (current count **12/30**, gap 18).
+- AW-VFY-010 status is **ADJUST / PAUSE**, not Done and not a silent close of the parent program.
+- B5 has not been started. No new tasks were created merely to increase the count.
+- Future real, already-approved .NET or Flutter work (including HOLD-gated items only if the owner later lifts the HOLD) may be tracked as part of the next validation. That is not an instruction to invent work or to start B5.
+- New product goal: determine whether AgentsWatch can become a **useful product**, not merely a technically correct tool.
+- Product decision rule (verbatim owner wording): `GO samo kada postoje proverljivi slučajevi promene odluke uz prihvatljiv dodatni trošak; inače NARROW ili STOP.`
+- Supporting docs (this PR): `docs/evidence/aw-vfy-010-gate5-interim.md`, `docs/evidence/aw-vfy-010-competitive-baseline-2026-11-07.md`, `docs/evidence/aw-vfy-010-benefit-measurement-protocol.md`.
+

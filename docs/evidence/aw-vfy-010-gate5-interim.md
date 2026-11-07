@@ -1,11 +1,23 @@
 # AW-VFY-010 — privremena procena Gate 5
 
 Datum: 2026-11-07 (Europe/Belgrade)
-Status programa: **In progress, nije complete**
+Status programa: **ADJUST / PAUSE**, nije complete i nije Done
 Izvor brojeva: `docs/evidence/aw-vfy-010-ledger.md` i sanitarizovani B3/B4 pregledi.
 Ovaj dokument ne menja istorijske redove ledgera i ne reprodukuje sentinel vrednosti.
 
 Ovo je **privremena (interim) procena**, ne izlazna Gate 5 presuda i ne pokretanje B5.
+
+## Odluka vlasnika (2026-11-07): ADJUST / PAUSE
+
+Odluka je **ADJUST / PAUSE**. AW-VFY-010 nije Done.
+
+- Originalni cilj 30/30 korisnih REAL ostaje **neispunjen** (trenutno 12/30, nedostaje 18).
+- Dvanaest postojećih REAL runova ostaje sačuvano kako je zapisano u ledgeru i **ne sme** se naknadno koristiti kao dokaz novog cilja (da li je AgentsWatch koristan proizvod, a ne samo tehnički ispravan alat).
+- B5 nije pokrenut. Novi zadaci nisu kreirani radi brojanja.
+- Budući stvarni, već odobreni .NET ili Flutter posao može se pratiti kao deo sledeće validacije, ali samo ako postoji i ako vlasnik to odobri; HOLD stavke ostaju HOLD dok se izričito ne podignu.
+- Pravilo odluke o proizvodu, doslovno: `GO samo kada postoje proverljivi slučajevi promene odluke uz prihvatljiv dodatni trošak; inače NARROW ili STOP.`
+- Protokol merenja: `aw-vfy-010-benefit-measurement-protocol.md`. Konkurentska osnova: `aw-vfy-010-competitive-baseline-2026-11-07.md`.
+
 
 ## Stanje brojača
 
@@ -93,4 +105,4 @@ Opcije su vlasnikova odluka, ne automatski sledeći batch:
 2. Sačekati ili otvoriti stvarne, već potrebne ticket-e (.NET endpoint/service ili slično) i tek tada raditi novi mali REAL batch.
 3. Revidirati same Gate 5 kriterijume: da li je brojilac 30 korisnih REAL i dalje pravi izlaz, ili treba težište premestiti na dokazanu incremental vrednost naspram Git/CI/PR, mereni overhead i jedan nezavisno verifikovani Done put.
 
-Preporuka ove privremene procene: **pauza pred B5**. Ne pokretati B5 automatski. AW-VFY-010 ostaje **In progress**.
+Preporuka ove privremene procene bila je pauza pred B5. Vlasnik je 2026-11-07 zabeležio odluku **ADJUST / PAUSE**. Ne pokretati B5 automatski. AW-VFY-010 nije Done.

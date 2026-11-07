@@ -13,7 +13,7 @@ not the next claimable task unless the owner explicitly redirects.
 ## Current next prompt
 
 ```text
-Further AW-VFY-010 batch (B5) — Next small dogfood batch
+AW-VFY-010 ADJUST / PAUSE (B5 not started) — do not start a new batch from this pointer
 ```
 
 Prompt file:
@@ -45,7 +45,8 @@ docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 
 B3 executed three useful REAL runs and raised the useful REAL total from 8 to 11 of 30.
 B4 added one legitimate REAL and raised the total to 12 of 30 (gap 18).
-AW-VFY-010 remains in progress and not complete.
+On 2026-11-07 the owner recorded Gate 5 as ADJUST / PAUSE. The original 30/30 goal remains unmet.
+The twelve existing REAL runs must not be reused to prove the new usefulness goal.
 
 Do not start B5 automatically from this pointer.
 Do not mark AW-VFY-010 complete from unit tests, a plan, or green CI.
@@ -56,7 +57,7 @@ Do not pad the remaining 18 with extra synthetic N2/privacy variations.
 
 ```text
 Repository: ivanjovicic/AgentsWatch
-Prompt ID: AW-VFY-010-B5 (named in ledger; do not start automatically)
+Prompt ID: AW-VFY-010 ADJUST/PAUSE (B5 not started; do not start automatically)
 Queue: docs/prompt_queues/verification_mvp_2026_08_25.md
 Run mode: small real dogfood batch
 Budget: one small batch; only useful REAL rows advance the 30

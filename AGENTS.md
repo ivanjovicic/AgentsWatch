@@ -58,10 +58,10 @@ As of merged PR #13, `origin/main` is
 at 193/193 tests. Older notes claiming the Git parser/test gate is still
 failing, or that CI last stopped at 150/150 on `ab3ebe6`, are superseded.
 
-AW-VFY-010 is **in progress and not complete**. Corrective PRs #11, #12 and
+AW-VFY-010 is **ADJUST / PAUSE** and not complete (not Done). Corrective PRs #11, #12 and
 #13 merged during dogfood; the post-merge finish-output privacy check after
 #13 succeeded. The ledger inventory exists at `docs/evidence/aw-vfy-010-ledger.md` (current useful REAL 12 of 30; initial inventory was 8 of 30, after B3 11 of 30, after B4 12 of 30).
-The next claimable slice is a further **AW-VFY-010** batch (B5) named in `docs/evidence/aw-vfy-010-ledger.md`. B4 has been executed. Do not silently mark AW-VFY-010 Done based only on green
+B5 is not started and must not be started automatically. The original 30/30 useful-REAL goal remains unmet at 12/30. Do not silently mark AW-VFY-010 Done based only on green
 unit tests, merged fixes, or a plan.
 
 Manual `Supported` validation stays `AWE009` / `NeedsReview`. There is no
