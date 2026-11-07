@@ -41,7 +41,8 @@ public sealed record ContractDraft(
     IReadOnlyList<ValidationRequirement> Validations,
     IReadOnlyList<string> StopRules,
     IReadOnlyList<string> ExpectedEvidence,
-    SourceTaskRef? SourceTaskRef);
+    SourceTaskRef? SourceTaskRef,
+    IReadOnlyList<CriterionValidationBinding>? CriterionValidationBindings = null);
 
 public sealed record ContractCreateResult(bool Created, RunContract? Contract, string? Path, ContractCheckResult Check, string? Error);
 
@@ -68,6 +69,10 @@ public sealed class ContractService(IRunContractStore store, TimeProvider? clock
             draft.ExpectedEvidence,
             draft.SourceTaskRef,
             _clock.GetUtcNow().ToUniversalTime());
+        if (draft.CriterionValidationBindings is { Count: > 0 } bindings)
+        {
+            contract = contract with { CriterionValidationBindings = bindings };
+        }
 
         var check = RunContractLinter.Check(contract);
         if (!ContractIds.IsValid(id))

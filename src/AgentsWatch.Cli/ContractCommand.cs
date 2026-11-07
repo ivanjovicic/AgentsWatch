@@ -7,7 +7,7 @@ internal static class ContractCommand
 {
     public const string Usage = """
 Usage:
-  agentswatch contract create <task-id> --intent <text> --accept <text>... --validate <cmd>...
+  agentswatch contract create <task-id> --intent <text> --accept <text>... [--accept-validation <cmd>...] --validate <cmd>...
       [--id <contract-id>] [--owned <path>...] [--avoid <path>...] [--stop <text>...] [--evidence <text>...]
       [--mode implementation|investigation|validation|docs] [--permission read-only|workspace-write|approval-required]
       [--source <system>:<reference>] [--force]
@@ -32,6 +32,8 @@ Usage:
     {
         var taskId = args[0];
         var multi = new Dictionary<string, List<string>>();
+        var acceptTexts = new List<string>();
+        var acceptValidations = new List<List<string>>();
         var force = false;
         for (var i = 1; i < args.Length; i++)
         {
@@ -49,18 +51,38 @@ Usage:
             }
 
             var key = args[i][2..];
+            var value = args[++i];
+            if (key == "accept")
+            {
+                acceptTexts.Add(value);
+                acceptValidations.Add([]);
+                continue;
+            }
+
+            if (key == "accept-validation")
+            {
+                if (acceptValidations.Count == 0)
+                {
+                    e.WriteLine("--accept-validation must follow --accept.");
+                    return 2;
+                }
+
+                acceptValidations[^1].Add(value);
+                continue;
+            }
+
             if (!multi.TryGetValue(key, out var list))
             {
                 multi[key] = list = [];
             }
 
-            list.Add(args[++i]);
+            list.Add(value);
         }
 
         List<string> All(string key) => multi.TryGetValue(key, out var v) ? v : [];
         string? One(string key) => multi.TryGetValue(key, out var v) ? v[^1] : null;
 
-        var known = new HashSet<string> { "id", "intent", "accept", "owned", "avoid", "validate", "stop", "evidence", "mode", "permission", "source" };
+        var known = new HashSet<string> { "id", "intent", "owned", "avoid", "validate", "stop", "evidence", "mode", "permission", "source" };
         var unknown = multi.Keys.FirstOrDefault(k => !known.Contains(k));
         if (unknown is not null)
         {
@@ -88,8 +110,13 @@ Usage:
         }
 
         var validations = All("validate").Select((cmd, i) => new ValidationRequirement($"v{i + 1}", cmd)).ToArray();
-        var draft = new ContractDraft(taskId, One("id"), One("intent"), All("accept"), All("owned"), All("avoid"),
-            permission, mode, validations, All("stop"), All("evidence"), source);
+        var bindings = acceptTexts
+            .Select((text, i) => acceptValidations[i].Count == 0 ? null : new CriterionValidationBinding($"ac{i + 1}", acceptValidations[i]))
+            .Where(b => b is not null)
+            .Cast<CriterionValidationBinding>()
+            .ToArray();
+        var draft = new ContractDraft(taskId, One("id"), One("intent"), acceptTexts, All("owned"), All("avoid"),
+            permission, mode, validations, All("stop"), All("evidence"), source, bindings.Length == 0 ? null : bindings);
 
         var result = service.Create(draft, force);
         if (!result.Created)

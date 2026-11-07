@@ -242,7 +242,7 @@ public sealed class FileRunRecordStore(string workspaceRoot) : IRunRecordStore
         var path = PathFor(record.RunId);
         Directory.CreateDirectory(Dir);
         var temp = Path.Combine(Dir, $".{record.RunId}.{Guid.NewGuid():N}.tmp");
-        File.WriteAllText(temp, RunFinishJson.Serialize(record) + "\n");
+        File.WriteAllText(temp, ReceiptRedaction.RedactJsonDocument(RunFinishJson.Serialize(record)) + "\n");
         try
         {
             File.Move(temp, path, overwrite: false);

@@ -11,6 +11,7 @@ public static class EvidenceRules
     public const string ExpectedEvidenceMissing = "AWE006";
     public const string AcceptanceUnsupported = "AWE007";
     public const string ApprovalRequired = "AWE008";
+    public const string AcceptanceUnverified = "AWE009";
     public const string Satisfied = "AWE000";
 }
 
@@ -125,7 +126,7 @@ public static class EvidenceGate
             {
                 var matches = validations.Where(v =>
                     string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal)
-                    && string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal)).ToList();
+                    && ReceiptRedaction.CommandsMatch(v.CommandDisplay, req.Command)).ToList();
                 var pref = $"contract.validationContract.requirements[{req.Id}]";
                 if (matches.Count == 0)
                 {
@@ -170,6 +171,10 @@ public static class EvidenceGate
                 Add(EvidenceRules.AcceptanceUnsupported, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.Unsupported,
                     $"acceptance criterion '{ac.CriterionId}' is unsupported.", [], [$"acceptanceCriteria[{ac.CriterionId}]"]);
             }
+            else if (ac.Status == CriterionStatus.Supported)
+            {
+                EvaluateSupportedVerification(ac, receipt, contract, Add);
+            }
         }
 
         var (evaluatedClaims, claimFindings) = ClaimVerifier.Evaluate(receipt, contract);
@@ -186,7 +191,7 @@ public static class EvidenceGate
         return (contract.ValidationContract?.Requirements ?? []).Where(r => r.Mandatory).All(req =>
             (receipt.Validations ?? []).Any(v =>
                 string.Equals(v.RunId, receipt.RunId, StringComparison.Ordinal)
-                && string.Equals(v.CommandDisplay, req.Command, StringComparison.Ordinal)
+                && ReceiptRedaction.CommandsMatch(v.CommandDisplay, req.Command)
                 && v.Status == ValidationStatus.Pass
                 && (v.ExitCode is null or 0)));
     }
@@ -213,7 +218,67 @@ public static class EvidenceGate
             Decision = receipt.Decision with { Status = status, Reasons = reasons },
             EvidenceDigest = null
         };
+        updated = ReceiptRedaction.Apply(updated);
         return RunReceiptJson.WithDigest(updated);
+    }
+
+    private static void EvaluateSupportedVerification(
+        AcceptanceCriterionResult ac,
+        RunReceipt receipt,
+        RunContract? contract,
+        Action<string, FindingCategory, FindingSeverity, FindingStatus, string, IReadOnlyList<string>, IReadOnlyList<string>> add)
+    {
+        var declared = (contract?.CriterionValidationBindings ?? [])
+            .Where(b => string.Equals(b.CriterionId, ac.CriterionId, StringComparison.Ordinal))
+            .SelectMany(b => b.Commands ?? [])
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        string[] refs = [$"acceptanceCriteria[{ac.CriterionId}]"];
+        if (declared.Length == 0)
+        {
+            add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+                $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: the contract does not declare a validation command for this criterion.", [], refs);
+            return;
+        }
+
+        var evidenceRefs = (ac.EvidenceRefs ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).ToArray();
+        if (evidenceRefs.Length == 0)
+        {
+            add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+                $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: no linked validation reference is recorded for this criterion.", [], refs);
+            return;
+        }
+
+        foreach (var evRef in evidenceRefs)
+        {
+            var id = evRef.StartsWith("validations[", StringComparison.Ordinal) && evRef.EndsWith(']')
+                ? evRef["validations[".Length..^1]
+                : evRef;
+            var linked = (receipt.Validations ?? []).FirstOrDefault(v =>
+                string.Equals(v.ValidationId, id, StringComparison.Ordinal));
+            if (linked is null)
+            {
+                add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+                    $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: a linked validation reference does not resolve to a recorded validation.", [], refs.Concat([evRef]).ToArray());
+                return;
+            }
+
+            if (!string.Equals(linked.RunId, receipt.RunId, StringComparison.Ordinal)
+                || linked.Status != ValidationStatus.Pass
+                || linked.ExitCode is not null and not 0
+                || !declared.Any(d => ReceiptRedaction.CommandsMatch(linked.CommandDisplay, d)))
+            {
+                add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+                    $"acceptance criterion '{ac.CriterionId}' is Supported but unverified: a linked validation is not a passing, criterion-declared validation.", [], refs.Concat([$"validations[{linked.ValidationId}]"]).ToArray());
+                return;
+            }
+        }
+
+        // No independently verified/authorized acceptance mechanism exists yet: a manual
+        // Supported mark (including a predeclared command string) is not trustworthy Done.
+        add(EvidenceRules.AcceptanceUnverified, FindingCategory.AcceptanceCriterionUnsupported, FindingSeverity.Error, FindingStatus.NeedsReview,
+            $"acceptance criterion '{ac.CriterionId}' is Supported by a manual assessment (declared, not attested) and is unverified; independently verified acceptance is required for trustworthy Done.", [], refs);
     }
 }
 

@@ -14,7 +14,8 @@ public sealed class EvidenceGateTests
     {
         var repo = new TempGitRepo();
         var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["**"], [],
-            permission, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            permission, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null,
+            [new CriterionValidationBinding("ac1", ["dotnet test"])]));
         Assert.True(created.Created, created.Error);
         var git = new GitRepositoryStateReader(new GitCommandRunner());
         var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");
@@ -82,7 +83,7 @@ public sealed class EvidenceGateTests
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
         }
     }
@@ -103,9 +104,10 @@ public sealed class EvidenceGateTests
             var store = new FileRunReceiptStore(repo.Root);
             store.Replace(RunReceiptJson.WithDigest(store.Read(run) with { Validations = [wrongRun], EvidenceDigest = null }));
             var checkedReceipt = Service(repo.Root).Check(run).Receipt!;
-            Assert.Equal(DecisionStatus.NeedsEvidence, checkedReceipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, checkedReceipt.Decision.Status);
             Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("belongs to run"));
             Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            Assert.Contains(checkedReceipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
             Assert.False(EvidenceGate.SatisfiesMandatory(checkedReceipt, contract));
         }
@@ -120,8 +122,9 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, command: "echo skipped tests"));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.MandatoryMissing);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
             Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
         }
@@ -137,8 +140,9 @@ public sealed class EvidenceGateTests
             var inconsistent = Ev(run, ValidationStatus.Pass, ValidationSource.CI) with { ExitCode = 7 };
             var result = Service(repo.Root).Record(run, inconsistent);
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete && f.Message.Contains("nonzero exit code"));
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             var contract = RunContractJson.Deserialize(new FileRunContractStore(repo.Root).ReadRaw("t"));
             Assert.False(EvidenceGate.SatisfiesMandatory(result.Receipt, contract));
         }
@@ -157,7 +161,7 @@ public sealed class EvidenceGateTests
 
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete
                 && f.Message.Contains("mandatory contract fields"));
         }
@@ -210,7 +214,8 @@ public sealed class EvidenceGateTests
             var contracts = new FileRunContractStore(repo.Root);
             var created = new ContractService(contracts).Create(new ContractDraft("T", null, "intent",
                 ["feature works"], ["**"], [], PermissionMode.WorkspaceWrite, RunMode.Implementation,
-                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+                [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null,
+                [new CriterionValidationBinding("ac1", ["dotnet test"])]));
             Assert.True(created.Created, created.Error);
 
             var git = new GitRepositoryStateReader(new GitCommandRunner());
@@ -228,7 +233,7 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.NeedsEvidence, result.Receipt!.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, result.Receipt!.Decision.Status);
             Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.ReceiptIncomplete);
         }
     }
@@ -347,13 +352,13 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var result = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.AgentsWatchCommand));
             Assert.True(result.Ok, result.Error);
-            Assert.Equal(DecisionStatus.Done, result.Receipt!.Decision.Status);
-            Assert.Contains(result.Receipt.Decision.Reasons, r => r.StartsWith(EvidenceRules.Satisfied));
+            Assert.Equal(DecisionStatus.NeedsReview, result.Receipt!.Decision.Status);
+            Assert.Contains(result.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
             Assert.True(RunReceiptJson.VerifyDigest(result.Receipt));
 
             var md = File.ReadAllText(Path.Combine(repo.Root, ".ai", "runs", run + ".md"));
-            Assert.Contains("## Decision: Done", md);
-            Assert.Contains(EvidenceRules.Satisfied, md);
+            Assert.Contains("## Decision: NeedsReview", md);
+            Assert.Contains(EvidenceRules.AcceptanceUnverified, md);
             Assert.Contains("AgentsWatchCommand", md);
         }
     }
@@ -395,7 +400,7 @@ public sealed class EvidenceGateTests
             SupportAcceptance(repo.Root, run);
             var receipt = Service(repo.Root).Record(run, Ev(run, ValidationStatus.Pass, ValidationSource.CI, summary: null)).Receipt!;
             Assert.Contains(receipt.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing);
-            Assert.Equal(DecisionStatus.NeedsEvidence, receipt.Decision.Status);
+            Assert.NotEqual(DecisionStatus.Done, receipt.Decision.Status);
         }
     }
 
@@ -454,7 +459,7 @@ public sealed class EvidenceGateTests
         {
             var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["**"], [],
                 PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"],
-                ["unit test log", "coverage report"], null));
+                ["unit test log", "coverage report"], null, [new CriterionValidationBinding("ac1", ["dotnet test"])]));
             Assert.True(created.Created, created.Error);
             var git = new GitRepositoryStateReader(new GitCommandRunner());
             var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");
@@ -476,7 +481,8 @@ public sealed class EvidenceGateTests
             var complete = Service(repo.Root).Record(run, new ValidationEvidence("cov", run, "coverage", ValidationStatus.Pass, ValidationSource.CI, OutputSummary: "coverage report"));
             Assert.True(complete.Ok, complete.Error);
             Assert.DoesNotContain(complete.Receipt!.Findings, f => f.RuleId == EvidenceRules.ExpectedEvidenceMissing);
-            Assert.Equal(DecisionStatus.Done, complete.Receipt.Decision.Status);
+            Assert.Equal(DecisionStatus.NeedsReview, complete.Receipt.Decision.Status);
+            Assert.Contains(complete.Receipt.Findings, f => f.RuleId == EvidenceRules.AcceptanceUnverified);
         }
     }
 
