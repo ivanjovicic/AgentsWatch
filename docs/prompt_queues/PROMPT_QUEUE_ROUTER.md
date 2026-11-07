@@ -1,6 +1,6 @@
 # AgentsWatch Prompt Queue Router
 
-Last aligned: 2026-09-16
+Last aligned: 2026-11-07
 
 Use this file first when choosing the next AgentsWatch task.
 
@@ -12,61 +12,117 @@ Current active implementation + validation queue:
 docs/prompt_queues/verification_mvp_2026_08_25.md
 ```
 
-Older bootstrap, MVP, token-economy, productization, roadmap, architecture, licensing, and evidence queues are historical/supporting context unless a task is explicitly re-promoted into the canonical queue.
+There is one active queue. Do not create a second runtime queue from support
+prompts, old `AW-VAL-*` files, or planning notes.
+
+Older bootstrap, MVP, token-economy, productization, roadmap, architecture,
+licensing, and evidence queues are historical/supporting context unless a task
+is explicitly re-promoted into the canonical queue.
+
+Copy-ready next-task pointer: `docs/prompt_queues/NEXT_PROMPT_FAST_PATH.md`.
+If that pointer disagrees with this router or the canonical queue, this router
+and the canonical queue win.
+
+Support-prompt coverage and open-PR classification:
+`docs/prompt_queues/SUPPORT_PROMPT_COVERAGE.md`.
 
 ## Current known state
 
-Updated 2026-11-06 (local evidence, `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`):
+Updated 2026-11-07 (planning/docs reconciliation; not additional dogfood runs):
 
 ```text
+origin/main: edbbbe4a3e2962a8b20f7536d4a106420ff8492f
 restore: PASS
 build: PASS
-tests: PASS (150/150 CI-confirmed on ab3ebe6, run 42201075461)
+tests: PASS (193/193 CI-confirmed on edbbbe4, GitHub Actions run 42361996228)
 ```
 
-AW-VFY-001..009 done (CI run 42201075461 on ab3ebe6, 150/150). Follow-up + 008 + 009 + review-fix are on origin/main. Next: AW-VFY-010 dogfood (requires real runs). Not started.
-Gate 0 confirmed by GitHub CI run 42071854837 on 9d3f459 (build-test success, 2026-11-05).
+AW-VFY-001..009 are Done on `origin/main`.
+
+Merged after the previous router note (which still said 150/150 on `ab3ebe6`
+and “AW-VFY-010 not started”):
+
+- PR #12 merged; head `d09bfea3a6b21397776d949a18180f72fdc10074`; merge commit
+  `04d064fde822c7907b7bd3f65eb1161eeae6032b`; PR CI run `42356206659` (190/190);
+  main CI run `42357282636` (190/190). Receipt redaction walker, AWE009 /
+  `NeedsReview` for unverified / manual `Supported`, replay-stable `AWD004`.
+- PR #13 merged; head `5453420870c993201424d40f34f1f2cfce0974df`; merge commit
+  `edbbbe4a3e2962a8b20f7536d4a106420ff8492f`; PR CI run `42359180448` (193/193);
+  main CI run `42361996228` (193/193). Finish CLI renders from the redacted
+  receipt. The requested post-merge privacy / finish-output check succeeded
+  (local evidence `.ai/runs/2026-11-07-aw-vfy-010-finish-output-final-check.md`:
+  invented-sentinel hits on stored artifacts and finish stdout/stderr = 0).
+  Two known non-blocking residual limits remain documented in
+  `docs/RECEIPT_REDACTION.md` (unexpected `Program.Main` exceptions;
+  artifact paths outside the workspace may not be repo-relative).
+
+AW-VFY-010 is **in progress and not complete**. Unit tests, merged corrective
+PRs, and a successful privacy check do not close the 30-receipt program.
+Existing batches and checks must be inventoried by `AW-VFY-010-LEDGER` before
+another dogfood batch. Do not invent run counts, customer feedback, or
+independent approvals. Planning documents are not completion evidence.
+
+The attached planning file `AgentsWatch_Operativni_Backlog_2026-11-07.md` was
+not found on the searched machines or `/workspace/uploads` during AW-DOC-001.
+Do not invent its contents.
+
+Manual `Supported` remains `AWE009` / `NeedsReview`. `--accept-validation`
+binds a command to a criterion and does not independently certify `Done`.
 
 ## Current next prompt
 
 ```text
-AW-VFY-010 - Dogfood 30 receipts
+AW-VFY-010-LEDGER - Inventory existing AW-VFY-010 evidence
 ```
 
 Prompt file:
 
 ```text
+docs/prompts/AW-VFY-010-LEDGER.md
+```
+
+Immediate order after that:
+
+```text
+1. AW-VFY-010-LEDGER     (NEXT; claimable now)
+2. AW-VFY-010-B3         (after ledger; docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md)
+3. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
+4. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
+5. AW-VFY-012            (HOLD until AW-VFY-011 passes)
+```
+
+Parent prompt (program, not the next single-session task):
+
+```text
 docs/prompts/AW-VFY-010-dogfood-30-receipts.md
 ```
+
 ## Strict decision tree
 
 ```text
-Is AW-VFY-001 full test gate green?
-  no  -> AW-VFY-001
-  yes -> Is CLI smoke/Gate 0 closed?
-          no  -> AW-VFY-002
-          yes -> Is RunContract v1 proven?
-                  no  -> AW-VFY-003
-                  yes -> Is start baseline proven?
-                          no  -> AW-VFY-004
-                          yes -> Is attributable finish delta proven?
-                                  no  -> AW-VFY-005
-                                  yes -> Is RunReceipt v1 proven?
-                                          no  -> AW-VFY-006
-                                          yes -> Is Evidence Gate proven?
-                                                  no  -> AW-VFY-007
-                                                  yes -> Is Scope Drift proven?
-                                                          no  -> AW-VFY-008
-                                                          yes -> Are initial claims checks proven?
-                                                                  no  -> AW-VFY-009
-                                                                  yes -> Is 30-run dogfood proof complete?
-                                                                          no  -> AW-VFY-010
-                                                                          yes -> Is external value proven?
-                                                                                  no  -> AW-VFY-011
-                                                                                  yes -> Is commercial design-partner value proven?
-                                                                                          no  -> AW-VFY-012
-                                                                                          yes -> choose post-gate investment from evidence
+Are AW-VFY-001..009 done on current origin/main?
+  no  -> stop and report; this router is stale
+  yes -> Is the AW-VFY-010 30-run proof complete (exit gate in the parent prompt)?
+          no  -> Has AW-VFY-010-LEDGER produced a sanitized inventory of existing evidence?
+                  no  -> AW-VFY-010-LEDGER     <== CURRENT NEXT TASK
+                  yes -> Run the next small named batch (currently AW-VFY-010-B3)
+                         then only further 010 batches the ledger still shows as open
+          yes -> Is external value proven (AW-VFY-011)?
+                  no  -> AW-VFY-011            (HOLD until 010 is complete and reviewed)
+                  yes -> Is commercial design-partner value proven (AW-VFY-012)?
+                          no  -> AW-VFY-012    (HOLD until 011 passes)
+                          yes -> choose post-gate investment from evidence
 ```
+
+Do not select:
+
+- AW-VFY-001 through AW-VFY-009 (already Done);
+- the parent AW-VFY-010 prompt as one giant session;
+- AW-QA-001, AW-SEC-001, AW-RES-001, or AW-RES-002 as the next runtime task
+  (parallel support track only; see coverage matrix);
+- AW-VAL-* or other historical `Ready` prompts that are not in the canonical queue;
+- open PRs #4, #5, #6, #8, or #9 as merge/close/update work unless the owner
+  separately asks (classification only; do not change those PRs).
 
 ## Non-negotiable ordering rules
 
