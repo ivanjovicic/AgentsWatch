@@ -64,19 +64,32 @@ Timestamp format: lokalno Europe/Belgrade uz navođenje zone, plus originalni iz
 
 Ako vreme nije mereno časovnikom u tom trenutku, upisati Unknown. Ne sme se pogađati naknadno.
 
-## 5. Prihvatljiv dodatni trošak
+## 5. Prihvatljiv dodatni trošak (unapred definisani pilot kriterijumi)
 
-**Prag prihvatljivog dodatnog troška: [OWNER-DEFINED — nije postavljen].**
+Vlasnik je 2026-11-07 predložio sledeće **unapred definisane pilot kriterijume**.
+To **nisu** izmereni rezultati, **nisu** dokaz da je prag već ispunjen, i **nisu**
+odobrenje da se pokrene B5 ili AW-VFY-011. Vlasnik ih može promeniti pre prvog
+budućeg merenja.
 
-Vlasnik treba da upiše konkretan prag pre GO odluke (npr. najviše N dodatnih recenzentskih minuta po decision change case, ili najviše M lažnih alarma po K runova). Dok prag nije upisan, nijedan skup merenja ne može sam sebe proglasiti „prihvatljivim“.
+| Metrika | Predloženi prag |
+|---|---|
+| Medijana dodatnog vremena po REAL runu (setup + AW sloj recenzenta) | Najviše 2 minuta |
+| Relativni dodatni trošak | Najviše 25% medijane vremena običnog Git/CI/PR reviewa |
+| Materijalni lažni alarmi | Najviše 1 na 10 legitimnih runova |
+| Dokazane, nezavisno potvrđene promene odluke | Najmanje 3 u 10–15 relevantnih slučajeva (uslov za GO) |
+| Materijalni false Done, ozbiljno curenje privatnosti, ili materijalna pogrešna atribucija | STOP (nije prihvatljivo) |
+
+Prva dva vremenska ograničenja moraju da važe **zajedno** (oba istovremeno).
+Dodatno vreme meri se timestampovima kako je opisano u odeljku 4 (setup iznad
+uobičajenog toka plus minuti recenzenta na AgentsWatch sloj).
 
 ## 6. GO / NARROW / STOP
 
-Primeniti vlasnikovo pravilo:
+Primeniti vlasnikovo pravilo, uz gornje unapred definisane pilot kriterijume:
 
-- **GO** samo kada postoje proverljivi decision change case-ovi **i** izmereni dodatni trošak je unutar vlasničkog praga.
-- **NARROW** ako ima malo (ili usko lokalizovanih) decision change slučajeva, ili ako korist postoji samo u uskom režimu (npr. samo dirty-start atribucija) uz trošak koji vlasnik još može da prihvati u tom užem slučaju.
-- **STOP** ako posle dogovorenog broja stvarnih odobrenih zadataka nema proverljivih decision change slučajeva, ili je dodatni trošak neprihvatljiv, ili lažni alarmi potiskuju korist.
+- **GO** samo kada postoji najmanje 3 nezavisno potvrđene decision change case-a u 10–15 relevantnih slučajeva **i** oba vremenska praga važe zajedno **i** materijalni lažni alarmi nisu iznad 1 na 10 runova **i** nije nastupio nijedan STOP uslov ispod.
+- **NARROW** ako ima malo (ili usko lokalizovanih) decision change slučajeva, ili „near miss“ u odnosu na pragove, ili ako korist postoji samo u uskom režimu (npr. samo dirty-start atribucija) uz trošak koji vlasnik još može da prihvati u tom užem slučaju.
+- **STOP** ako nastupi materijalni false Done, ozbiljno curenje privatnosti ili materijalna pogrešna atribucija; ili ako posle dogovorenog broja stvarnih odobrenih zadataka nema proverljivih decision change slučajeva; ili je dodatni trošak iznad oba zajednička vremenska praga; ili lažni alarmi potiskuju korist.
 
 Tehnički ispravno blokiranje neverifikovanog Done (`AWE009`) samo po sebi nije GO.
 

@@ -13,13 +13,13 @@ not the next claimable task unless the owner explicitly redirects.
 ## Current next prompt
 
 ```text
-AW-VFY-010 ADJUST / PAUSE (B5 not started) — do not start a new batch from this pointer
+AW-VFY-010 ADJUST / PAUSE — prepare a real usefulness evaluation (no auto-run)
 ```
 
 Prompt file:
 
 ```text
-docs/evidence/aw-vfy-010-ledger.md
+docs/evidence/aw-vfy-010-benefit-measurement-protocol.md
 ```
 
 Queue:
@@ -48,43 +48,50 @@ B4 added one legitimate REAL and raised the total to 12 of 30 (gap 18).
 On 2026-11-07 the owner recorded Gate 5 as ADJUST / PAUSE. The original 30/30 goal remains unmet.
 The twelve existing REAL runs must not be reused to prove the new usefulness goal.
 
-Do not start B5 automatically from this pointer.
+Do not start B3, B4, or B5 from this pointer. B3 and B4 already executed; B5 is not started.
 Do not mark AW-VFY-010 complete from unit tests, a plan, or green CI.
 Do not pick AW-VFY-011 or AW-VFY-012 (HOLD).
 Do not pad the remaining 18 with extra synthetic N2/privacy variations.
+The intended next product step, only after a new explicit owner instruction, is preparing a real usefulness evaluation — not launching another dogfood batch.
 
 ## Copy-ready instruction
 
 ```text
 Repository: ivanjovicic/AgentsWatch
-Prompt ID: AW-VFY-010 ADJUST/PAUSE (B5 not started; do not start automatically)
+Prompt ID: AW-VFY-010 ADJUST/PAUSE — prepare a real usefulness evaluation (no auto-run)
 Queue: docs/prompt_queues/verification_mvp_2026_08_25.md
-Run mode: small real dogfood batch
-Budget: one small batch; only useful REAL rows advance the 30
+Run mode: HOLD / handoff only; do not execute dogfood or measurement runs
+Budget: none; no batches, no runs, no outreach, no HOLD lifting
 
 Read:
 - AGENTS.md
 - docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
 - docs/prompt_queues/verification_mvp_2026_08_25.md
-- docs/prompts/AW-VFY-010-dogfood-30-receipts.md
-- docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md
 - docs/evidence/aw-vfy-010-ledger.md
+- docs/evidence/aw-vfy-010-gate5-interim.md
+- docs/evidence/aw-vfy-010-competitive-baseline-2026-11-07.md
+- docs/evidence/aw-vfy-010-benefit-measurement-protocol.md
 - docs/DECISION_ORDERING.md
 - docs/RECEIPT_REDACTION.md
 
 Task:
-Execute AW-VFY-010-B3 exactly. Prefer the REAL slots named in the ledger.
-Do not invent run counts. Do not mark AW-VFY-010 complete. Do not lift
-Flutter/Mobile HOLD items without owner approval.
+Do not execute AW-VFY-010-B3, B4, or B5. Do not start AW-VFY-011 or AW-VFY-012.
+Do not collect the remaining 18 useful REAL runs. Do not invent work to pad the count.
+Do not lift any HOLD and do not do external outreach.
+Gate 5 is ADJUST / PAUSE. The original 30/30 goal remains unmet at 12/30.
+The existing 12 REAL runs must not be reused to prove the new usefulness goal.
+The only copy-ready next step is to prepare (not start) a real usefulness
+evaluation against the benefit-measurement protocol and its pre-defined
+pilot criteria. Wait for a new, explicit owner instruction before any run.
 
 Return:
-- new rows with kind and TP/FP/FN/TN using the Batch 2 positive class
-- useful REAL count after the batch and remaining gap to 30
-- updated ledger
-- explicit statement that AW-VFY-010 is still not complete
+- confirmation that no batch, measurement run, or HOLD-gated work was started
+- pointers to the Gate 5 interim, competitive baseline, and benefit protocol
 ```
 
 ## Next after success
 
-Continue only the remaining AW-VFY-010 batches named by the updated ledger,
-still without claiming the parent program complete until its exit gate is met.
+Do not continue remaining AW-VFY-010 batches from this pointer. After a
+separate owner authorization, the next product step is preparing a real
+usefulness evaluation, not automatically gathering the remaining 18 runs
+and not starting B5 or AW-VFY-011.

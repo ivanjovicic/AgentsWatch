@@ -28,7 +28,20 @@ Support-prompt coverage and open-PR classification:
 
 ## Current known state
 
-Updated 2026-11-07 (planning/docs reconciliation; not additional dogfood runs):
+Updated 2026-11-07 (planning/docs reconciliation; not additional dogfood runs).
+
+Current `origin/main` snapshot (verified 2026-11-07 after merge of PR #18; this
+is the live tip, not a historical leftover):
+
+```text
+origin/main: 354abf5f954db8681d6c5da49efd99d0c8edb33e
+restore: PASS
+build: PASS
+tests: PASS (197/197 CI-confirmed on Linux and Windows, GitHub Actions run 42390626419)
+```
+
+Historical snapshot immediately after PR #13 (kept for traceability; superseded
+by the current main line above):
 
 ```text
 origin/main: edbbbe4a3e2962a8b20f7536d4a106420ff8492f
