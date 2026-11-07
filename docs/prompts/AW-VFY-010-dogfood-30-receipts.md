@@ -2,10 +2,18 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: Ready after AW-VFY-009  
+Status: In progress — not complete (next slice: AW-VFY-010-LEDGER)  
 Run mode: dogfood / evidence collection / targeted fixes only  
 Budget: staged; do not run as one giant context-heavy session  
 Gate: Contract -> Attribution -> Receipt -> Evidence -> Scope -> Claims works end to end
+
+
+Slices (do not run this parent prompt as one giant session):
+
+- `docs/prompts/AW-VFY-010-LEDGER.md` — inventory existing evidence first
+- `docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md` — next small batch after the ledger
+
+Manual `Supported` is `AWE009` / `NeedsReview`. Do not claim independently verified `Done`.
 
 ## Purpose
 

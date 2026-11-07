@@ -2,7 +2,7 @@
 
 Status: **canonical active implementation + validation queue**  
 Target repo: `ivanjovicic/AgentsWatch`  
-Last aligned: 2026-09-16
+Last aligned: 2026-11-07
 
 ## Purpose
 
@@ -79,9 +79,49 @@ Do not skip ahead unless an earlier prompt is explicitly completed or replaced w
 | AW-VFY-007 | **Done** (CI run 42192082705 on d078295; AWE006-per-item + unique evidence IDs follow-up 2026-11-06, evidence `.ai/runs/2026-11-06-aw-vfy-006-007-followup-evidence.md`) | `../prompts/AW-VFY-007-evidence-gate-v1.md` | Implement validation evidence model and deterministic completion gate. |
 | AW-VFY-008 | **Done** (2026-11-06; CI run 42201075461 success 150/150 on ab3ebe6; evidence `.ai/runs/2026-11-06-aw-vfy-008-evidence.md`; review `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`) | `../prompts/AW-VFY-008-scope-drift-v1.md` | Verify high-confidence run-interval changes against owned/avoid paths; surface ambiguity separately. |
 | AW-VFY-009 | **Done** (2026-11-06; CI run 42201075461 success 150/150 on ab3ebe6; evidence `.ai/runs/2026-11-06-aw-vfy-009-evidence.md`; review `.ai/runs/2026-11-06-aw-vfy-review-008-009-deliver-evidence.md`) | `../prompts/AW-VFY-009-claims-verification-v1.md` | Verify narrow structured claims against diff/validation evidence. |
-| AW-VFY-010 | **Ready now** (local; requires dogfood runs) | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
+| AW-VFY-010 | **In progress — not complete** (2026-11-07). Batches and corrective PRs #11/#12/#13 exist; post-merge privacy/finish check after #13 succeeded. Unit tests and green CI do not close this program. Inventory first via AW-VFY-010-LEDGER. | `../prompts/AW-VFY-010-dogfood-30-receipts.md` | Run adversarial 30-receipt dogfood and measure decision-changing value/false findings. |
 | AW-VFY-011 | Ready after 010 + dogfood review | `../prompts/AW-VFY-011-external-value-validation.md` | Test value with 10+ external agent-heavy users/teams against Git/CI/PR/native/Qodo baselines. |
 | AW-VFY-012 | Ready after 011 passes | `../prompts/AW-VFY-012-commercial-design-partner-validation.md` | Obtain 3+ concrete commercial commitments before SaaS/team expansion. |
+
+
+## Current next-task order
+
+There is one active queue (this file). Do not create another.
+
+1. **AW-VFY-010-LEDGER** — NEXT claimable task (`../prompts/AW-VFY-010-LEDGER.md`).
+2. **AW-VFY-010-B3** — next small dogfood batch after the ledger (`../prompts/AW-VFY-010-B3-small-dogfood-batch.md`).
+3. Further AW-VFY-010 batches named by the ledger, until the parent exit gate.
+4. **AW-VFY-011** — HOLD until AW-VFY-010 is complete and reviewed.
+5. **AW-VFY-012** — HOLD until AW-VFY-011 passes.
+
+Parallel support prompts (not next, not a second queue): see
+`SUPPORT_PROMPT_COVERAGE.md`.
+
+As of 2026-11-07, `origin/main` after merged PR #13 is
+`edbbbe4a3e2962a8b20f7536d4a106420ff8492f` (CI run `42361996228`, 193/193).
+Manual `Supported` remains AWE009 / NeedsReview. No independently verified
+`Done` path exists from human-typed `Supported`. The planning file
+`AgentsWatch_Operativni_Backlog_2026-11-07.md` was not found during AW-DOC-001;
+do not invent its contents. Plans are not completion evidence.
+
+## AW-VFY-010 execution slices
+
+| ID | Status | Prompt file | Purpose |
+|---|---|---|---|
+| AW-VFY-010-LEDGER | **Ready now / NEXT** | `../prompts/AW-VFY-010-LEDGER.md` | Inventory existing dogfood evidence and corrective PRs without modifying historical receipts. |
+| AW-VFY-010-B3 | Ready after LEDGER | `../prompts/AW-VFY-010-B3-small-dogfood-batch.md` | Next small real dogfood batch against ledger gaps (5–7 receipts max). |
+
+## Support track (parallel, not claimable as next)
+
+| ID | Status | Prompt file | Purpose |
+|---|---|---|---|
+| AW-QA-001 | Parallel support | `../prompts/AW-QA-001-receipt-quality-protocol.md` | Quality protocol for current receipt/evidence-gate semantics. |
+| AW-SEC-001 | Parallel support | `../prompts/AW-SEC-001-receipt-trust-boundary.md` | Privacy/trust-boundary review of persist and display surfaces. |
+| AW-RES-001 | Parallel research | `../prompts/AW-RES-001-external-value-protocol.md` | Interview protocol required later by AW-VFY-011. |
+| AW-RES-002 | Parallel research | `../prompts/AW-RES-002-commercial-design-partner-protocol.md` | Buyer-commitment protocol required later by AW-VFY-012. |
+
+Open PRs #4, #5, #6, #8, and #9 are classified in `SUPPORT_PROMPT_COVERAGE.md`.
+Do not change, merge, or close them from queue work.
 
 ## Gate 0 — Skeleton proven
 

@@ -49,16 +49,24 @@ docs/prompt_queues/PROMPT_QUEUE_ROUTER.md
 
 Do not select an old `AW-VAL-*`, `AW-TOKEN-*`, productization, dashboard, or architecture-expansion prompt merely because its historical file says `Ready`.
 
-## Current implementation gate (2026-11-06)
+## Current implementation gate (2026-11-07)
 
 Gate 0 is closed. AW-VFY-001–009 are implemented on `main`, including
 Contract, baseline, finish, RunReceipt, Evidence Gate, Scope Drift and Claims.
-GitHub CI succeeded at `ab3ebe62f1a23fd19a87caff98f8a267e598920c`.
-Older notes claiming the Git parser/test gate is still failing are superseded.
+As of merged PR #13, `origin/main` is
+`edbbbe4a3e2962a8b20f7536d4a106420ff8492f` with GitHub CI run `42361996228`
+at 193/193 tests. Older notes claiming the Git parser/test gate is still
+failing, or that CI last stopped at 150/150 on `ab3ebe6`, are superseded.
 
-Current canonical next step is **AW-VFY-010**: 30 adjudicated real-world receipts,
-with falsification/negative-control cases before external and commercial validation.
-Do not silently mark AW-VFY-010 Done based only on green unit tests.
+AW-VFY-010 is **in progress and not complete**. Corrective PRs #11, #12 and
+#13 merged during dogfood; the post-merge finish-output privacy check after
+#13 succeeded. The next claimable slice is **AW-VFY-010-LEDGER**, then
+**AW-VFY-010-B3**. Do not silently mark AW-VFY-010 Done based only on green
+unit tests, merged fixes, or a plan.
+
+Manual `Supported` validation stays `AWE009` / `NeedsReview`. There is no
+independently verified `Done` path from a human-typed `Supported` line.
+`--accept-validation` binds a command to a criterion and does not certify Done.
 
 Scope/claims verification is deterministic and bounded. `Pass` evidence imported
 through a user-controlled CLI is labeled by the declared source but is not authenticated
@@ -84,6 +92,7 @@ test gate on the **exact** resulting head. An unrun check is not PASS.
 - No opaque score may independently decide completion.
 - Risky actions require explicit approval.
 - No hidden telemetry or network calls in MVP.
+- Manual `Supported` remains `AWE009` / `NeedsReview`; it cannot independently produce `Done`.
 
 ## Architecture rules
 

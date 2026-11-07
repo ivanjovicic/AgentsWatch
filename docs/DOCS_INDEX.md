@@ -1,6 +1,6 @@
 # AgentsWatch Documentation Index
 
-Last aligned: 2026-09-16
+Last aligned: 2026-11-07
 
 ## Canonical reading path
 
@@ -86,8 +86,10 @@ Most important decisions:
 | `prompt_queues/PROMPT_QUEUE_ROUTER.md` | Canonical next-prompt decision. |
 | `prompt_queues/NEXT_PROMPT_FAST_PATH.md` | Copy-ready next prompt only. |
 | `prompt_queues/verification_mvp_2026_08_25.md` | Active queue AW-VFY-001..012. |
+| `prompt_queues/SUPPORT_PROMPT_COVERAGE.md` | Support-prompt matrix and open-PR classification. |
 
-Current next implementation task remains `AW-VFY-001` until Gate 0 CI/tests are green.
+Current next implementation task is `AW-VFY-010-LEDGER`. AW-VFY-001..009 are Done and Gate 0 is closed.
+`BOOTSTRAP_NEXT_STEPS.md` is historical context after Gate 0; it must not be read as the current next task.
 
 ## Core technical contracts
 
