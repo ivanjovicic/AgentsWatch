@@ -340,6 +340,126 @@ public sealed class TrustBoundaryAndRedactionTests
         }
     }
 
+﻿    [Fact]
+    public async Task P1_FinishCli_DoesNotPrintRawSentinelInStdoutOrStderr()
+    {
+        using var repo = new TempGitRepo();
+        var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft(
+            "T", null, "docs audit", [], ["notes/**"], [],
+            PermissionMode.WorkspaceWrite, RunMode.Docs,
+            [], ["stop"], [], null));
+        Assert.True(created.Created, created.Error);
+        var git = new GitRepositoryStateReader(new GitCommandRunner());
+        var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git)
+            .StartAsync(repo.Root, "t");
+        Assert.True(started.Started, started.Error);
+        var run = started.Baseline!.RunId;
+        repo.Write("notes/" + InventedSentinel + ".txt", "payload");
+
+        var o = new StringWriter();
+        var err = new StringWriter();
+        var code = await FinishCommand.RunAsync(repo.Root, [run], o, err);
+        Assert.True(code is 0 or 1, $"unexpected finish exit {code}: {err}");
+        AssertNoRawSentinel(o.ToString(), err.ToString());
+        Assert.DoesNotContain(repo.Root, o.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Decision:", o.ToString());
+        Assert.Contains("Run-interval changes:", o.ToString());
+        Assert.Contains(ReceiptRedaction.Placeholder, o.ToString());
+
+        AssertStoredArtifactsRedacted(repo.Root, run);
+    }
+
+    [Fact]
+    public async Task P1_FinishCli_ErrorText_RedactsSecretLikeValues()
+    {
+        using var repo = new TempGitRepo();
+        var o = new StringWriter();
+        var err = new StringWriter();
+        var code = await FinishCommand.RunAsync(repo.Root, [InventedSentinel], o, err);
+        Assert.Equal(1, code);
+        AssertNoRawSentinel(o.ToString(), err.ToString());
+        Assert.Contains("error:", err.ToString());
+    }
+
+    [Fact]
+    public async Task P1_FinishCli_DirtyUnchangedAndRenameOrChangedFurther_StayAttributedAndRedacted()
+    {
+        using var repo = new TempGitRepo();
+        var stay = "notes/stay-" + InventedSentinel + ".txt";
+        var further = "notes/further-" + InventedSentinel + ".txt";
+        var renameFrom = "notes/from-" + InventedSentinel + ".txt";
+        var renameTo = "notes/to-" + InventedSentinel + ".txt";
+        repo.Write(stay, "dirty at start, left unchanged");
+        repo.Write(further, "dirty at start");
+        repo.Write(renameFrom, string.Join("\n", Enumerable.Range(0, 40).Select(i => $"line {i}")));
+        repo.Git("add -- \"" + renameFrom.Replace("\\", "/") + "\"");
+        repo.Git("commit -q -m add-rename-src");
+
+        var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft(
+            "T", null, "docs audit", [], ["notes/**"], [],
+            PermissionMode.WorkspaceWrite, RunMode.Docs,
+            [], ["stop"], [], null));
+        Assert.True(created.Created, created.Error);
+        var git = new GitRepositoryStateReader(new GitCommandRunner());
+        var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git)
+            .StartAsync(repo.Root, "t");
+        Assert.True(started.Started, started.Error);
+        var run = started.Baseline!.RunId;
+
+        repo.Write(further, "dirty at start + further edit");
+        repo.Git("mv -- \"" + renameFrom.Replace("\\", "/") + "\" \"" + renameTo.Replace("\\", "/") + "\"");
+
+        var o = new StringWriter();
+        var err = new StringWriter();
+        var code = await FinishCommand.RunAsync(repo.Root, [run], o, err);
+        Assert.True(code is 0 or 1, $"unexpected finish exit {code}: {err}");
+        AssertNoRawSentinel(o.ToString(), err.ToString());
+        Assert.DoesNotContain(repo.Root, o.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        var stored = new FileRunReceiptStore(repo.Root).Read(run);
+        var redactedStay = ReceiptRedaction.RedactText(stay)!;
+        var redactedFurther = ReceiptRedaction.RedactText(further)!;
+        var redactedFrom = ReceiptRedaction.RedactText(renameFrom)!;
+        var redactedTo = ReceiptRedaction.RedactText(renameTo)!;
+        Assert.Contains(stored.RunDelta.PreExistingUnchangedChanges, c => c.Path == redactedStay);
+        Assert.DoesNotContain(stored.RunDelta.RunIntervalChanges, c => c.Path == redactedStay);
+        Assert.DoesNotContain(stored.RunDelta.PreExistingChangedFurther, c => c.Path == redactedStay);
+        Assert.Contains(stored.RunDelta.PreExistingChangedFurther, c => c.Path == redactedFurther);
+        Assert.DoesNotContain(stored.RunDelta.RunIntervalChanges, c => c.Path == redactedFurther);
+        Assert.Contains(stored.RunDelta.RunIntervalChanges, c => c.Path == redactedTo && c.OldPath == redactedFrom && c.Status == "R");
+        AssertStoredArtifactsRedacted(repo.Root, run);
+        Assert.True(RunReceiptJson.VerifyDigest(stored));
+
+        var replay1 = Evidence(repo.Root).Check(run);
+        Assert.True(replay1.Ok, replay1.Error);
+        var replay2 = Evidence(repo.Root).Check(run);
+        Assert.True(replay2.Ok, replay2.Error);
+        Assert.Equal(stored.Decision.Status, replay1.Receipt!.Decision.Status);
+        Assert.Equal(stored.EvidenceDigest, replay1.Receipt.EvidenceDigest);
+        Assert.Equal(replay1.Receipt.Decision.Status, replay2.Receipt!.Decision.Status);
+        Assert.Equal(replay1.Receipt.EvidenceDigest, replay2.Receipt.EvidenceDigest);
+    }
+
+    private static void AssertNoRawSentinel(string stdout, string stderr)
+    {
+        Assert.DoesNotContain(InventedSentinel, stdout);
+        Assert.DoesNotContain(InventedSentinel, stderr);
+    }
+
+    private static void AssertStoredArtifactsRedacted(string root, string run)
+    {
+        var json = File.ReadAllText(new FileRunReceiptStore(root).PathFor(run));
+        var md = File.ReadAllText(Path.Combine(root, ".ai", "runs", run + ".md"));
+        var handoff = File.ReadAllText(Path.Combine(root, ".ai", "handoffs", run + ".md"));
+        var delta = File.ReadAllText(new FileRunRecordStore(root).PathFor(run));
+        Assert.DoesNotContain(InventedSentinel, json);
+        Assert.DoesNotContain(InventedSentinel, md);
+        Assert.DoesNotContain(InventedSentinel, handoff);
+        Assert.DoesNotContain(InventedSentinel, delta);
+        Assert.Contains(ReceiptRedaction.Placeholder, json);
+        Assert.Contains(ReceiptRedaction.Placeholder, delta);
+    }
+
     private static void SupportAndPass(string root, string run)
     {
         StampSupported(root, run, []);
