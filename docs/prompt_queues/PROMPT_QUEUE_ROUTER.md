@@ -28,7 +28,20 @@ Support-prompt coverage and open-PR classification:
 
 ## Current known state
 
-Updated 2026-11-07 (planning/docs reconciliation; not additional dogfood runs):
+Updated 2026-11-07 (planning/docs reconciliation; not additional dogfood runs).
+
+Current `origin/main` snapshot (verified 2026-11-07 after merge of PR #18; this
+is the live tip, not a historical leftover):
+
+```text
+origin/main: 354abf5f954db8681d6c5da49efd99d0c8edb33e
+restore: PASS
+build: PASS
+tests: PASS (197/197 CI-confirmed on Linux and Windows, GitHub Actions run 42390626419)
+```
+
+Historical snapshot immediately after PR #13 (kept for traceability; superseded
+by the current main line above):
 
 ```text
 origin/main: edbbbe4a3e2962a8b20f7536d4a106420ff8492f
@@ -58,7 +71,7 @@ and “AW-VFY-010 not started”):
 
 AW-VFY-010 is **in progress and not complete**. Unit tests, merged corrective
 PRs, and a successful privacy check do not close the 30-receipt program.
-Existing batches and checks were inventoried in `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 11 of 30 after B3). The next slice is a further AW-VFY-010 batch (B4) named in that ledger; do not start it automatically. Do not invent run counts, customer feedback, or
+Existing batches and checks were inventoried in `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 12 of 30 after B4). Gate 5 is ADJUST / PAUSE. The original 30/30 goal remains unmet at 12/30. B5 is not started; do not start it automatically. Do not invent run counts, customer feedback, or
 independent approvals. Planning documents are not completion evidence.
 
 The attached planning file `AgentsWatch_Operativni_Backlog_2026-11-07.md` was
@@ -71,24 +84,25 @@ binds a command to a criterion and does not independently certify `Done`.
 ## Current next prompt
 
 ```text
-Further AW-VFY-010 batch (B4) - named in the ledger; do not start automatically
+AW-VFY-010 ADJUST / PAUSE - B5 not started; do not start automatically
 ```
 
 Prompt file:
 
 ```text
-docs/evidence/aw-vfy-010-ledger.md (Recommended B4 slots)
+docs/evidence/aw-vfy-010-ledger.md (Recommended B5 slots)
 ```
 
 Immediate order after that:
 
 ```text
 1. AW-VFY-010-B3         (executed; ledger updated)
-2. Further AW-VFY-010 batch / B4 (NEXT; proposal only in the ledger; do not start automatically)
-3. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
-4. (AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears)
-5. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
-6. AW-VFY-012            (HOLD until AW-VFY-011 passes)
+2. AW-VFY-010-B4         (executed one legitimate REAL; remaining 3-5 slots not padded)
+3. Further AW-VFY-010 batch / B5 (not started; Gate 5 ADJUST / PAUSE; do not start automatically)
+4. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
+5. (AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears)
+6. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
+7. AW-VFY-012            (HOLD until AW-VFY-011 passes)
 ```
 
 Parent prompt (program, not the next single-session task):
@@ -105,7 +119,7 @@ Are AW-VFY-001..009 done on current origin/main?
   yes -> Is the AW-VFY-010 30-run proof complete (exit gate in the parent prompt)?
           no  -> Has AW-VFY-010-LEDGER produced a sanitized inventory of existing evidence?
                   no  -> AW-VFY-010-LEDGER
-                  yes -> Run the next small named batch (B4 per ledger; not started) <== CURRENT NEXT TASK
+                  yes -> Do not auto-start B5; Gate 5 is ADJUST / PAUSE (see ledger) <== CURRENT STATUS
                          then only further 010 batches the ledger still shows as open
           yes -> Is external value proven (AW-VFY-011)?
                   no  -> AW-VFY-011            (HOLD until 010 is complete and reviewed)

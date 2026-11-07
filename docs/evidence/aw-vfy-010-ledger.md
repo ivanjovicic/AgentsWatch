@@ -4,6 +4,7 @@ Date: 2026-11-07 (Europe/Belgrade)
 Inventory SHA: `origin/main` `d1028b357fa7ea7002aa5ce2e155d295a99c54f6` (merge of PR #14)  
 Main CI on that SHA: run `42369838859`, 193/193 Linux and Windows  
 B3 update (2026-11-07, Europe/Belgrade): executed on approved `origin/main` `8e0bd8e7a9ab9b479a6f5a4cda21a63cc5fc4809` (merge of PR #15). Main CI after PR #15: run `42371110378`, 193/193 Linux and Windows.  
+B4 update (2026-11-07, Europe/Belgrade): executed on `origin/main` `f85015cdbbb76b8ad6fb02faf37b0a241706cf09` (merge of PR #17 then PR #16). Main CI after those merges: run `42378164156`, 194/194 Linux and Windows.  
 Parent program: `docs/prompts/AW-VFY-010-dogfood-30-receipts.md` — **in progress, not complete**
 
 This file is a sanitized public inventory. It does not reproduce invented sentinel
@@ -33,13 +34,13 @@ in their originals and are annotated here.
 
 | Kind | Rows | Count toward the 30? |
 |---|---|---|
-| `REAL` (useful) | 11 | Yes |
+| `REAL` (useful) | 12 | Yes |
 | `NEGATIVE_CONTROL` | 9 | No |
 | `REPLAY` | 6 | No |
 | `FIXTURE` | 0 separate run rows | No |
 | `DUPLICATE` | 0 counted run rows | No |
 | `UNKNOWN` | 0 executed rows | No |
-| **Useful REAL total** | **11** | **Gap to 30: 19** |
+| **Useful REAL total** | **12** | **Gap to 30: 18** |
 
 Planning templates (`aw-vfy-010-setup.md`, `aw-vfy-010-adversarial-matrix.md`)
 are not runs. Flutter/Mobile planned items #5 (GRX84) and #6 (MOB80) were never
@@ -73,6 +74,7 @@ changes, not dogfood receipts. Docs PR #15 recorded the pre-B3 ledger. Batch 3 a
 | B3-R1 | REAL | yes | 2026-11-07 13:24 | AgentsWatch | start/end `8e0bd8e` (interval uncommitted at finish) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 x2; AWE006 x2 warnings on expectedEvidence phrase match | TP | run `aw-vfy-010-b3-r1-20261107t122421z-e6589a`; digest `sha256:0042bd8d4ba88e7b4967bb6ffbea9a82a816315d1ae2c2de09e5ef86dd117b15` | Documented Program.Main last-resort catch now wraps exception text through ReceiptRedaction; focused test plus full suite 194/194 locally. Manual Supported stays unverified. No independently verified Done | small bug fix / .NET+test |
 | B3-R2 | REAL | yes | 2026-11-07 13:26 | MathLearning | start/end `b8acd22` (no product commit) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 | TP | run `aw-vfy-010-b3-r2-20261107t122625z-de848e`; digest `sha256:4855bebb8554a65c158b0e9b65b68ba4b7cfa4353da130379466557accf39dda` | Not issue #47. Guide hourly-reset claim does not match GetDelayUntilNextUtcBoundary; Monday week start matches StartOfWeekUtc/GetWeekStart; LeaderboardJobs stubs are not Hangfire-registered. Init files stayed pre-existing unchanged | investigation |
 | B3-R3 | REAL | yes | 2026-11-07 13:27 | MathLearning | start/end `b8acd22` (interval uncommitted at finish) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 | TP | run `aw-vfy-010-b3-r3-20261107t122746z-d47952`; digest `sha256:402b026ae7634891a9dfd29a6f34880fd12d7e04f83db184b13ab4de822b8a88` | Distinct dirty-start: planted tracked comment on LeaderboardJobs.cs stayed pre-existing unchanged; interval edit was LEADERBOARD_SYSTEM_GUIDE.md only. No production SQL/Fly | docs correction + tracked dirty-at-start |
+| B4-R1 | REAL | yes | 2026-11-07 14:45 | AgentsWatch | start/end `f85015c` (interval uncommitted at finish) | NeedsReview after manual Supported (finish-at-close was NeedsEvidence) | AWE009 x2 | TP | run `aw-vfy-010-b4-r1-20261107t134511z-54bbaa`; digest `sha256:ca050c6686b096dfe39378355f1ca55a68d05b7aade5b806421223f1442b2fa7` | Documented residual: finish DisplayArtifactPath no longer echoes host-absolute out-of-repo paths; placeholder [outside-workspace]; focused test plus local suite 195/195. Manual Supported stays unverified. AWE009 is a correct block, not new business-value discovery; a normal Git/CI/PR review of the same diff would see the fix | privacy path display / production CLI |
 
 Six Batch 1 replay rows are summarized on one table line above; they are six
 `REPLAY` rows, not one.
@@ -84,7 +86,7 @@ Six Batch 1 replay rows are summarized on one table line above; they are six
 | docs-only | yes | B1-1, B2-R1; also B1-4 / B2-R4 / B2-R5 as docs tasks |
 | test-only | yes | B1-2 |
 | small bug fix | yes | B3-R1 Program.Main unexpected-exception redaction + test |
-| .NET endpoint/service change | no | — |
+| .NET endpoint/service change | no | Still uncovered. B4 searched authorized repos and did not invent an endpoint task |
 | Flutter widget change | no | planned #5 HOLD, not run |
 | Flutter provider/state change | no | planned #6 HOLD, not run |
 | investigation/fix split | partial | B1-3 and B3-R2 investigation only; production apply still HOLD |
@@ -121,7 +123,7 @@ of N2 or privacy sentinels (those controls are already covered after PRs #12/#13
    had an unstored format-verifier exit 2, so Fail-vs-Done is not yet a stored
    control. Include only after the REAL slots, not instead of them.
 
-## Recommended B4 slots (proposal only; not executed here)
+## B4 execution (completed this update; historical B4 proposal kept as context below)
 
 Prefer more useful REAL tasks. Do not start this batch automatically. Do not
 open AW-VFY-011 or AW-VFY-012. Do not pad with extra N2 or privacy-sentinel
@@ -139,11 +141,43 @@ variations. Reviewer overhead remains Unknown unless independently timed.
 5. Continue to treat manual Supported as AWE009 / NeedsReview. There is
    still no independently verified Done path.
 
+## Recommended B5 slots (proposal only; not executed here)
+
+B4 executed one legitimate production-code REAL (out-of-repo finish path display)
+and did not invent additional documentation or endpoint work to force a 3-5 count.
+
+1. REAL - .NET endpoint/service change only if a genuine approved issue or
+   documented in-repo defect exists. None was available in B4 without lifting
+   HOLD items (MathLearning #47 production apply; Fly/Neon live probes).
+2. HOLD-gated REAL - Flutter #5/#6 only if the owner lifts that HOLD.
+3. Optional NEGATIVE_CONTROL - structured Fail / AWE003, after REAL slots.
+4. Do not repeat the leaderboard-guide cadence fix or merge MathLearning #49
+   from a dogfood batch without a separate owner OK.
+5. Continue to treat manual Supported as AWE009 / NeedsReview. Do not equate
+   that block with incremental business-defect discovery.
+
 ## Explicit statement
 
-AW-VFY-010 is **not complete**. Useful REAL count is 11 of 30. Several parent
+AW-VFY-010 is **not complete**. Useful REAL count is 12 of 30. Several parent
 sample classes and most of the adversarial catalog remain open or are covered
 only by controls. There is no reviewed 30-run exit-gate report, and reviewer
 benefit was not measured.
 
-Next claimable task: a further AW-VFY-010 batch (B4) as named in the recommended slots above. Do not start it automatically. AW-VFY-010 remains In progress.
+Original 30/30 goal remains unmet at 12/30. Program status after the 2026-11-07 product decision: **ADJUST / PAUSE** (not Done). B5 is not started and must not be started automatically. See the Gate 5 decision section below.
+
+
+## Gate 5 decision (2026-11-07): ADJUST / PAUSE
+
+Recorded after the owner accepted the interim Gate 5 assessment and asked that
+this decision be written down. This section does not rewrite historical ledger
+rows or original receipts. The twelve existing useful REAL runs stay as written
+and are **not** to be reused retroactively as proof of the new product goal.
+
+- Original Gate 5 numerator/denominator of **30 useful REAL receipts remains unmet** (current count **12/30**, gap 18).
+- AW-VFY-010 status is **ADJUST / PAUSE**, not Done and not a silent close of the parent program.
+- B5 has not been started. No new tasks were created merely to increase the count.
+- Future real, already-approved .NET or Flutter work (including HOLD-gated items only if the owner later lifts the HOLD) may be tracked as part of the next validation. That is not an instruction to invent work or to start B5.
+- New product goal: determine whether AgentsWatch can become a **useful product**, not merely a technically correct tool.
+- Product decision rule (verbatim owner wording): `GO samo kada postoje proverljivi slučajevi promene odluke uz prihvatljiv dodatni trošak; inače NARROW ili STOP.`
+- Supporting docs (this PR): `docs/evidence/aw-vfy-010-gate5-interim.md`, `docs/evidence/aw-vfy-010-competitive-baseline-2026-11-07.md`, `docs/evidence/aw-vfy-010-benefit-measurement-protocol.md`.
+
