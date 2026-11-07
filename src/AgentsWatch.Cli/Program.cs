@@ -1,4 +1,5 @@
 using AgentsWatch.Core;
+using AgentsWatch.Core.Runs;
 using AgentsWatch.Git;
 using AgentsWatch.LanguageAdapters;
 
@@ -41,11 +42,17 @@ public static class Program
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"error: {ex.Message}");
+            Console.Error.WriteLine(FormatUnexpectedError(ex));
             return 1;
         }
     }
 
+
+    internal static string FormatUnexpectedError(Exception ex)
+    {
+        var message = ReceiptRedaction.RedactText(ex.Message) ?? string.Empty;
+        return "error: " + message;
+    }
     private static int Unknown(string command)
     {
         Console.Error.WriteLine($"Unknown command: {command}");
