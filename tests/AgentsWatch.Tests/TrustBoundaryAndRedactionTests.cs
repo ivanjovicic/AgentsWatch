@@ -481,4 +481,14 @@ public sealed class TrustBoundaryAndRedactionTests
             EvidenceDigest = null
         }));
     }
+
+    [Fact]
+    public void P1_ProgramMain_UnexpectedExceptionMessage_IsRedacted()
+    {
+        const string sentinel = "AWSENTINEL-TOKEN-b3r1a84f6c21d903";
+        var text = Program.FormatUnexpectedError(new InvalidOperationException("connect failed " + sentinel));
+        Assert.StartsWith("error: ", text);
+        Assert.DoesNotContain(sentinel, text);
+        Assert.Contains(ReceiptRedaction.Placeholder, text);
+    }
 }
