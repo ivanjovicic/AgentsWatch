@@ -71,7 +71,8 @@ public sealed class DecisionOrderingAndAcceptTests
     {
         var repo = new TempGitRepo();
         var created = new ContractService(new FileRunContractStore(repo.Root)).Create(new ContractDraft("T", null, "intent", ["feature works"], ["**"], [],
-            PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null));
+            PermissionMode.WorkspaceWrite, RunMode.Implementation, [new ValidationRequirement("t", "dotnet test")], ["stop"], ["test log"], null,
+            [new CriterionValidationBinding("ac1", ["dotnet test"])]));
         Assert.True(created.Created, created.Error);
         var git = new GitRepositoryStateReader(new GitCommandRunner());
         var started = await new RunStartService(new FileRunContractStore(repo.Root), new FileActiveRunStore(repo.Root), git).StartAsync(repo.Root, "t");

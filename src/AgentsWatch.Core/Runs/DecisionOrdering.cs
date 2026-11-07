@@ -15,7 +15,8 @@ public static class DecisionOrdering
     /// 2. Blocked — any AWE004 (blocked by environment).
     /// 3. NeedsApproval — any AWE008.
     /// 4. NeedsReview — scope-drift errors (AWD001/AWD002/AWD003), unsupported claims (AWK001),
-    ///    unsupported acceptance (AWE007 with Unsupported status), or attribution ambiguity (AWR002 / AWD004).
+    ///    unsupported acceptance (AWE007 with Unsupported status), unverified Supported acceptance (AWE009),
+    ///    or attribution ambiguity (AWR002 / AWD004).
     ///    This class outranks unknown acceptance (AWE007/Unknown) so drift is not hidden behind NeedsEvidence.
     /// 5. NeedsEvidence — incomplete receipt (AWE001), missing/unknown mandatory validation (AWE002),
     ///    missing expected evidence (AWE006), unknown acceptance (AWE007/Unknown), or unknown claims (AWK002).
@@ -60,6 +61,7 @@ public static class DecisionOrdering
         f.RuleId is ScopeDriftRules.OutsideOwned or ScopeDriftRules.AvoidTouched or ScopeDriftRules.RenameCrosses
             or ClaimRules.Unsupported
         || (f.RuleId == EvidenceRules.AcceptanceUnsupported && f.Status == FindingStatus.Unsupported)
+        || f.RuleId == EvidenceRules.AcceptanceUnverified
         || f.RuleId is "AWR002" or ScopeDriftRules.AmbiguousScope
         || f.Category == FindingCategory.AttributionAmbiguous;
 

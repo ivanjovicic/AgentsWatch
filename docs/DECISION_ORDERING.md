@@ -10,7 +10,7 @@ The classifier inspects the finished finding set. The same findings always produ
 1. **Failed** — any `AWE003` (validation `Fail`, `TimedOut`, or `Killed`).
 2. **Blocked** — any `AWE004` (blocked by environment).
 3. **NeedsApproval** — any `AWE008`.
-4. **NeedsReview** — scope-drift errors (`AWD001`, `AWD002`, `AWD003`), unsupported claims (`AWK001`), unsupported acceptance (`AWE007` with status Unsupported), or attribution ambiguity (`AWR002` / `AWD004`). This class outranks unknown acceptance, so drift and unsupported claims are not hidden behind a `NeedsEvidence` banner.
+4. **NeedsReview** — scope-drift errors (`AWD001`, `AWD002`, `AWD003`), unsupported claims (`AWK001`), unsupported acceptance (`AWE007` with status Unsupported), unverified Supported acceptance (`AWE009`), or attribution ambiguity (`AWR002` / `AWD004`). This class outranks unknown acceptance, so drift and unsupported claims are not hidden behind a `NeedsEvidence` banner.
 5. **NeedsEvidence** — incomplete receipt (`AWE001`), missing or unevaluated mandatory validation (`AWE002`), missing expected evidence (`AWE006`), unknown acceptance (`AWE007` with status Unknown), or unknown claims (`AWK002`).
 6. **Done** — no blocking findings.
 
@@ -21,6 +21,7 @@ The classifier inspects the finished finding set. The same findings always produ
 Use `agentswatch accept record <run-id> --id <acN> --status supported|not-supported|unknown --evidence <validation-id> --reason <text>`.
 
 - `Supported` requires one or more recorded validations that are `Pass` with exit `0` or no exit code, plus a non-empty `--reason`. Evidence-free or unexplained `Supported` is rejected. The receipt stores this as a manual assessment (declared, not attested), the supplied reason, and the declared evidence ids; the receipt/CLI banner shows the same provenance.
+- A `Supported` mark is trustworthy `Done` only when the contract declares a validation command for that criterion (`--accept-validation` on `contract create`, bound to the preceding `--accept`). Run-level `--validate` is not enough. Missing bindings, or a linked/passing validation that is not declared for that criterion, produce `AWE009` and `NeedsReview` (unverified). This is fail-closed: implicit pairing of the only acceptance criterion with the only run-level validation is intentionally not used.
 - `NotSupported` requires a link to a recorded validation id.
 - `Unknown` may omit `--evidence` (clears a previous mark when `--replace` is used).
 - Tampered or digest-invalid receipts are rejected and not rewritten.

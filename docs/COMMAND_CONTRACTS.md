@@ -258,6 +258,7 @@ Purpose: evaluate and persist one acceptance criterion without free-form Support
 Rules:
 
 - `Supported` must cite recorded passing validation evidence and a non-empty `--reason`; no evidence-free or unexplained Supported. The stored mark is a manual assessment (declared, not attested) plus the reason and declared evidence ids.
+- `Supported` yields trustworthy `Done` only when the contract declares a validation command for that criterion (`--accept-validation`). Otherwise `AWE009` / `NeedsReview` (unverified).
 - `NotSupported` must cite a recorded validation id.
 - Invalid or digest-mismatched receipts are rejected without rewrite.
 - Decision ranking after the mark follows `docs/DECISION_ORDERING.md` (`Failed > Blocked > NeedsApproval > NeedsReview > NeedsEvidence > Done`).

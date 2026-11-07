@@ -27,7 +27,17 @@ public sealed record RunContract(
     DateTimeOffset CreatedAtUtc)
 {
     public const int CurrentSchemaVersion = 1;
+
+    /// <summary>
+    /// Optional per-criterion validation commands. Omitted from JSON when null so
+    /// existing v1 contract digests are unchanged. Missing bindings mean Supported
+    /// is unverified (AWE009 / NeedsReview), not trustworthy Done.
+    /// </summary>
+    public IReadOnlyList<CriterionValidationBinding>? CriterionValidationBindings { get; init; }
 }
+
+/// <summary>Declares which recorded validation command(s) may verify a criterion (ac1, ac2, …).</summary>
+public sealed record CriterionValidationBinding(string CriterionId, IReadOnlyList<string> Commands);
 
 public enum PermissionMode
 {
