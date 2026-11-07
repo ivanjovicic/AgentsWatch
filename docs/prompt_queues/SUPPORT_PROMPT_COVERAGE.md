@@ -7,7 +7,7 @@ This file is supporting context for the canonical queue
 
 ## Next-task reminder
 
-The only next claimable task is `AW-VFY-010-LEDGER`. Support prompts below may
+The only next claimable task is `AW-VFY-010-B3`. Support prompts below may
 run in parallel as docs/research if the owner assigns them, but they never
 outrank the router.
 

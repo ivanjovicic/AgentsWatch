@@ -58,8 +58,7 @@ and “AW-VFY-010 not started”):
 
 AW-VFY-010 is **in progress and not complete**. Unit tests, merged corrective
 PRs, and a successful privacy check do not close the 30-receipt program.
-Existing batches and checks must be inventoried by `AW-VFY-010-LEDGER` before
-another dogfood batch. Do not invent run counts, customer feedback, or
+Existing batches and checks were inventoried in `docs/evidence/aw-vfy-010-ledger.md` (useful REAL 8 of 30). The next slice is `AW-VFY-010-B3`. Do not invent run counts, customer feedback, or
 independent approvals. Planning documents are not completion evidence.
 
 The attached planning file `AgentsWatch_Operativni_Backlog_2026-11-07.md` was
@@ -72,21 +71,21 @@ binds a command to a criterion and does not independently certify `Done`.
 ## Current next prompt
 
 ```text
-AW-VFY-010-LEDGER - Inventory existing AW-VFY-010 evidence
+AW-VFY-010-B3 - Next small dogfood batch
 ```
 
 Prompt file:
 
 ```text
-docs/prompts/AW-VFY-010-LEDGER.md
+docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md
 ```
 
 Immediate order after that:
 
 ```text
-1. AW-VFY-010-LEDGER     (NEXT; claimable now)
-2. AW-VFY-010-B3         (after ledger; docs/prompts/AW-VFY-010-B3-small-dogfood-batch.md)
-3. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
+1. AW-VFY-010-B3         (NEXT; ledger at docs/evidence/aw-vfy-010-ledger.md)
+2. Remaining AW-VFY-010 batches named by the ledger, until the parent exit gate
+3. (AW-VFY-010-LEDGER is complete as an inventory slice; do not repeat unless new evidence appears)
 4. AW-VFY-011            (HOLD until AW-VFY-010 is complete and reviewed)
 5. AW-VFY-012            (HOLD until AW-VFY-011 passes)
 ```
@@ -104,8 +103,8 @@ Are AW-VFY-001..009 done on current origin/main?
   no  -> stop and report; this router is stale
   yes -> Is the AW-VFY-010 30-run proof complete (exit gate in the parent prompt)?
           no  -> Has AW-VFY-010-LEDGER produced a sanitized inventory of existing evidence?
-                  no  -> AW-VFY-010-LEDGER     <== CURRENT NEXT TASK
-                  yes -> Run the next small named batch (currently AW-VFY-010-B3)
+                  no  -> AW-VFY-010-LEDGER
+                  yes -> Run the next small named batch (currently AW-VFY-010-B3)     <== CURRENT NEXT TASK
                          then only further 010 batches the ledger still shows as open
           yes -> Is external value proven (AW-VFY-011)?
                   no  -> AW-VFY-011            (HOLD until 010 is complete and reviewed)

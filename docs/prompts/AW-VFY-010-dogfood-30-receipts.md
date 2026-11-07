@@ -2,7 +2,7 @@
 
 Repository: `ivanjovicic/AgentsWatch`  
 Queue: `docs/prompt_queues/verification_mvp_2026_08_25.md`  
-Status: In progress — not complete (next slice: AW-VFY-010-LEDGER)  
+Status: In progress — not complete (next slice: AW-VFY-010-B3; ledger at docs/evidence/aw-vfy-010-ledger.md)  
 Run mode: dogfood / evidence collection / targeted fixes only  
 Budget: staged; do not run as one giant context-heavy session  
 Gate: Contract -> Attribution -> Receipt -> Evidence -> Scope -> Claims works end to end
