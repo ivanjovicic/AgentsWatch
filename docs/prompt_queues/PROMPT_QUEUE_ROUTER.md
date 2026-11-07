@@ -106,6 +106,17 @@ Canonical addendum:
 docs/research/COMPETITIVE_VALIDATION_ADDENDUM_2026_09_16.md
 ```
 
+## Parallel support-track routing
+
+The only currently claimable **runtime implementation** prompt remains `AW-VFY-001` until Gate 0 evidence closes it. The canonical queue also lists four *non-runtime* preparation tasks. These do not advance the strict AW-VFY chain:
+
+- `AW-RES-001` — independently check competitor/native Git+CI baselines before external value claims.
+- `AW-RES-002` — plan real buyer discovery; do not invent outreach or paid commitments.
+- `AW-SEC-001` — assess licensing, evidence privacy and release safety; owner must choose license.
+- `AW-QA-001` — after RunReceipt schema is stable, define adversarial 30-run benchmark before dogfood.
+
+All four prompt files and activation conditions are linked from `verification_mvp_2026_08_25.md`. Do **not** confuse documentation-only preparation with a green Gate 0 or proven external commercial value.
+
 ## Context rule
 
 Normal prompt selection should require only:
