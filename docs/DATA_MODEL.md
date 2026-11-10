@@ -351,7 +351,14 @@ findings[]
 decision
 missedWork[]
 evidenceDigest?
+observedExecutorEvidence?   (AW-FIX-EXECUTOR-001; omitted when null)
+executorIdentity?           (AW-FIX-EXECUTOR-001; omitted when null)
 ```
+
+`executorMetadata` is the operator-declared executor. `observedExecutorEvidence` and
+`executorIdentity` are additive and optional, so historical receipt files are not rewritten and keep
+their stored digest (re-serialization matches only after line-ending normalization, not byte-for-byte);
+see `docs/EXECUTOR_IDENTITY.md`. No field proves authorship.
 
 `evidenceDigest` and `contractDigest` use the platform-independent canonical form in `docs/DIGEST_CANONICALIZATION.md`.
 

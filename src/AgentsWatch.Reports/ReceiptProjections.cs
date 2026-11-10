@@ -19,6 +19,14 @@ public static class ReceiptMarkdownWriter
         b.AppendLine($"- Start: `{r.StartRepositoryState.Branch}` @ `{Short(r.StartRepositoryState.HeadCommitSha)}`; End: `{r.EndRepositoryState.Branch}` @ `{Short(r.EndRepositoryState.HeadCommitSha)}` ({r.HeadTransition.Kind})");
         b.AppendLine($"- Evidence digest: `{r.EvidenceDigest ?? "none"}`");
         b.AppendLine();
+        b.AppendLine("## Executor identity");
+        b.AppendLine();
+        foreach (var line in ExecutorIdentityDisplay.Lines(r))
+        {
+            b.AppendLine("- " + line);
+        }
+
+        b.AppendLine();
         foreach (var line in DecisionBanner.MarkdownLines(r))
         {
             b.AppendLine(line);
@@ -62,7 +70,7 @@ public static class ReceiptMarkdownWriter
 
     internal static string Executor(ExecutorMetadata? m) => m is null
         ? "unknown"
-        : $"agent={m.Agent ?? "unknown"}, tool={m.Tool ?? "unknown"}, model={m.Model ?? "unknown"}";
+        : $"agent={ExecutorIdentityDisplay.Visible(m.Agent ?? "unknown")}, tool={ExecutorIdentityDisplay.Visible(m.Tool ?? "unknown")}, model={ExecutorIdentityDisplay.Visible(m.Model ?? "unknown")}";
 
     internal static string Short(string? sha) => sha is null ? "(unborn)" : sha.Length > 7 ? sha[..7] : sha;
 
@@ -98,6 +106,11 @@ public static class ReceiptHandoffWriter
         b.AppendLine("- Blocking: " + (blocking.Count == 0 ? "none" : string.Join("; ", blocking)));
         b.AppendLine($"- Findings by severity: {DecisionOrdering.SeverityCountLabel(r.Findings ?? [])}");
         b.AppendLine($"- Executor: {ReceiptMarkdownWriter.Executor(r.ExecutorMetadata)}");
+        foreach (var line in ExecutorIdentityDisplay.Lines(r))
+        {
+            b.AppendLine("- " + line);
+        }
+
         b.AppendLine($"- Run-interval files: {Join(r.RunDelta.RunIntervalChanges.Select(c => c.Path))}");
         b.AppendLine($"- Pre-existing changed further: {Join(r.RunDelta.PreExistingChangedFurther.Select(c => c.Path))}");
         b.AppendLine($"- Ambiguous: {Join(r.RunDelta.AttributionAmbiguities.Select(c => c.Path))}");
@@ -136,6 +149,84 @@ public sealed class FileReceiptProjectionWriter : IReceiptProjectionWriter
         var temp = path + ".tmp";
         File.WriteAllText(temp, content);
         File.Move(temp, path, overwrite: true);
+    }
+}
+
+/// <summary>
+/// Executor identity block shared by `finish`, `receipt show` and `handoff` (AW-FIX-EXECUTOR-001).
+/// Authorship is always shown as NO: no source in this version proves who authored the changes.
+/// </summary>
+public static class ExecutorIdentityDisplay
+{
+    public static IReadOnlyList<string> Lines(RunReceipt r)
+    {
+        var lines = new List<string> { "Executor declared: " + Declared(r.ExecutorMetadata) };
+        var o = r.ObservedExecutorEvidence;
+        if (o is null)
+        {
+            lines.Add("Additional source: none");
+        }
+        else
+        {
+            var parts = new[] { o.AgentTool, o.ModelProvider, o.ModelName }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => Visible(v!.Trim())).ToArray();
+            lines.Add("Additional source: " + (o.Problem is not null ? "unusable" : parts.Length == 0 ? "no identity fields" : string.Join(" / ", parts)));
+            if (!string.IsNullOrWhiteSpace(o.ClientIde))
+            {
+                lines.Add("Additional source client: " + Visible(o.ClientIde.Trim()));
+            }
+
+            lines.Add($"Additional source ref: {Visible(o.SourcePath)} ({Visible(o.SourceSha256)})");
+        }
+
+        var id = r.ExecutorIdentity;
+        lines.Add("Identity status: " + StatusLabel(id?.Status));
+        lines.Add("Authorship verified: NO");
+        lines.Add("Reason: " + (id?.Reason ?? "not assessed; this receipt predates executor identity assessment, so the declaration above is unverified."));
+        return lines;
+    }
+
+    /// <summary>
+    /// Rendering only (stored values are never changed): control (Cc), format (Cf: bidi overrides/isolates,
+    /// zero-width characters) and line/paragraph separator (Zl/Zp) code points are shown as <c>&lt;U+XXXX&gt;</c>,
+    /// so a value cannot reorder, hide or break a line of the rendered identity block.
+    /// </summary>
+    public static string Visible(string value)
+    {
+        StringBuilder? b = null;
+        var i = 0;
+        foreach (var rune in value.EnumerateRunes())
+        {
+            var cat = Rune.GetUnicodeCategory(rune);
+            var unsafeRune = cat is System.Globalization.UnicodeCategory.Control or System.Globalization.UnicodeCategory.Format
+                or System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator;
+            if (unsafeRune)
+            {
+                b ??= new StringBuilder(value, 0, i, value.Length + 16);
+                b.Append("<U+").Append(rune.Value.ToString("X4")).Append('>');
+            }
+            else
+            {
+                b?.Append(rune.ToString());
+            }
+
+            i += rune.Utf16SequenceLength;
+        }
+
+        return b?.ToString() ?? value;
+    }
+
+    public static string StatusLabel(ExecutorIdentityStatus? status) => status switch
+    {
+        ExecutorIdentityStatus.DeclaredOnly => "DECLARED_ONLY",
+        ExecutorIdentityStatus.ConsistentUnverified => "CONSISTENT_UNVERIFIED",
+        ExecutorIdentityStatus.Conflict => "CONFLICT",
+        _ => "UNKNOWN" // includes not assessed; VERIFIED is reserved and rejected on load
+    };
+
+    private static string Declared(ExecutorMetadata? m)
+    {
+        var parts = new[] { m?.Agent, m?.Tool, m?.Model }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => Visible(v!.Trim())).ToArray();
+        return parts.Length == 0 ? "unknown" : string.Join(" / ", parts);
     }
 }
 
