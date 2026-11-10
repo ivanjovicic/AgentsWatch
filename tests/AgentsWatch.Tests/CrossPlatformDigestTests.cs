@@ -166,6 +166,88 @@ public sealed class CrossPlatformDigestTests
         Assert.Equal(Facts[fixture].StoredContractDigest, result.Receipt.ContractDigest);
     }
 
+    // ---------- read paths on a digest mismatch (owner plan 2026-11-10 16:00, A2-A4) ----------
+
+    public static TheoryData<string, string> FixturesByBreakage()
+    {
+        var data = new TheoryData<string, string>();
+        foreach (var f in new[] { "windows-crlf", "linux-lf" })
+        {
+            data.Add(f, "content-edit");
+            data.Add(f, "digest-removed");
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(FixturesByBreakage))]
+    public void R01_Handoff_DigestMismatch_RefusesWithExit1_AndWritesNoProjection(string fixture, string breakage)
+    {
+        using var ws = new FixtureWorkspace(fixture);
+        ws.Break(breakage);
+        var report = Path.Combine(ws.Root, ".ai", "runs", ws.RunId + ".md");
+        var handoff = Path.Combine(ws.Root, ".ai", "handoffs", ws.RunId + ".md");
+        var before = File.ReadAllBytes(ws.ReceiptPath);
+
+        var (o, e) = (new StringWriter(), new StringWriter());
+        var exit = ReceiptCommand.Handoff(ws.Root, [ws.RunId], o, e);
+        // Checked first so that RED shows the actual defect: a projection written from an untrusted receipt.
+        Assert.False(File.Exists(handoff), "no handoff projection may be produced from an untrusted receipt");
+        Assert.False(File.Exists(report), "no receipt projection may be produced from an untrusted receipt");
+        Assert.Equal(1, exit);
+        Assert.Contains("evidence digest", e.ToString());
+        Assert.DoesNotContain("Handoff:", o.ToString());
+        Assert.Equal(before, File.ReadAllBytes(ws.ReceiptPath));
+    }
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void R02_Handoff_DigestMismatch_LeavesExistingTrustedProjectionUntouched(string fixture)
+    {
+        using var ws = new FixtureWorkspace(fixture);
+        var (o, e) = (new StringWriter(), new StringWriter());
+        Assert.Equal(0, ReceiptCommand.Handoff(ws.Root, [ws.RunId], o, e));
+        var handoff = Path.Combine(ws.Root, ".ai", "handoffs", ws.RunId + ".md");
+        var trusted = File.ReadAllBytes(handoff);
+
+        ws.Break("content-edit");
+        Assert.Equal(1, ReceiptCommand.Handoff(ws.Root, [ws.RunId], new StringWriter(), new StringWriter()));
+        Assert.Equal(trusted, File.ReadAllBytes(handoff));
+    }
+
+    [Theory]
+    [MemberData(nameof(FixturesByBreakage))]
+    public void R03_Show_DigestMismatch_Exit1_AndAnyRenderingIsMarkedUntrusted(string fixture, string breakage)
+    {
+        using var ws = new FixtureWorkspace(fixture);
+        ws.Break(breakage);
+        var (o, e) = (new StringWriter(), new StringWriter());
+        Assert.Equal(1, ReceiptCommand.Show(ws.Root, ["show", ws.RunId], o, e));
+        Assert.Contains("UNTRUSTED", e.ToString());
+        var shown = o.ToString();
+        if (shown.Length > 0)
+        {
+            Assert.StartsWith("UNTRUSTED", shown.TrimStart());
+        }
+
+        Assert.False(Directory.Exists(Path.Combine(ws.Root, ".ai")), "show must not write projections");
+    }
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void R04_ShowAndHandoff_ValidLegacyDigest_Exit0_NotMarkedUntrusted(string fixture)
+    {
+        using var ws = new FixtureWorkspace(fixture);
+        var (o, e) = (new StringWriter(), new StringWriter());
+        Assert.Equal(0, ReceiptCommand.Show(ws.Root, ["show", ws.RunId], o, e));
+        Assert.DoesNotContain("UNTRUSTED", o.ToString() + e.ToString());
+        (o, e) = (new StringWriter(), new StringWriter());
+        Assert.Equal(0, ReceiptCommand.Handoff(ws.Root, [ws.RunId], o, e));
+        Assert.DoesNotContain("UNTRUSTED", o.ToString() + e.ToString());
+        Assert.True(File.Exists(Path.Combine(ws.Root, ".ai", "handoffs", ws.RunId + ".md")));
+    }
+
     // ---------- mutation paths ----------
 
     [Theory]
@@ -376,6 +458,24 @@ public sealed class CrossPlatformDigestTests
             var text = File.ReadAllText(ReceiptPath);
             Assert.Contains(from, text);
             File.WriteAllText(ReceiptPath, text.Replace(from, to));
+        }
+
+        public void Break(string breakage)
+        {
+            switch (breakage)
+            {
+                case "content-edit":
+                    EditReceiptBytes("\"agent\": \"synthetic-agent\"", "\"agent\": \"synthetic-agenT\"");
+                    break;
+                case "digest-removed":
+                    var text = File.ReadAllText(ReceiptPath);
+                    var digest = Facts[_fixture].StoredEvidenceDigest;
+                    Assert.Contains(digest, text);
+                    File.WriteAllText(ReceiptPath, text.Replace(digest, "sha256:" + new string('0', 64)));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(breakage));
+            }
         }
 
         public void AssertFixtureBytesUnchanged()
