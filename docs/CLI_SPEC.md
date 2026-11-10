@@ -167,6 +167,18 @@ The completed baseline may be removed/moved from `active-runs` only after the fi
 
 Purpose: render the canonical receipt concisely.
 
+Exit codes and trust (AW-FIX-DIGEST-001):
+
+- `0`: the receipt loads and its `evidenceDigest` matches its content (canonical LF or legacy CRLF form,
+  see `docs/DIGEST_CANONICALIZATION.md`).
+- `1` with an **UNTRUSTED** banner: the stored digest does not match the content (edited, or digest
+  missing/replaced). The receipt is still rendered for inspection, but stdout starts with
+  `UNTRUSTED - evidence digest mismatch: ...` and stderr carries
+  `error: UNTRUSTED receipt: evidence digest mismatch; ...`.
+- `1` without rendering: no receipt for the run, or the receipt is invalid (for example a refused
+  `executorIdentity`, see `docs/EXECUTOR_IDENTITY.md`).
+- `2`: usage error.
+
 Default output includes:
 
 ```text
@@ -244,11 +256,17 @@ Claim extraction may initially be explicit/imported. LLM extraction is not requi
 
 Purpose: generate compact continuation context from the structured receipt.
 
-Writes:
+Writes (exit `0`), regenerating both projections from the canonical receipt:
 
 ```text
+.ai/runs/<run-id>.md
 .ai/handoffs/<run-id>.md
 ```
+
+On an evidence-digest mismatch (AW-FIX-DIGEST-001) `handoff` exits `1`, prints
+`error: UNTRUSTED receipt: evidence digest mismatch; refusing to write a handoff or receipt projection.`,
+and writes nothing: no projection is generated from an untrusted receipt, and existing projection files
+are left unchanged. A missing or invalid receipt also exits `1`; a usage error exits `2`.
 
 Target 10–20 lines. Include:
 
