@@ -424,25 +424,22 @@ public sealed class ExecutorIdentityFlowTests
     }
 
     // 10. Historical v1 receipt (written by pre-fix fe1be51 CLI on Windows) -> reads; stored digest matches its producing (CRLF) form;
-    //     strict VerifyDigest only where the newline is CRLF (cross-OS: AW-FIX-DIGEST-001); re-serializes to the same text after
-    //     line-ending normalization (NOT an original-bytes comparison); show/handoff leave the file bytes unchanged.
+    //     strict VerifyDigest/EnsureStoredDigest/MatchDigest == LegacyCrlf on EVERY OS (AW-FIX-DIGEST-001, merged); re-serializes
+    //     to the same text after line-ending normalization (NOT an original-bytes comparison); show/handoff exit 0 without any
+    //     mismatch or UNTRUSTED marking and leave the file bytes unchanged.
     [Fact]
     public void T10_HistoricalV1Receipt_ReadsAndKeepsOriginalDigest()
     {
         var fixture = Path.Combine(AppContext.BaseDirectory, "Fixtures", FixtureName);
         var original = File.ReadAllText(fixture);
         var receipt = RunReceiptJson.Deserialize(original);
-        // The fixture was produced on Windows by the pre-fix CLI. RunReceiptJson.ComputeDigest hashes indented JSON whose
-        // newline follows Environment.NewLine (pre-existing behavior, unchanged by this fix), so its digest is bound to CRLF.
-        // Platform-independent check: the stored digest still matches the unchanged content in its producing (CRLF) form.
+        // The fixture was produced on Windows by the pre-fix CLI, so its stored digest is the legacy CRLF form.
+        // Independent recomputation of that form, then the strict product checks on every OS (requires AW-FIX-DIGEST-001).
         var producingForm = RunReceiptJson.Serialize(receipt with { EvidenceDigest = null }).Replace("\r\n", "\n").Replace("\n", "\r\n");
         Assert.Equal(receipt.EvidenceDigest, "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(producingForm))).ToLowerInvariant());
-        var producerNewline = Environment.NewLine == "\r\n";
-        if (producerNewline)
-        {
-            Assert.True(RunReceiptJson.VerifyDigest(receipt));
-            RunReceiptJson.EnsureStoredDigest(receipt);
-        }
+        Assert.True(RunReceiptJson.VerifyDigest(receipt));
+        RunReceiptJson.EnsureStoredDigest(receipt);
+        Assert.Equal(AgentsWatch.Core.DigestForm.LegacyCrlf, RunReceiptJson.MatchDigest(receipt));
 
         Assert.Equal("Claude", receipt.ExecutorMetadata!.Agent);
         // Same text after CRLF->LF normalization and trailing-newline trim. This is semantic/layout equality, not byte identity.
@@ -457,17 +454,18 @@ public sealed class ExecutorIdentityFlowTests
         var showOut = new StringWriter();
         var showErr = new StringWriter();
         Assert.Equal(0, ReceiptCommand.Show(repo.Root, ["show", receipt.RunId], showOut, showErr));
-        if (producerNewline)
-        {
-            Assert.DoesNotContain("digest mismatch", showErr.ToString());
-        }
+        Assert.DoesNotContain("digest mismatch", showErr.ToString());
+        Assert.DoesNotContain("UNTRUSTED", showOut.ToString() + showErr.ToString());
 
         var shown = showOut.ToString();
         Assert.Contains("Executor declared: Claude / owner-run-manual", Lines(shown));
         Assert.Contains("Identity status: UNKNOWN", Lines(shown));
         Assert.Contains("Authorship verified: NO", Lines(shown));
         Assert.Contains("not assessed", shown);
-        Assert.Equal(0, ReceiptCommand.Handoff(repo.Root, [receipt.RunId], new StringWriter(), new StringWriter()));
+        var handoffErr = new StringWriter();
+        Assert.Equal(0, ReceiptCommand.Handoff(repo.Root, [receipt.RunId], new StringWriter(), handoffErr));
+        Assert.DoesNotContain("digest mismatch", handoffErr.ToString());
+        Assert.DoesNotContain("UNTRUSTED", handoffErr.ToString());
         Assert.Contains("Authorship verified: NO", Lines(File.ReadAllText(Path.Combine(repo.Root, ".ai", "handoffs", receipt.RunId + ".md"))));
         Assert.Equal(before, Sha256File(path));
     }
