@@ -127,6 +127,59 @@ public sealed class CrossPlatformDigestTests
         Assert.False(RunContractJson.MatchesDigest(null, winContract));
     }
 
+    [Fact]
+    public void D09_CanonicalJsonDigest_NormalizesLayout_IndependentOfTheRunningOs()
+    {
+        // Explicit CRLF/LF inputs, so a regression in the normalization itself is caught on Linux too,
+        // not only where Environment.NewLine happens to be CRLF.
+        const string lf = "{\n  \"a\": \"x\\r\\ny\"\n}";
+        var crlf = lf.Replace("\n", "\r\n");
+        var expectedLf = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(lf))).ToLowerInvariant();
+        var expectedCrlf = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(crlf))).ToLowerInvariant();
+
+        Assert.Equal(expectedLf, AgentsWatch.Core.CanonicalJsonDigest.Compute(lf));
+        Assert.Equal(expectedLf, AgentsWatch.Core.CanonicalJsonDigest.Compute(crlf));
+        Assert.Equal(expectedCrlf, AgentsWatch.Core.CanonicalJsonDigest.ComputeLegacyCrlf(lf));
+        Assert.Equal(expectedCrlf, AgentsWatch.Core.CanonicalJsonDigest.ComputeLegacyCrlf(crlf));
+        Assert.Equal(AgentsWatch.Core.DigestForm.CanonicalLf, AgentsWatch.Core.CanonicalJsonDigest.Match(expectedLf, crlf));
+        Assert.Equal(AgentsWatch.Core.DigestForm.LegacyCrlf, AgentsWatch.Core.CanonicalJsonDigest.Match(expectedCrlf, lf));
+        Assert.Equal(AgentsWatch.Core.DigestForm.None, AgentsWatch.Core.CanonicalJsonDigest.Match(expectedLf, lf.Replace("x", "z")));
+        // A UTF-8 BOM is never part of the hashed bytes.
+        Assert.False(AgentsWatch.Core.CanonicalJsonDigest.ToCanonicalText(crlf).Contains('\uFEFF'));
+        // Escaped "\\r\\n" inside a JSON string value is content, not layout, and is preserved.
+        Assert.Contains("x\\r\\ny", AgentsWatch.Core.CanonicalJsonDigest.ToCanonicalText(crlf), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void D10_DigestCoversBoundContent_NotFileBytes_DocumentedLimits()
+    {
+        // Characterization of documented limits (docs/DIGEST_CANONICALIZATION.md, "Limits"):
+        // the digest covers the canonical re-serialization of the bound receipt, not the JSON file bytes.
+        using var ws = new FixtureWorkspace("linux-lf");
+        var text = File.ReadAllText(ws.ReceiptPath);
+
+        // File layout is outside the digest: a BOM, CRLF line endings or compact JSON still verify.
+        File.WriteAllBytes(ws.ReceiptPath, [0xEF, 0xBB, 0xBF, .. Encoding.UTF8.GetBytes(text.Replace("\n", "\r\n"))]);
+        Assert.True(RunReceiptJson.VerifyDigest(ws.ReadReceipt()));
+        File.WriteAllText(ws.ReceiptPath, System.Text.Json.Nodes.JsonNode.Parse(text)!.ToJsonString());
+        Assert.DoesNotContain("\n", File.ReadAllText(ws.ReceiptPath));
+        Assert.True(RunReceiptJson.VerifyDigest(ws.ReadReceipt()));
+
+        // Unknown properties are ignored by the binder and are therefore outside the digest.
+        File.WriteAllText(ws.ReceiptPath, text.Replace("\"schemaVersion\": 1,", "\"schemaVersion\": 1,\n  \"unknownExtra\": \"synthetic-sentinel\","));
+        Assert.True(RunReceiptJson.VerifyDigest(ws.ReadReceipt()));
+
+        // A duplicated property binds the LAST value; the digest covers that bound value only.
+        File.WriteAllText(ws.ReceiptPath, text.Replace("\"taskId\": \"DIGEST-FIXTURE\",", "\"taskId\": \"SHADOW-SENTINEL\",\n  \"taskId\": \"DIGEST-FIXTURE\","));
+        var dup = ws.ReadReceipt();
+        Assert.Equal("DIGEST-FIXTURE", dup.TaskId);
+        Assert.True(RunReceiptJson.VerifyDigest(dup));
+
+        // Changing the bound value (here: the last duplicate) is detected.
+        File.WriteAllText(ws.ReceiptPath, text.Replace("\"taskId\": \"DIGEST-FIXTURE\",", "\"taskId\": \"DIGEST-FIXTURE\",\n  \"taskId\": \"SHADOW-SENTINEL\","));
+        Assert.False(RunReceiptJson.VerifyDigest(ws.ReadReceipt()));
+    }
+
     // ---------- read paths ----------
 
     [Theory]
@@ -255,19 +308,46 @@ public sealed class CrossPlatformDigestTests
     public void D07_MutationPaths_AcceptLegacyDigest_AndResignInCanonicalForm(string fixture, string mutation)
     {
         using var ws = new FixtureWorkspace(fixture);
+        var original = ws.ReadReceipt();
         var (exit, stdout, stderr) = RunMutation(ws, mutation);
-        Assert.DoesNotContain("does not match its contents", stderr + stdout);
-        Assert.DoesNotContain("receipt is invalid", stderr + stdout);
-        Assert.True(exit is 0 or 1, $"{mutation} exit {exit}: {stderr}");
+
+        // Exact expected outcome. Exit 1 is the decision exit code (NeedsEvidence), not an error; stderr must be empty.
+        Assert.Equal(string.Empty, stderr);
+        Assert.Equal(1, exit);
+        var expectedFirstLine = mutation switch
+        {
+            "evidence-record" => "Evidence recorded: v1 Pass (source: CI)",
+            "accept-record" => "Acceptance recorded: ac1 [Unknown]",
+            "claims-record" => "Claim recorded: c1 DocsOnly [Supported]",
+            _ => "Decision: NeedsEvidence"
+        };
+        Assert.Equal(expectedFirstLine, stdout.Split('\n')[0].TrimEnd('\r'));
 
         var stored = ws.ReadReceipt();
-        Assert.True(RunReceiptJson.VerifyDigest(stored));
-        if (stored.EvidenceDigest != Facts[fixture].StoredEvidenceDigest)
+        Assert.Equal(DecisionStatus.NeedsEvidence, stored.Decision.Status);
+        switch (mutation)
         {
-            // Any re-signed receipt carries the canonical (LF) digest, whatever OS wrote it.
-            Assert.Equal(CanonicalSha256(RunReceiptJson.Serialize(stored with { EvidenceDigest = null })), stored.EvidenceDigest);
+            case "evidence-record":
+                var v = Assert.Single(stored.Validations);
+                Assert.Equal(("v1", ValidationStatus.Pass, ValidationSource.CI, 0), (v.ValidationId, v.Status, v.Source, v.ExitCode));
+                break;
+            case "accept-record":
+                Assert.Equal(CriterionStatus.Unknown, Assert.Single(stored.AcceptanceCriteria, a => a.CriterionId == "ac1").Status);
+                break;
+            case "claims-record":
+                Assert.Equal("DocsOnly", Assert.Single(stored.Claims).ClaimType);
+                break;
+            default:
+                // Read-style checks re-evaluate and persist, but must not change validations, claims or acceptance.
+                Assert.Equal(original.Validations.Count, stored.Validations.Count);
+                Assert.Equal(original.Claims.Count, stored.Claims.Count);
+                Assert.Equal(original.AcceptanceCriteria.Select(a => a.Status), stored.AcceptanceCriteria.Select(a => a.Status));
+                break;
         }
 
+        // Every persisted receipt is (re)signed in the canonical LF form, whatever OS wrote it.
+        Assert.Equal(AgentsWatch.Core.DigestForm.CanonicalLf, RunReceiptJson.MatchDigest(stored));
+        Assert.Equal(CanonicalSha256(RunReceiptJson.Serialize(stored with { EvidenceDigest = null })), stored.EvidenceDigest);
         Assert.Equal(Facts[fixture].StoredContractDigest, stored.ContractDigest);
     }
 
@@ -387,21 +467,26 @@ public sealed class CrossPlatformDigestTests
         Assert.Contains("does not match", ex.Message);
 
         var (o, e) = (new StringWriter(), new StringWriter());
-        Assert.Equal(0, ReceiptCommand.Show(ws.Root, ["show", ws.RunId], o, e));
+        Assert.Equal(1, ReceiptCommand.Show(ws.Root, ["show", ws.RunId], o, e));
         Assert.Contains("digest mismatch", e.ToString());
+        Assert.StartsWith("UNTRUSTED", o.ToString());
 
         (o, e) = (new StringWriter(), new StringWriter());
-        ReceiptCommand.Handoff(ws.Root, [ws.RunId], o, e);
+        Assert.Equal(1, ReceiptCommand.Handoff(ws.Root, [ws.RunId], o, e));
         Assert.Contains("digest mismatch", e.ToString());
+        Assert.Equal(string.Empty, o.ToString());
 
         var before = File.ReadAllBytes(ws.ReceiptPath);
         foreach (var mutation in new[] { "evidence-record", "evidence-check", "accept-record", "claims-record", "claims-check", "drift-check" })
         {
             var (exit, stdout, stderr) = RunMutation(ws, mutation);
-            Assert.NotEqual(0, exit);
-            Assert.Contains("does not match", stderr + stdout);
+            Assert.Equal(1, exit);
+            Assert.Equal(string.Empty, stdout);
+            Assert.Equal("error: receipt is invalid: receipt evidence digest does not match its contents.", stderr.TrimEnd());
             Assert.Equal(before, File.ReadAllBytes(ws.ReceiptPath));
         }
+
+        Assert.False(Directory.Exists(Path.Combine(ws.Root, ".ai")), "no projection may be written from an untrusted receipt");
     }
 
     private static (int Exit, string Stdout, string Stderr) RunMutation(FixtureWorkspace ws, string mutation)

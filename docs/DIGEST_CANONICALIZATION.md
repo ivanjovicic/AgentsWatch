@@ -45,7 +45,12 @@ digest when it equals one of exactly two digests, **both recomputed from the cur
 | `CanonicalLf` | pre-fix Linux/macOS builds, and all builds after this fix | yes |
 | `LegacyCrlf` (same JSON, LF→CRLF) | pre-fix Windows builds | **no**, accepted on read only |
 
-Nothing else is accepted: no lone CR, no BOM, no compact JSON, no other line-break placement.
+The comparison is between the **stored digest value** and these two recomputed values; nothing else is
+accepted as a digest. The layout of the receipt **file** plays no part in it: the file is parsed, bound
+to the model and re-serialized before hashing, so a file saved with CRLF, LF, a BOM or as compact JSON
+verifies as long as its bound content is unchanged (see "Integrity scope" below). What is never accepted
+is a stored digest computed any other way, for example over the raw file bytes, over a lone-CR or
+compact serialization, or with a BOM included in the hashed bytes.
 
 Tamper detection is not weakened. Both accepted digests are functions of the record being verified, so
 an edited field changes both and the record fails verification. Accepting two layouts of the same content
@@ -66,16 +71,54 @@ Receipt and contract **files** are still written with the platform line ending. 
 canonical serialization, not the file bytes, so line-ending conversion of the file (for example
 `core.autocrlf`) does not affect verification.
 
-## Read paths
+## Integrity scope: canonical content, not file bytes
 
-`receipt show` and `handoff` both print `warning: evidence digest mismatch; canonical receipt may have
-been edited.` to stderr when the stored digest matches neither form. The exit code stays 0, as it already
-was for `show`. Before this fix, `handoff` printed no warning.
+Two different properties are easy to confuse:
+
+- **Integrity of the canonical content** (what the digest guarantees): the receipt, as bound to the
+  model and re-serialized canonically, is the same content the digest was computed over. Any change to
+  a bound field value is detected.
+- **Byte identity of the JSON file** (what the digest does not guarantee): the file may be re-encoded,
+  re-indented, have its line endings converted or carry extra properties and still verify. Byte identity
+  of a file is only asserted where a test or a refusal path compares the bytes explicitly (for example:
+  a refused mutation leaves the receipt byte-identical).
+
+## Read paths (owner decision, 2026-11-10)
+
+On a digest mismatch (edited content, or a missing/replaced digest):
+
+- `receipt show` exits **1**. It still renders the receipt for inspection, but the first stdout line is
+  `UNTRUSTED - evidence digest mismatch: ...` and stderr carries
+  `error: UNTRUSTED receipt: evidence digest mismatch; ...`.
+- `handoff` exits **1**, writes nothing (neither `.ai/runs/<id>.md` nor `.ai/handoffs/<id>.md`) and leaves
+  any existing projection file untouched. stderr:
+  `error: UNTRUSTED receipt: evidence digest mismatch; refusing to write a handoff or receipt projection.`
+
+This is a behavior change ordered by the owner. Before it, both commands only warned and exited 0, and
+`handoff` wrote projections from the untrusted receipt. Receipts that verify in either accepted form are
+unaffected (exit 0, no banner).
+
+Mutation commands (`evidence record|check`, `accept record`, `claims record|check`, `drift check`) were
+already refusing: exit 1, empty stdout, stderr
+`error: receipt is invalid: receipt evidence digest does not match its contents.`, receipt file
+byte-identical. Note that on success these commands also exit 1 while the decision is `NeedsEvidence`
+(the exit code reports the decision); success and refusal are told apart by stderr, not by the exit code.
+On success they re-write the receipt (canonical digest; file written with the platform line ending), so
+the file bytes of a successful `check` are not guaranteed to stay identical.
 
 ## Limits
 
 - The digest is an integrity checksum, not a signature. Anyone who can edit the receipt can recompute
   a valid digest. Authenticating receipts is out of scope.
+- **Unknown properties** in the receipt file are ignored by the binder and are therefore outside the
+  digest: adding one does not fail verification and it is dropped on the next re-sign.
+- **Duplicate properties** bind the last occurrence (System.Text.Json default). Only that bound value is
+  covered; an earlier duplicate is invisible to the digest. Changing the last one is detected.
+  (Characterized by `D10_DigestCoversBoundContent_NotFileBytes_DocumentedLimits`.)
+- The full M1 regression (a digest computed over raw `Environment.NewLine` output instead of the canonical
+  form) can only surface where `Environment.NewLine` is CRLF, i.e. in the `windows-latest` CI job; on Linux
+  the raw output is already LF. The canonicalization itself is covered on every OS by
+  `D09_CanonicalJsonDigest_NormalizesLayout_IndependentOfTheRunningOs` with explicit CRLF/LF inputs.
 - A receipt re-signed by a post-fix build verifies on pre-fix Linux/macOS builds (same LF form), but a
   pre-fix **Windows** build will report a mismatch. It fails closed.
 
