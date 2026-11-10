@@ -90,9 +90,8 @@ public static class EvidenceGate
                     "contract identity or mandatory contract fields are inconsistent with the receipt.", [], ["contract", "receipt"]);
             }
 
-            var observedDigest = RunContractJson.ComputeDigest(contract);
             if (string.IsNullOrWhiteSpace(receipt.ContractDigest)
-                || !string.Equals(receipt.ContractDigest, observedDigest, StringComparison.Ordinal))
+                || !RunContractJson.MatchesDigest(receipt.ContractDigest, contract))
             {
                 Add(EvidenceRules.ReceiptIncomplete, FindingCategory.ContractIncomplete, FindingSeverity.Error, FindingStatus.Unknown,
                     "stored contract does not match the digest captured when the run finished; a later edit cannot reinterpret this run's evidence.", [], ["contract", "receipt.contractDigest"]);

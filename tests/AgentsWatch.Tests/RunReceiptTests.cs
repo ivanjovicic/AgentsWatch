@@ -170,10 +170,14 @@ public sealed class RunReceiptTests
 
         var o = new StringWriter();
         var e = new StringWriter();
-        Assert.Equal(0, ReceiptCommand.Show(repo.Root, ["show", run], o, e));
+        // AW-FIX-DIGEST-001 (owner plan 2026-11-10): a digest mismatch now fails show (exit 1, UNTRUSTED)
+        // and handoff (exit 1, nothing written) instead of warning with exit 0.
+        Assert.Equal(1, ReceiptCommand.Show(repo.Root, ["show", run], o, e));
         Assert.Contains("digest mismatch", e.ToString());
+        Assert.StartsWith("UNTRUSTED", o.ToString());
         Assert.Equal(1, ReceiptCommand.Show(repo.Root, ["show", "nope"], new StringWriter(), new StringWriter()));
-        Assert.Equal(0, ReceiptCommand.Handoff(repo.Root, [run], new StringWriter(), new StringWriter()));
+        Assert.Equal(1, ReceiptCommand.Handoff(repo.Root, [run], new StringWriter(), new StringWriter()));
+        Assert.False(File.Exists(Path.Combine(repo.Root, ".ai", "handoffs", run + ".md.tmp")));
     }
 
     [Fact]
