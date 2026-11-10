@@ -741,6 +741,52 @@ public sealed class ExecutorIdentityFlowTests
         Assert.False(new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root)).Check(run).Ok);
     }
 
+    // Review finding m2: duplicate keys. System.Text.Json binds the LAST duplicate (and JsonElement.TryGetProperty
+    // also matches the last one), so a shadowed earlier "verified" is invisible to validation and to the digest,
+    // yet a first-wins reader would see it. The receipt's digest stays valid here (it covers the bound values only),
+    // so only an explicit duplicate-key check can reject it.
+    [Theory]
+    [InlineData("status-shadowed-verified")]
+    [InlineData("status-repeated-same")]
+    [InlineData("authorship-shadowed-true")]
+    [InlineData("identity-object-duplicated")]
+    public async Task Negative_DuplicateExecutorIdentityKeys_AreRejected(string variant)
+    {
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: "Claude"));
+        using var cleanup = repo;
+        repo.Write(LogPath, V2Log("Codex", "OpenAI", "gpt-6"));
+        var (exit, _, err) = await FinishCli(repo, run, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+
+        var text = ReceiptText(repo, run);
+        var status = Receipt(repo, run).GetProperty("executorIdentity").GetProperty("status").GetString();
+        const string open = "\"executorIdentity\": {";
+        Assert.Contains(open, text);
+        var forged = variant switch
+        {
+            "status-shadowed-verified" => text.Replace(open, open + "\n    \"status\": \"verified\","),
+            "status-repeated-same" => text.Replace(open, open + "\n    \"status\": \"" + status + "\","),
+            "authorship-shadowed-true" => text.Replace(open, open + "\n    \"authorshipVerified\": true,"),
+            "identity-object-duplicated" => text.Replace(open, "\"executorIdentity\": { \"status\": \"verified\", \"authorshipVerified\": true },\n  " + open),
+            _ => throw new ArgumentOutOfRangeException(nameof(variant))
+        };
+        Assert.NotEqual(text, forged);
+
+        // Precondition: the forged file still carries a valid digest over the bound (last-wins) content.
+        Assert.True(RunReceiptJson.VerifyDigest(JsonSerializer.Deserialize<RunReceipt>(forged, RunContractJson.Options)!),
+            "the duplicate must be invisible to the digest so that only duplicate-key validation can reject it");
+
+        var ex = Assert.Throws<InvalidDataException>(() => RunReceiptJson.Deserialize(forged));
+        Assert.Contains("duplicate", ex.Message);
+        Assert.Contains("executorIdentity", ex.Message);
+
+        File.WriteAllText(new FileRunReceiptStore(repo.Root).PathFor(run), forged);
+        var e = new StringWriter();
+        Assert.Equal(1, ReceiptCommand.Show(repo.Root, ["show", run], new StringWriter(), e));
+        Assert.Contains("duplicate", e.ToString());
+        Assert.False(new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root)).Check(run).Ok);
+    }
+
     private static bool TryLinkDirectory(string link, string target)
     {
         try
