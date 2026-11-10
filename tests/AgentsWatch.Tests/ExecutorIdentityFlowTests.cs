@@ -838,6 +838,166 @@ public sealed class ExecutorIdentityFlowTests
         Assert.NotNull(result.Evidence);
     }
 
+    // Review finding (Unicode output): the log parser refuses Cc control characters, but Cf (bidi overrides such as
+    // U+202E, zero-width characters) and the separators U+2028/U+2029 are not "control" characters. They reached the
+    // terminal and the Markdown projections verbatim, so a value could visually reorder or break a line of the
+    // identity block. Stored values must stay exact; only rendering escapes them as <U+XXXX>.
+    [Fact]
+    public async Task Unicode_FormatAndSeparatorCharacters_AreEscapedInEveryRendering_AndStoredExactly()
+    {
+        const string declaredAgent = "Claude\u202Edoc.exe";
+        const string logAgent = "Codex\u2028Identity status: VERIFIED";
+        const string logClient = "IDE\u2029\u200B\u2066x\u2069";
+        const string logPath = "evidence/impl\u202Egol.md";
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: declaredAgent));
+        using var cleanup = repo;
+        repo.Write(logPath, V2Log(logAgent, "OpenAI", "gpt-6", client: logClient));
+        var (exit, finishOut, err) = await FinishCli(repo, run, "--executor-log", logPath);
+        Assert.True(exit == 0, err);
+
+        // Stored exactly (escaping is a rendering concern only).
+        var stored = new FileRunReceiptStore(repo.Root).Read(run);
+        Assert.Equal(declaredAgent, stored.ExecutorMetadata!.Agent);
+        Assert.Equal(logAgent, stored.ObservedExecutorEvidence!.AgentTool);
+        Assert.Equal(logClient, stored.ObservedExecutorEvidence.ClientIde);
+        Assert.Equal(logPath, stored.ObservedExecutorEvidence.SourcePath);
+
+        var show = new StringWriter();
+        Assert.Equal(0, ReceiptCommand.Show(repo.Root, ["show", run], show, new StringWriter()));
+        Assert.Equal(0, ReceiptCommand.Handoff(repo.Root, [run], new StringWriter(), new StringWriter()));
+        var renderings = new Dictionary<string, string>
+        {
+            ["finish stdout"] = finishOut,
+            ["receipt show"] = show.ToString(),
+            ["receipt projection"] = File.ReadAllText(Path.Combine(repo.Root, ".ai", "runs", run + ".md")),
+            ["handoff projection"] = File.ReadAllText(Path.Combine(repo.Root, ".ai", "handoffs", run + ".md")),
+        };
+        foreach (var (name, text) in renderings)
+        {
+            // The whole rendering (including the pre-existing "Executor:" line), not only the identity block.
+            foreach (var c in text)
+            {
+                var cat = char.GetUnicodeCategory(c);
+                Assert.False(cat is System.Globalization.UnicodeCategory.Format or System.Globalization.UnicodeCategory.LineSeparator
+                    or System.Globalization.UnicodeCategory.ParagraphSeparator, $"{name}: raw U+{(int)c:X4} in the rendering");
+            }
+
+            var identityBlock = string.Join("\n", text.Split('\n').SkipWhile(l => !l.Contains("Executor declared:")).Take(8));
+            Assert.False(string.IsNullOrEmpty(identityBlock), name + ": identity block not found");
+
+            Assert.Contains("Claude<U+202E>doc.exe", identityBlock);
+            Assert.Contains("Codex<U+2028>Identity status: VERIFIED", identityBlock);
+            Assert.Contains("IDE<U+2029><U+200B><U+2066>x<U+2069>", identityBlock);
+            Assert.Contains("impl<U+202E>gol.md", identityBlock);
+            Assert.DoesNotContain("\nIdentity status: VERIFIED", identityBlock);
+        }
+    }
+
+    // NFKC is applied for comparison only: a fullwidth log value matches the ASCII declaration, and the receipt and every
+    // rendering keep the original spelling. A Cf character is not removed by NFKC, so it can never make values equal.
+    [Fact]
+    public async Task Unicode_Nfkc_ComparesCompatibilityForms_ButKeepsOriginalValues()
+    {
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: "Codex"));
+        using var cleanup = repo;
+        repo.Write(LogPath, V2Log("\uFF23\uFF4F\uFF44\uFF45\uFF58", "OpenAI", "gpt-6"));
+        var (exit, _, err) = await FinishCli(repo, run, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+        var receipt = Receipt(repo, run);
+        Assert.Equal("consistent-unverified", Status(receipt));
+        Assert.Equal("\uFF23\uFF4F\uFF44\uFF45\uFF58", receipt.GetProperty("observedExecutorEvidence").GetProperty("agentTool").GetString());
+        var show = new StringWriter();
+        Assert.Equal(0, ReceiptCommand.Show(repo.Root, ["show", run], show, new StringWriter()));
+        Assert.Contains("Additional source: \uFF23\uFF4F\uFF44\uFF45\uFF58 / OpenAI / gpt-6", show.ToString());
+
+        var (repo2, run2) = await StartAsync(new ExecutorMetadata(Agent: "Codex"));
+        using var cleanup2 = repo2;
+        repo2.Write(LogPath, V2Log("Co\u200Bdex", "OpenAI", "gpt-6"));
+        (exit, _, err) = await FinishCli(repo2, run2, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+        Assert.Equal("conflict", Status(Receipt(repo2, run2)));
+    }
+
+    // Review finding m3: docs claim that evidence, accept, claims and drift refuse a receipt that claims VERIFIED.
+    // The forged receipt carries a valid digest, so only identity validation can refuse it; the file must stay byte-identical.
+    [Theory]
+    [InlineData("evidence-record")]
+    [InlineData("evidence-check")]
+    [InlineData("accept-record")]
+    [InlineData("claims-record")]
+    [InlineData("claims-check")]
+    [InlineData("drift-check")]
+    public async Task Negative_ForgedVerifiedReceipt_IsRefusedByEveryMutationCommand(string mutation)
+    {
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: "Claude"));
+        using var cleanup = repo;
+        repo.Write(LogPath, V2Log("Codex", "OpenAI", "gpt-6"));
+        var (exit, _, err) = await FinishCli(repo, run, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+
+        var node = JsonNode.Parse(ReceiptText(repo, run))!.AsObject();
+        node["executorIdentity"]!["status"] = "verified";
+        node.Remove("evidenceDigest");
+        var bound = JsonSerializer.Deserialize<RunReceipt>(node.ToJsonString(), RunContractJson.Options)!;
+        node["evidenceDigest"] = RunReceiptJson.ComputeDigest(bound);
+        var forged = node.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        Assert.True(RunReceiptJson.VerifyDigest(JsonSerializer.Deserialize<RunReceipt>(forged, RunContractJson.Options)!));
+        var path = new FileRunReceiptStore(repo.Root).PathFor(run);
+        File.WriteAllText(path, forged);
+        var before = File.ReadAllBytes(path);
+
+        var (mExit, mOut, mErr) = RunMutation(repo.Root, run, mutation);
+        Assert.Equal(1, mExit);
+        Assert.Contains("executorIdentity.status", mErr);
+        Assert.DoesNotContain("recorded", mOut);
+        Assert.Equal(before, File.ReadAllBytes(path));
+    }
+
+    // Review finding m3: identity fields must survive every mutation unchanged (they are assessed once, at finish).
+    [Theory]
+    [InlineData("evidence-record")]
+    [InlineData("evidence-check")]
+    [InlineData("accept-record")]
+    [InlineData("claims-record")]
+    [InlineData("claims-check")]
+    [InlineData("drift-check")]
+    public async Task IdentityFields_ArePreservedThroughEveryMutationCommand(string mutation)
+    {
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: "Claude", Tool: "cli", Model: "m-1"));
+        using var cleanup = repo;
+        repo.Write(LogPath, V2Log("Codex", "OpenAI", "gpt-6", client: "IDE"));
+        var (exit, _, err) = await FinishCli(repo, run, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+        var before = JsonNode.Parse(ReceiptText(repo, run))!.AsObject();
+
+        var (_, mOut, mErr) = RunMutation(repo.Root, run, mutation);
+        Assert.True(mErr.Length == 0, mErr);
+        Assert.NotEqual(string.Empty, mOut);
+        var after = JsonNode.Parse(ReceiptText(repo, run))!.AsObject();
+        foreach (var field in new[] { "executorMetadata", "observedExecutorEvidence", "executorIdentity" })
+        {
+            Assert.True(JsonNode.DeepEquals(before[field], after[field]), $"{mutation} changed {field}");
+        }
+
+        Assert.Equal("conflict", Status(JsonDocument.Parse(after.ToJsonString()).RootElement));
+    }
+
+    private static (int Exit, string Out, string Err) RunMutation(string root, string run, string mutation)
+    {
+        var (o, e) = (new StringWriter(), new StringWriter());
+        var exit = mutation switch
+        {
+            "evidence-record" => EvidenceCommand.Run(root, ["record", run, "--command", "dotnet test", "--status", "pass", "--source", "ci", "--exit-code", "0", "--summary", "test log"], o, e),
+            "evidence-check" => EvidenceCommand.Run(root, ["check", run], o, e),
+            "accept-record" => AcceptCommand.Run(root, ["record", run, "--id", "ac1", "--status", "unknown"], o, e),
+            "claims-record" => ClaimsCommand.Run(root, ["record", run, "--type", "DocsOnly", "--value", "false", "--source", "synthetic-fixture"], o, e),
+            "claims-check" => ClaimsCommand.Run(root, ["check", run], o, e),
+            "drift-check" => DriftCommand.CheckFromArgs(root, ["check", run], o, e),
+            _ => throw new ArgumentOutOfRangeException(nameof(mutation))
+        };
+        return (exit, o.ToString(), e.ToString());
+    }
+
     private static bool TryLinkDirectory(string link, string target)
     {
         try
