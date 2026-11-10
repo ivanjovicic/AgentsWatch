@@ -98,3 +98,18 @@ Validation not run: no production or deploy steps (none apply). The file-symlink
   - So `031c5110…` is verifiable only on that machine or through the stated transform, not from a fresh checkout. The authoritative hash of the committed fixture is `f6c056ae…`.
   - The test logic does not depend on either file hash: it deserializes the content and compares digests.
 - Neither correction changes product code or test logic. The other review findings (VERIFIED bypass via a comma enum list, FIFO, hard links, Unicode, test gaps, accept/claims) await an owner decision and are not implemented here.
+
+## Addendum 2026-11-10 (owner-approved blocking fix: VERIFIED bypass)
+
+- Finding (independent review of head 5df365b): the load check matched only the exact string `verified` (ignoring case). The default `JsonStringEnumConverter` also binds comma-separated lists and numeric strings: `"unknown, verified"` and `"4"` became `Verified`; `"conflict,verified"` and `"7"` became undefined values. An attacker can recompute a valid evidence digest whenever the value round-trips through the serializer.
+- RED (commit `ee576f8`, test only, `src/` unchanged): `dotnet test tests/AgentsWatch.Tests/AgentsWatch.Tests.csproj -c Release --no-build --filter FullyQualifiedName~Negative_ForgedIdentityStatusVariant` → **exit 1, 11 total, 8 failed, 3 passed** on both Linux (box, .NET 8) and Windows (DESKTOP-V877DAD).
+  - Loaded with no error, which is a bypass: `"unknown, verified"`, `"4"` and `"declared-only, consistent-unverified"`, all three with a recomputed valid digest; also `"conflict,verified"` and `"7"`, undefined values that cannot be serialized, so they had no valid digest.
+  - Rejected only by a generic `JsonException`, not by the identity rule: `4`, `7` (JSON numbers) and `"declared-only,verified"`.
+  - Passed already (exact-casing variants of `verified`): `"Verified"`, `"VERIFIED"`, `"vErIfIeD"`.
+- Fix (commit `bc07d9f`):
+  - On the raw JSON, `executorIdentity.status` must be a string exactly equal to `unknown`, `declared-only`, `consistent-unverified` or `conflict` (ordinal).
+  - After binding, `Verified`, any undefined value and `authorshipVerified=true` are rejected (defense in depth).
+  - `docs/EXECUTOR_IDENTITY.md` now describes this rule.
+  - No custom converter, no schema change, and nothing changes for receipts written by this version.
+- GREEN: full Release gate on Linux (box) exit 0, 250/250. Windows and CI results for the final head are in the PR body.
+- Other review findings (FIFO, hard links, Unicode, test gaps, accept/claims) await an owner decision and are not implemented.
