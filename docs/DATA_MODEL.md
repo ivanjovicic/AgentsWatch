@@ -360,6 +360,8 @@ executorIdentity?           (AW-FIX-EXECUTOR-001; omitted when null)
 their stored digest (re-serialization matches only after line-ending normalization, not byte-for-byte);
 see `docs/EXECUTOR_IDENTITY.md`. No field proves authorship.
 
+`evidenceDigest` and `contractDigest` use the platform-independent canonical form in `docs/DIGEST_CANONICALIZATION.md`.
+
 Do **not** require these as canonical audit fields:
 
 ```text

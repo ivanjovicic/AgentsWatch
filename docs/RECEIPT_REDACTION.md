@@ -49,6 +49,8 @@ Scope drift is evaluated on raw paths, then paths are stored in redacted form. A
 
 `evidenceDigest` is `sha256` over the canonical JSON **with the digest field omitted**, after redaction. Integrity verification therefore answers: “does this published receipt still match the bytes that were signed?” It does not preserve or authenticate the raw operator input that was redacted.
 
+The canonical JSON is line-ending normalized (LF, UTF-8 without BOM), so the digest is the same on every OS. Legacy Windows (CRLF) digests are still verified. See `docs/DIGEST_CANONICALIZATION.md`.
+
 Consequences:
 
 1. A stored receipt that contains `[redacted]` and a matching digest is intact as published.

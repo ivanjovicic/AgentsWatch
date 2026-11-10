@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using AgentsWatch.Core.Contracts;
 
@@ -127,13 +125,19 @@ public static class RunReceiptJson
         return RejectUnassignableIdentity(JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null."));
     }
 
-    /// <summary>sha256 over the canonical JSON with evidenceDigest omitted.</summary>
-    public static string ComputeDigest(RunReceipt r) =>
-        "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Serialize(r with { EvidenceDigest = null })))).ToLowerInvariant();
+    /// <summary>
+    /// sha256 over the canonical (LF, UTF-8 without BOM) JSON with evidenceDigest omitted; see
+    /// <see cref="CanonicalJsonDigest"/> and docs/DIGEST_CANONICALIZATION.md. Independent of the OS that computes it.
+    /// </summary>
+    public static string ComputeDigest(RunReceipt r) => CanonicalJsonDigest.Compute(Serialize(r with { EvidenceDigest = null }));
 
     public static RunReceipt WithDigest(RunReceipt r) => r with { EvidenceDigest = ComputeDigest(r) };
 
-    public static bool VerifyDigest(RunReceipt r) => r.EvidenceDigest is not null && r.EvidenceDigest == ComputeDigest(r);
+    /// <summary>Which accepted form the stored digest matches: canonical LF, legacy CRLF (pre-fix Windows), or none.</summary>
+    public static DigestForm MatchDigest(RunReceipt r) => CanonicalJsonDigest.Match(r.EvidenceDigest, Serialize(r with { EvidenceDigest = null }));
+
+    /// <summary>True when the stored digest matches the receipt's current content in the canonical or the legacy CRLF form.</summary>
+    public static bool VerifyDigest(RunReceipt r) => MatchDigest(r) != DigestForm.None;
 
     public static void EnsureStoredDigest(RunReceipt r)
     {

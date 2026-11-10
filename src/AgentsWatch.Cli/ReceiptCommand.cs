@@ -7,6 +7,8 @@ namespace AgentsWatch.Cli;
 /// <summary>`receipt show <run-id>` and `handoff <run-id>`: projections regenerated from canonical JSON.</summary>
 internal static class ReceiptCommand
 {
+    internal const string UntrustedBanner = "UNTRUSTED - evidence digest mismatch: this receipt's content does not match its stored digest. Do not rely on anything below.";
+
     public static int Show(string root, string[] args, TextWriter? output = null, TextWriter? error = null)
     {
         var o = output ?? Console.Out;
@@ -22,12 +24,17 @@ internal static class ReceiptCommand
             return 1;
         }
 
-        o.Write(ReceiptMarkdownWriter.Write(receipt));
         if (!RunReceiptJson.VerifyDigest(receipt))
         {
-            e.WriteLine("warning: evidence digest mismatch; canonical receipt may have been edited.");
+            // Rendered only for inspection, under an explicit UNTRUSTED banner, and the command fails.
+            o.WriteLine(UntrustedBanner);
+            o.WriteLine();
+            o.Write(ReceiptMarkdownWriter.Write(receipt));
+            e.WriteLine("error: UNTRUSTED receipt: evidence digest mismatch; the stored digest does not match the receipt content (edited, or digest missing/replaced).");
+            return 1;
         }
 
+        o.Write(ReceiptMarkdownWriter.Write(receipt));
         return 0;
     }
 
@@ -43,6 +50,13 @@ internal static class ReceiptCommand
 
         if (!TryLoad(root, args[0], e, out var receipt))
         {
+            return 1;
+        }
+
+        if (!RunReceiptJson.VerifyDigest(receipt))
+        {
+            // Never derive a projection from an untrusted receipt; existing projection files are left as they are.
+            e.WriteLine("error: UNTRUSTED receipt: evidence digest mismatch; refusing to write a handoff or receipt projection.");
             return 1;
         }
 
