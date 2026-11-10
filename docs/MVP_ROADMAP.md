@@ -342,6 +342,17 @@ Only after comparable external/dogfood evidence:
 - route only when evidence supports it;
 - otherwise return `unknown`.
 
+The owner-requested **task-difficulty and model-choice advisory** is scoped in
+[MODEL_ROUTING_ADVISORY_RFC_2026_11_10.md](MODEL_ROUTING_ADVISORY_RFC_2026_11_10.md)
+(AW-ROUTE-RFC-001). It separates difficulty, operational risk and confidence;
+recommends capability classes before specific available models; remains manual,
+offline and derived from canonical verification evidence. Its phased AW-ROUTE-001..
+004 plan is **a gated proposal only**, not permission to implement, dispatch,
+spend, count new useful REAL runs or alter AW-VFY-010's ADJUST/PAUSE status.
+It must demonstrate incremental value against a manual and a simple-model
+baseline before considering empirical or automatic routing. PR #22's optional
+orchestration companion can consume its advisory output after separate approvals.
+
 ## Phase 13 — Thin integrations
 
 Preferred order after stable contracts and external-value proof:
