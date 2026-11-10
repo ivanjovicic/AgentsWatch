@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "runId": "digest-fixture-20261110t104944z-dc3397",
+  "contractId": "digest-fixture",
+  "taskId": "DIGEST-FIXTURE",
+  "startedAtUtc": "2026-11-10T10:49:44.6903649+00:00",
+  "finishedAtUtc": "2026-11-10T10:49:45.3496419+00:00",
+  "executorMetadata": {
+    "agent": "synthetic-agent",
+    "tool": "synthetic-tool",
+    "model": "synthetic-model"
+  },
+  "startRepositoryState": {
+    "branch": "main",
+    "headCommitSha": "36567881471b88fea8696f613fc1fe8930f7f673",
+    "worktreeState": {
+      "porcelainVersion": "v1-z",
+      "staged": [],
+      "unstaged": [],
+      "untracked": [
+        {
+          "path": ".ai/CHANGELOG_AI.md",
+          "status": "??",
+          "fingerprint": "sha256:c742d873fa304d4fa2da1f37bb997797a6580f2281847f0fb6b7e71a88735ab8"
+        },
+        {
+          "path": ".ai/REVIEW_CHECKLIST.md",
+          "status": "??",
+          "fingerprint": "sha256:ab3425dbb25c45a4f1acd1f30c6bfaac14ccf289855be8947248c467b0a4e9ba"
+        },
+        {
+          "path": ".ai/STATUS.md",
+          "status": "??",
+          "fingerprint": "sha256:039c7dd461f4f57b9172f6ed92958cef3f7b845d29cef1ef537abc832fae69c6"
+        },
+        {
+          "path": ".ai/config.yml",
+          "status": "??",
+          "fingerprint": "sha256:837e3b7cbe79dd78a67b625dbb157953070f44af64eee861bc38a9a3757f69b7"
+        }
+      ],
+      "stateFingerprint": "sha256:68d9da6e2a74bae7cd240a3ecfd2b7f79d5fcd7fa314dc190bf7408bc027f812"
+    }
+  },
+  "endRepositoryState": {
+    "branch": "main",
+    "headCommitSha": "36567881471b88fea8696f613fc1fe8930f7f673",
+    "worktreeState": {
+      "porcelainVersion": "v1-z",
+      "staged": [],
+      "unstaged": [
+        {
+          "path": "a.txt",
+          "status": "M",
+          "fingerprint": "sha256:c490595b3eacb7256f98f2ee40f45e3c3ce8c82b37804bc45a771ee38aa56898"
+        }
+      ],
+      "untracked": [
+        {
+          "path": ".ai/CHANGELOG_AI.md",
+          "status": "??",
+          "fingerprint": "sha256:c742d873fa304d4fa2da1f37bb997797a6580f2281847f0fb6b7e71a88735ab8"
+        },
+        {
+          "path": ".ai/REVIEW_CHECKLIST.md",
+          "status": "??",
+          "fingerprint": "sha256:ab3425dbb25c45a4f1acd1f30c6bfaac14ccf289855be8947248c467b0a4e9ba"
+        },
+        {
+          "path": ".ai/STATUS.md",
+          "status": "??",
+          "fingerprint": "sha256:039c7dd461f4f57b9172f6ed92958cef3f7b845d29cef1ef537abc832fae69c6"
+        },
+        {
+          "path": ".ai/config.yml",
+          "status": "??",
+          "fingerprint": "sha256:837e3b7cbe79dd78a67b625dbb157953070f44af64eee861bc38a9a3757f69b7"
+        }
+      ],
+      "stateFingerprint": "sha256:31996ba44e10e8d83f4ac44dfae1b6664710fb545816295fc016d5995b7dfa27"
+    }
+  },
+  "headTransition": {
+    "kind": "unchanged",
+    "fromCommitSha": "36567881471b88fea8696f613fc1fe8930f7f673",
+    "toCommitSha": "36567881471b88fea8696f613fc1fe8930f7f673",
+    "fromBranch": "main",
+    "toBranch": "main",
+    "committedChanges": [],
+    "branchChanged": false
+  },
+  "runDelta": {
+    "runIntervalChanges": [
+      {
+        "path": "a.txt",
+        "status": "M",
+        "classification": "run-interval-change",
+        "classificationReason": "clean at start, changed during interval (worktree/index); authorship not proven"
+      }
+    ],
+    "preExistingUnchangedChanges": [
+      {
+        "path": ".ai/CHANGELOG_AI.md",
+        "status": "??",
+        "classification": "pre-existing-unchanged",
+        "classificationReason": "dirty at start; identical staged/unstaged/untracked fingerprints at end"
+      },
+      {
+        "path": ".ai/REVIEW_CHECKLIST.md",
+        "status": "??",
+        "classification": "pre-existing-unchanged",
+        "classificationReason": "dirty at start; identical staged/unstaged/untracked fingerprints at end"
+      },
+      {
+        "path": ".ai/STATUS.md",
+        "status": "??",
+        "classification": "pre-existing-unchanged",
+        "classificationReason": "dirty at start; identical staged/unstaged/untracked fingerprints at end"
+      },
+      {
+        "path": ".ai/config.yml",
+        "status": "??",
+        "classification": "pre-existing-unchanged",
+        "classificationReason": "dirty at start; identical staged/unstaged/untracked fingerprints at end"
+      }
+    ],
+    "preExistingChangedFurther": [],
+    "attributionAmbiguities": [],
+    "endBranch": "main",
+    "endHeadCommitSha": "36567881471b88fea8696f613fc1fe8930f7f673"
+  },
+  "validations": [],
+  "claims": [],
+  "acceptanceCriteria": [
+    {
+      "criterionId": "ac1",
+      "text": "fixture works",
+      "status": "unknown",
+      "evidenceRefs": [],
+      "reason": "not evaluated; mark with agentswatch accept record and link recorded validation evidence"
+    }
+  ],
+  "findings": [
+    {
+      "findingId": "e1",
+      "ruleId": "AWE002",
+      "category": "missing-validation",
+      "severity": "error",
+      "status": "unsupported",
+      "message": "mandatory validation \u0027v1\u0027 (dotnet test) has no evidence; agent prose is not evidence.",
+      "paths": [],
+      "evidenceRefs": [
+        "contract.validationContract.requirements[v1]"
+      ],
+      "runId": "digest-fixture-20261110t104944z-dc3397",
+      "contractId": "digest-fixture"
+    },
+    {
+      "findingId": "e2",
+      "ruleId": "AWE006",
+      "category": "missing-validation",
+      "severity": "warning",
+      "status": "unsupported",
+      "message": "expected evidence \u0027test log\u0027 is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it.",
+      "paths": [],
+      "evidenceRefs": [
+        "contract.expectedEvidence[test log]"
+      ],
+      "runId": "digest-fixture-20261110t104944z-dc3397",
+      "contractId": "digest-fixture"
+    },
+    {
+      "findingId": "e3",
+      "ruleId": "AWE007",
+      "category": "acceptance-criterion-unsupported",
+      "severity": "warning",
+      "status": "unknown",
+      "message": "acceptance criterion \u0027ac1\u0027 is unknown and cannot support completion.",
+      "paths": [],
+      "evidenceRefs": [
+        "acceptanceCriteria[ac1]"
+      ],
+      "runId": "digest-fixture-20261110t104944z-dc3397",
+      "contractId": "digest-fixture"
+    }
+  ],
+  "decision": {
+    "status": "needs-evidence",
+    "reasons": [
+      "AWE002: mandatory validation \u0027v1\u0027 (dotnet test) has no evidence; agent prose is not evidence. [contract.validationContract.requirements[v1]]",
+      "AWE006: expected evidence \u0027test log\u0027 is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it. [contract.expectedEvidence[test log]]",
+      "AWE007: acceptance criterion \u0027ac1\u0027 is unknown and cannot support completion. [acceptanceCriteria[ac1]]"
+    ]
+  },
+  "missedWork": [],
+  "attributionPolicy": "Changes are classified by comparing start baseline fingerprints with end state. RunIntervalChange means observed during the recorded interval, not proven authored by the selected executor: Git cannot distinguish concurrent writers (humans, other agents, tools). Unprovable cases are Ambiguous.",
+  "evidenceDigest": "sha256:cfc059489df91e10ab07169349e8d71e6183b94ef3be5daeec18b0d429fc299a",
+  "contractDigest": "sha256:9f5d9cf88ff5bbfc447630ad489e74c4059169bf6edc28daa954925c50615144"
+}

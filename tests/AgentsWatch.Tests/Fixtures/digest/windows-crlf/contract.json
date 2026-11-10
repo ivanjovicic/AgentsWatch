@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "contractId": "digest-fixture",
+  "taskId": "DIGEST-FIXTURE",
+  "intent": "synthetic digest fixture (AW-FIX-DIGEST-001)",
+  "acceptanceCriteria": [
+    "fixture works"
+  ],
+  "ownedPaths": [
+    "**"
+  ],
+  "avoidPaths": [],
+  "permissionMode": "workspace-write",
+  "runMode": "implementation",
+  "validationContract": {
+    "requirements": [
+      {
+        "id": "v1",
+        "command": "dotnet test",
+        "mandatory": true
+      }
+    ]
+  },
+  "stopRules": [
+    "stop on failure"
+  ],
+  "expectedEvidence": [
+    "test log"
+  ],
+  "createdAtUtc": "2026-11-10T10:49:43.9477121+00:00",
+  "criterionValidationBindings": [
+    {
+      "criterionId": "ac1",
+      "commands": [
+        "dotnet test"
+      ]
+    }
+  ]
+}
