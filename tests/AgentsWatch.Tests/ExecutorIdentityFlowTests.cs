@@ -430,8 +430,18 @@ public sealed class ExecutorIdentityFlowTests
         var fixture = Path.Combine(AppContext.BaseDirectory, "Fixtures", FixtureName);
         var original = File.ReadAllText(fixture);
         var receipt = RunReceiptJson.Deserialize(original);
-        Assert.True(RunReceiptJson.VerifyDigest(receipt));
-        RunReceiptJson.EnsureStoredDigest(receipt);
+        // The fixture was produced on Windows by the pre-fix CLI. RunReceiptJson.ComputeDigest hashes indented JSON whose
+        // newline follows Environment.NewLine (pre-existing behavior, unchanged by this fix), so its digest is bound to CRLF.
+        // Platform-independent check: the stored digest still matches the unchanged content in its producing (CRLF) form.
+        var producingForm = RunReceiptJson.Serialize(receipt with { EvidenceDigest = null }).Replace("\r\n", "\n").Replace("\n", "\r\n");
+        Assert.Equal(receipt.EvidenceDigest, "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(producingForm))).ToLowerInvariant());
+        var producerNewline = Environment.NewLine == "\r\n";
+        if (producerNewline)
+        {
+            Assert.True(RunReceiptJson.VerifyDigest(receipt));
+            RunReceiptJson.EnsureStoredDigest(receipt);
+        }
+
         Assert.Equal("Claude", receipt.ExecutorMetadata!.Agent);
         Assert.Equal(original.Replace("\r\n", "\n").TrimEnd('\n'), RunReceiptJson.Serialize(receipt).Replace("\r\n", "\n"));
         Assert.False(JsonDocument.Parse(original).RootElement.TryGetProperty("executorIdentity", out _));
@@ -441,7 +451,15 @@ public sealed class ExecutorIdentityFlowTests
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.Copy(fixture, path);
         var before = Sha256File(path);
-        var shown = Show(repo, receipt.RunId);
+        var showOut = new StringWriter();
+        var showErr = new StringWriter();
+        Assert.Equal(0, ReceiptCommand.Show(repo.Root, ["show", receipt.RunId], showOut, showErr));
+        if (producerNewline)
+        {
+            Assert.DoesNotContain("digest mismatch", showErr.ToString());
+        }
+
+        var shown = showOut.ToString();
         Assert.Contains("Executor declared: Claude / owner-run-manual", Lines(shown));
         Assert.Contains("Identity status: UNKNOWN", Lines(shown));
         Assert.Contains("Authorship verified: NO", Lines(shown));

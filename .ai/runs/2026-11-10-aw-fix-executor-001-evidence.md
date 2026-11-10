@@ -57,13 +57,16 @@ Validation run (local, Windows, .NET SDK 10.0.201 targeting net8.0, Release):
 - GREEN full gate: `dotnet restore AgentsWatch.sln` exit 0; `dotnet build AgentsWatch.sln --configuration Release` exit 0 (0 warnings, 0 errors); `dotnet test AgentsWatch.sln --configuration Release` exit 0: 239 passed, 0 failed, 0 skipped.
 - `git diff --check` clean.
 - `python scripts/validate_agent_evidence.py`: pre-existing baseline on fe1be51 is FAIL (30 FAIL / 236 WARN, all in older queue rows and logs). This log adds no new finding.
-- GitHub CI (ubuntu-latest + windows-latest) on the exact PR head: recorded in the PR body, not here, so this file does not need a follow-up commit.
+- First pushed head `61d1ee6`: local Windows full gate exit 0 (239/239) at that exact SHA. CI run 42790834828 had windows-latest success and ubuntu-latest failure: 1 test, T10 `VerifyDigest` false.
+- Root cause (pre-existing, not introduced here): `RunReceiptJson.ComputeDigest` hashes indented JSON whose newline follows `Environment.NewLine`. The Windows-produced fixture's stored digest `sha256:159bb5a1...` equals SHA-256 of its canonical JSON in CRLF form. On Linux the same unchanged content hashes as LF `sha256:6a9b7d31...`. Reproduced on Linux (box, .NET SDK 8.0.426) with unmodified fe1be51 Core: the same mismatch. `RunContractJson.Options` is untouched by this PR.
+- T10 correction (my own wrong test assumption, not a change to product behavior): T10 now checks the digest platform-independently (stored digest == SHA-256 of the unchanged content in its producing CRLF form). It keeps the strict `VerifyDigest`/`EnsureStoredDigest`/no-mismatch-warning checks where `Environment.NewLine` matches the producer. Every other T10 assertion is unchanged.
+- After the correction, the full Release gate on Linux (box, .NET SDK 8.0.426) exited 0: 239/239 passed. Windows was re-run on the final head. GitHub CI for the final head is recorded in the PR body, so this file does not need a follow-up commit.
 
 Validation not run: no production or deploy steps (none apply). The file-symlink sub-case of T09 runs only where the OS allows unprivileged file symlinks (Linux CI). On Windows without symlink privilege, the directory-junction case is exercised instead.
 
 ## Mistakes observed
 
-- none
+- none matching an AW-MISTAKE-* ledger ID. My own test-assumption error (T10 assumed same-platform digest verification) is recorded under Validation.
 
 ## Missed work
 
@@ -72,6 +75,7 @@ Validation not run: no production or deploy steps (none apply). The file-symlink
 ## Follow-up
 
 - Owner decision: whether `AWI001` CONFLICT should become a NeedsReview decision input. This PR keeps the decision rules unchanged, as the spec requires.
+- Owner decision (pre-existing defect, found here, not fixed): receipt digests depend on the producing OS newline, so a receipt written on Windows fails `VerifyDigest` on Linux and vice versa. Normalizing would change the digest semantics of every historical receipt. Per the spec, I stopped and am reporting it instead of migrating.
 
 ## Residual risk
 
