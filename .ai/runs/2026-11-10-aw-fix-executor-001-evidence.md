@@ -113,3 +113,49 @@ Validation not run: no production or deploy steps (none apply). The file-symlink
   - No custom converter, no schema change, and nothing changes for receipts written by this version.
 - GREEN: full Release gate on Linux (box) exit 0, 250/250. Windows and CI results for the final head are in the PR body.
 - Other review findings (FIFO, hard links, Unicode, test gaps, accept/claims) await an owner decision and are not implemented.
+
+## Addendum 2026-11-10 (owner corrective plan 16:00: review findings after head 1c26381; earlier text above is left as written)
+
+- Reviewer: TECHNICAL GO for head `1c26381` with minor findings m1-m4. Owner ordered points B1-B4 only; merge, T10 strict and
+  the integrated CI wait for a merge GO on #24.
+- B1 re-check of the VERIFIED bypass: the existing 11 cases (comma lists, numeric strings, numbers, undefined values, case
+  variants) and `authorshipVerified=true` still fail closed; confirmed, unchanged.
+- m2 (duplicate keys) reproduced. RED commit `8e5b1f1`: Linux exit 1, 4 failed / 250 passed / 254. A shadowed earlier
+  `"status": "verified"`, a shadowed `"authorshipVerified": true`, a repeated status and a duplicated `executorIdentity`
+  object all loaded with a valid digest (System.Text.Json and `TryGetProperty` are last-wins). Fix commit `3cd292a`.
+- FIFO reproduced (Unix). RED commit `e5ccdb9`: `ExecutorLogReader.Read` on a FIFO blocked in `open(2)`
+  (test: "ExecutorLogReader.Read blocked on a FIFO" after 5 s; the test then unblocks it). Fix commit `dd72479`: file type
+  checked with the runtime's `SystemNative_LStat` before opening; non-regular files refused; interop failure fails closed.
+  Windows: no filesystem FIFOs; on the Windows machine `NUL` resolved to `\\.\NUL` (outside the workspace, refused by the
+  path check) and `CON`/`COM1`/`AUX.txt` inside a directory did not exist as files. The FIFO test is `[UnixOnlyFact]` and is
+  reported as **Skipped** on Windows.
+- Hard link: not refused; documented as a limitation. A hard link inside the workspace to an outside file is
+  indistinguishable from a regular file with the public .NET APIs on both OSes. Characterization test
+  `Limitation_ExecutorLog_HardLinkToOutsideFile_IsReadAsRegularFile` passes on Linux and Windows (libc `link` /
+  `CreateHardLinkW`).
+- Unicode output reproduced. RED commit `e16d9fc` (amended once locally before any push to widen the scan; not rewritten
+  after push): Cf (U+202E, U+200B, U+2066/U+2069) and U+2028/U+2029 in declared values, log fields and the log path reached
+  `finish`, `show` and both projections verbatim. Fix commit `91c2d8b`: identity values rendered with `<U+XXXX>` escapes;
+  stored values unchanged. Disclosed test change in that commit: the scan was narrowed from the whole rendering to the
+  identity block and the `Executor:` line, because changed-file paths in the run-delta lists are older code outside this
+  finding; the narrowed test was re-run against the unfixed projection code and still failed.
+- NFKC: comparison only, original spelling kept; a Cf character never makes values equal. Characterization test passes
+  (documented behavior, no defect).
+- m3 (accept/claims/drift refusal untested): tests added for all six mutation commands with a forged VERIFIED receipt
+  carrying a valid digest (exit 1, `executorIdentity.status` on stderr, file byte-identical) and for identity-field
+  preservation through every mutation. Both passed at first run: the documented claim was true, only untested.
+- m1: `RunReceipt` doc comment corrected (no "exact JSON" claim) in `3cd292a`.
+- m4: the historical text of this log contains local Windows paths (`C:\Users\Ivan\...`, the worktree line in "Claim record"
+  and the fixture-SHA correction). They are left as written, per the no-rewrite rule; they identify a local worktree only and
+  contain no secret. New text uses repository-relative paths.
+- RED (both OSes, `e16d9fc`, Release): Linux exit 1, 6 failed / 264 passed / 270; Windows exit 1, 5 failed / 264 passed /
+  1 skipped (FIFO, Unix-only) / 270.
+- GREEN (`35a8e89`, Release): Linux exit 0, 270/270; Windows exit 0, 269 passed / 1 skipped (FIFO, Unix-only) / 270.
+- Exact-head CI is recorded in the PR body (this file cannot contain the SHA of the commit that adds it).
+- Residuals: duplicate keys outside `executorIdentity` (for example in `observedExecutorEvidence`) are last-wins and not
+  refused; changed-file paths are rendered raw; type-check/open race on Unix; hard links (above).
+
+### Mistakes observed (addendum)
+
+- The first Unicode test scanned 8 lines from "Executor declared:", which in the handoff projection included the
+  "Run-interval files" line; corrected to end at the block's "Reason:" line before the fix commit.
