@@ -72,8 +72,9 @@ public sealed record RunDecision(DecisionStatus Status, IReadOnlyList<string> Re
 /// RunReceipt v1: canonical compact verification evidence at .agentwatch/runs/&lt;run-id&gt;.json.
 /// No learning/nextPrompt/routing/narrative fields; Markdown is a projection.
 /// ExecutorMetadata is the operator-declared executor (declaredExecutor). ObservedExecutorEvidence and
-/// ExecutorIdentity are additive, optional (omitted when null) fields from AW-FIX-EXECUTOR-001, so historical
-/// v1 receipts keep their exact JSON and digest. Neither field proves authorship.
+/// ExecutorIdentity are additive, optional (omitted when null) fields from AW-FIX-EXECUTOR-001, so a historical
+/// v1 receipt still verifies against its stored digest and re-serializes to the same JSON text after line-ending
+/// normalization (not a byte-for-byte guarantee for the file; see docs/EXECUTOR_IDENTITY.md). Neither field proves authorship.
 /// </summary>
 public sealed record RunReceipt(
     int SchemaVersion,
@@ -166,8 +167,26 @@ public static class RunReceiptJson
 
     internal static void ValidateRequiredShape(JsonElement root)
     {
+        // Duplicate keys: System.Text.Json and TryGetProperty both use the LAST occurrence, so an earlier duplicate
+        // (for example a shadowed "status": "verified") would be invisible to the checks below and to the digest,
+        // while a first-wins reader would see it. Refuse any duplicate executorIdentity key, and a repeated object.
+        if (root.ValueKind == JsonValueKind.Object
+            && root.EnumerateObject().Count(p => string.Equals(p.Name, "executorIdentity", StringComparison.Ordinal)) > 1)
+        {
+            throw new InvalidDataException("receipt contains a duplicate executorIdentity property; refusing the receipt.");
+        }
+
         if (root.TryGetProperty("executorIdentity", out var identity) && identity.ValueKind == JsonValueKind.Object)
         {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var property in identity.EnumerateObject())
+            {
+                if (!seen.Add(property.Name))
+                {
+                    throw new InvalidDataException("executorIdentity contains a duplicate key '" + property.Name + "'; refusing the receipt.");
+                }
+            }
+
             // VERIFIED is reserved for a future provenance mechanism. A checksum is not a signature, so a receipt
             // edited to claim it (or to claim verified authorship) is rejected rather than displayed as fact.
             if (identity.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.String
