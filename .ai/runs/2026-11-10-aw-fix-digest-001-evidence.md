@@ -69,6 +69,42 @@ Command on both OSes: `dotnet test tests/AgentsWatch.Tests/AgentsWatch.Tests.csp
 
 Tests that pass on unchanged code are regression guards, not RED: D00 fixture byte-exactness; X04 digest swap; X05 newline-in-string; the same-OS halves of D01–D07 and X03/X06.
 
+## Fix (commit 7ae6359)
+
+- `src/AgentsWatch.Core/CanonicalJsonDigest.cs` (new). Canonical form: the existing serialization with CRLF→LF, UTF-8 without BOM, `"sha256:"` + lowercase hex. `Match` accepts exactly the canonical LF form and the legacy CRLF form, both recomputed from the current content.
+- `RunReceiptJson.ComputeDigest` now writes the canonical form; `VerifyDigest`/`EnsureStoredDigest` accept LF or legacy CRLF; `MatchDigest` (new) reports which form matched.
+- `RunContractJson.ComputeDigest` writes the canonical form; `MatchesDigest` (new) is used by `EvidenceGate` for the stored `contractDigest`, which is kept verbatim.
+- `handoff` now prints the same digest-mismatch warning as `receipt show` (exit code unchanged, 0).
+- Docs: `docs/DIGEST_CANONICALIZATION.md` (new); pointers in `docs/DATA_MODEL.md` and `docs/RECEIPT_REDACTION.md`.
+- GREEN-phase test addition: `D08_MatchDigest_ReportsExactlyWhichAcceptedFormMatched`. It uses the new API, so it was not part of RED.
+- Not changed: `schemaVersion` (still 1), receipt fields, file write format, any historical receipt, contract or evidence file.
+
+## GREEN
+
+- Linux (box, .NET SDK 8.0.426), head 7ae6359: `dotnet build AgentsWatch.sln -c Release` exit 0 (0 warnings, 0 errors); `dotnet test AgentsWatch.sln -c Release` **exit 0, 234/234** passed (197 pre-existing + 37 new).
+- Windows (DESKTOP-V877DAD, .NET SDK 10.0.201 → net8.0), head 7ae6359: `dotnet restore` exit 0; `dotnet build AgentsWatch.sln --configuration Release` exit 0 (0 warnings, 0 errors); `dotnet test AgentsWatch.sln --configuration Release` **exit 0, 234/234**. `git status` clean, and the fixture SHA-256 values match exactly on the Windows checkout (`core.autocrlf=true`, protected by `.gitattributes -text`).
+- `git diff --check` clean.
+- CI for the exact PR head is listed in the PR body (a file cannot contain its own commit SHA).
+
+## T10 (PR #21) strict on both OSes: approach
+
+This PR is independent of #21, so it does not touch #21's T10. Plan, after this PR is merged with a separate owner GO:
+
+1. On `fix/aw-fix-executor-001`, merge `origin/main` with a normal merge commit (no rebase, no force push). There is one trivial conflict in `docs/DATA_MODEL.md`: both PRs add one paragraph after the receipt field list; keep both.
+2. Make T10 strict: remove the `Environment.NewLine == "\r\n"` guard, assert `VerifyDigest`, `EnsureStoredDigest` and `MatchDigest == LegacyCrlf` on every OS, and assert no "digest mismatch" warning from `show` on every OS.
+3. Push normally and require exact-head CI on Windows and Ubuntu.
+
+Proof that the plan works, with nothing pushed: a local throwaway branch on the box (`local/t10-strict-proof` = #21 head `1c26381` merged with this branch, plus the T10 patch) gave `dotnet test AgentsWatch.sln -c Release` **exit 0, 287/287** on Linux, including the strict T10. The same strict T10 failed on Ubuntu CI without this fix (run 42790834828, job 129743529802). The patch is 6 insertions and 15 deletions in `ExecutorIdentityFlowTests.cs`.
+
+## Residuals
+
+- A digest is an integrity checksum, not a signature: anyone who can edit a receipt can recompute a valid digest. Authentication is out of scope.
+- Forward compatibility: a receipt re-signed by this version, or any new receipt, still verifies on pre-fix Linux/macOS builds (same LF form) but **not** on pre-fix Windows builds. They fail closed with a warning on show and a refusal on mutation.
+- Legacy Windows receipts keep their CRLF digest until a mutation command re-signs them in the canonical form. This is existing re-sign-on-mutation behavior; nothing is migrated proactively.
+- `handoff` warns but still writes the projection, consistent with `show`. Whether a mismatch should block `handoff` is an owner decision.
+- Merge interaction with #21: one trivial `docs/DATA_MODEL.md` conflict, described above.
+- Missing claim/lease procedure for corrective tasks: see the Finding above. It needs an owner decision.
+
 ## Mistakes observed
 
 none
