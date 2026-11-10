@@ -108,3 +108,45 @@ Proof that the plan works, with nothing pushed: a local throwaway branch on the 
 ## Mistakes observed
 
 none
+
+## Addendum (2026-11-10, owner corrective plan 16:00): review findings m1-m4
+
+Append-only. The text above is unchanged.
+
+- Reviewer: TECHNICAL GO for head `71cff09`, minor findings m1-m4. Owner ordered the changes below.
+- A1 re-check at `71cff09`: `RunReceiptJson.ComputeDigest` and `RunContractJson.ComputeDigest` both go through
+  `CanonicalJsonDigest.Compute`; verification accepts `CanonicalLf` or `LegacyCrlf`, both recomputed from the
+  bound content; the Evidence Gate uses `RunContractJson.MatchesDigest`. Confirmed, no change.
+- m1 reproduced. Observed at `71cff09` (Linux, fixture workspace): `handoff` on a receipt with edited content or
+  a replaced digest wrote `.ai/runs/<id>.md` and `.ai/handoffs/<id>.md`, printed a warning and exited 0;
+  `receipt show` exited 0 with only a stderr warning.
+- RED commit `3eeef7e` (tests only, `R01`-`R04`):
+  - Linux: `dotnet test -c Release` exit 1, 10 failed / 236 passed / 246. `R01` x4 failed on
+    "no handoff projection may be produced from an untrusted receipt" (the projection was written);
+    `R02` x2 and `R03` x4 failed on exit code (expected 1, actual 0). `R04` (valid legacy fixtures) passed.
+  - Windows: exit 1, the same 10 failed / 236 passed / 246.
+- Fix commit `5b13342`: `handoff` verifies before writing (exit 1, nothing written, existing projections
+  untouched); `show` exits 1 with an `UNTRUSTED - evidence digest mismatch` first line and an UNTRUSTED stderr
+  error. Owner decision; the old exit-0 assertions in `RunReceiptTests.TamperedReceipt_FailsDigest_AndCliShowWarns`
+  and in the tamper helper were changed to the new behavior in the same commit (behavior change, not a weakening).
+- D07 strengthened to exact outcomes. Observed and now asserted per mutation command: exit 1 (decision
+  `NeedsEvidence`; the exit code reports the decision, so success and refusal both exit 1), empty stderr,
+  exact first stdout line, the mutation's own effect, canonical re-sign, `contractDigest` kept. Tamper path:
+  exit 1, empty stdout, exact stderr `error: receipt is invalid: receipt evidence digest does not match its
+  contents.`, receipt byte-identical, no projection.
+- m3: the full M1 regression is only observable where `Environment.NewLine` is CRLF (the `windows-latest` job).
+  Added `D09` (explicit CRLF/LF inputs, runs on every OS) for the canonicalization itself. Documented in Limits.
+- m2/m4: `docs/DIGEST_CANONICALIZATION.md` now separates canonical-content integrity from file byte identity
+  and lists unknown and earlier-duplicate properties as outside the digest. `D10` characterizes BOM/CRLF/compact
+  layout, an unknown property and a shadowed duplicate (all verify) and a changed last duplicate (detected).
+- GREEN at `5b13342`, Release: Linux exit 0, 248/248; Windows exit 0, 248/248.
+- CI: `.github/workflows/ci.yml` builds and tests with `--configuration Release` on `ubuntu-latest` and
+  `windows-latest` (`pull_request` and `push` to `main`). Exact-head CI is recorded in the PR, since this file
+  cannot contain the SHA of the commit that adds it.
+- Note: the historical text of this log contains local Windows paths (`C:\Users\Ivan\...`). They are left as
+  written; no secrets are involved.
+
+### Mistakes observed (addendum)
+
+- A first draft of `D09` used a culture-sensitive `Assert.DoesNotContain` for U+FEFF, which matches the
+  zero-width BOM everywhere; replaced by an ordinal `Contains('\uFEFF')` check before commit.
