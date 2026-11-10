@@ -309,6 +309,23 @@ public static class ExecutorLogReader
             return Refuse("file not found");
         }
 
+        // A FIFO, socket or device passes File.Exists and reports length 0; opening a FIFO for read blocks until a
+        // writer appears. On Unix, refuse anything that is not a regular file before opening it. Windows has no
+        // filesystem FIFOs, and device names (NUL, CON, ...) resolve outside the workspace and fail the check above.
+        if (!OperatingSystem.IsWindows())
+        {
+            var kind = UnixFileKind.Of(full);
+            if (kind is null)
+            {
+                return Refuse("path cannot be inspected safely");
+            }
+
+            if (kind != UnixFileKind.Regular)
+            {
+                return Refuse("not a regular file");
+            }
+        }
+
         byte[] bytes;
         try
         {
@@ -347,5 +364,39 @@ public static class ExecutorLogReader
         }
 
         return new ExecutorLogReadResult(ExecutorLogParser.Parse(bytes, string.Join('/', segments)), null);
+    }
+}
+
+/// <summary>
+/// File type of a path on Unix via the runtime's own native shim (<c>SystemNative_LStat</c>, the call behind
+/// <see cref="FileSystemInfo"/>); its <c>Mode</c> field carries the normalized <c>S_IFMT</c> bits on every Unix.
+/// Fails closed: any interop failure returns null, which callers treat as "cannot be inspected safely".
+/// </summary>
+internal static class UnixFileKind
+{
+    public const int Regular = 0x8000;
+    private const int TypeMask = 0xF000;
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, Size = 512)]
+    private struct FileStatus
+    {
+        public int Flags;
+        public int Mode;
+    }
+
+    [System.Runtime.InteropServices.DllImport("libSystem.Native", EntryPoint = "SystemNative_LStat",
+        CharSet = System.Runtime.InteropServices.CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+    private static extern int LStat(string path, out FileStatus status);
+
+    public static int? Of(string path)
+    {
+        try
+        {
+            return LStat(path, out var status) == 0 ? status.Mode & TypeMask : null;
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or ArgumentException)
+        {
+            return null;
+        }
     }
 }
