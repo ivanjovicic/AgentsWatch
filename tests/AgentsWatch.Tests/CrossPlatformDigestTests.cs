@@ -105,6 +105,28 @@ public sealed class CrossPlatformDigestTests
         Assert.Equal(CanonicalSha256(RunContractJson.Serialize(contract)), computed);
     }
 
+    [Fact]
+    public void D08_MatchDigest_ReportsExactlyWhichAcceptedFormMatched()
+    {
+        using var win = new FixtureWorkspace("windows-crlf");
+        using var lin = new FixtureWorkspace("linux-lf");
+        Assert.Equal(AgentsWatch.Core.DigestForm.LegacyCrlf, RunReceiptJson.MatchDigest(win.ReadReceipt()));
+        Assert.Equal(AgentsWatch.Core.DigestForm.CanonicalLf, RunReceiptJson.MatchDigest(lin.ReadReceipt()));
+        Assert.Equal(AgentsWatch.Core.DigestForm.None, RunReceiptJson.MatchDigest(lin.ReadReceipt() with { EvidenceDigest = null }));
+        Assert.Equal(AgentsWatch.Core.DigestForm.None, RunReceiptJson.MatchDigest(lin.ReadReceipt() with { TaskId = "OTHER" }));
+
+        // Legacy CRLF is accepted on read, but never written: re-signing yields the canonical form.
+        var resigned = RunReceiptJson.WithDigest(win.ReadReceipt() with { EvidenceDigest = null });
+        Assert.Equal(Facts["windows-crlf"].CanonicalEvidenceDigest, resigned.EvidenceDigest);
+        Assert.Equal(AgentsWatch.Core.DigestForm.CanonicalLf, RunReceiptJson.MatchDigest(resigned));
+
+        var winContract = RunContractJson.Deserialize(File.ReadAllText(FixturePath("windows-crlf", "contract.json")));
+        Assert.True(RunContractJson.MatchesDigest(Facts["windows-crlf"].StoredContractDigest, winContract));
+        Assert.True(RunContractJson.MatchesDigest(Facts["windows-crlf"].CanonicalContractDigest, winContract));
+        Assert.False(RunContractJson.MatchesDigest(Facts["linux-lf"].StoredContractDigest, winContract));
+        Assert.False(RunContractJson.MatchesDigest(null, winContract));
+    }
+
     // ---------- read paths ----------
 
     [Theory]

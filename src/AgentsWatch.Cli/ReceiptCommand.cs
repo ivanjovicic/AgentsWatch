@@ -48,6 +48,11 @@ internal static class ReceiptCommand
 
         var paths = new FileReceiptProjectionWriter().Write(root, receipt);
         o.WriteLine("Handoff: " + paths[1]);
+        if (!RunReceiptJson.VerifyDigest(receipt))
+        {
+            e.WriteLine("warning: evidence digest mismatch; canonical receipt may have been edited.");
+        }
+
         return 0;
     }
 

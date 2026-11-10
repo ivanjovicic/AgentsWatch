@@ -353,6 +353,8 @@ missedWork[]
 evidenceDigest?
 ```
 
+`evidenceDigest` and `contractDigest` use the platform-independent canonical form in `docs/DIGEST_CANONICALIZATION.md`.
+
 Do **not** require these as canonical audit fields:
 
 ```text

@@ -231,8 +231,15 @@ public static class RunContractJson
 
     public static string Serialize(RunContract contract) => JsonSerializer.Serialize(contract, Options);
 
-    public static string ComputeDigest(RunContract contract) =>
-        "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Serialize(contract)))).ToLowerInvariant();
+    /// <summary>Canonical (LF, UTF-8 without BOM) digest of the contract; see <see cref="CanonicalJsonDigest"/>.</summary>
+    public static string ComputeDigest(RunContract contract) => CanonicalJsonDigest.Compute(Serialize(contract));
+
+    /// <summary>
+    /// True when <paramref name="storedDigest"/> (captured at start) matches this contract in the canonical or the
+    /// legacy CRLF form (pre-fix Windows). Any content change fails both forms.
+    /// </summary>
+    public static bool MatchesDigest(string? storedDigest, RunContract contract) =>
+        CanonicalJsonDigest.Match(storedDigest, Serialize(contract)) != DigestForm.None;
 
 
     /// <summary>Reads schemaVersion first so unsupported versions fail clearly before shape binding.</summary>
