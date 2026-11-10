@@ -787,6 +787,57 @@ public sealed class ExecutorIdentityFlowTests
         Assert.False(new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root)).Check(run).Ok);
     }
 
+    // Review finding: a FIFO in the workspace passes File.Exists and the 0-byte length check, and opening it for read
+    // blocks until a writer appears, so `finish --executor-log <fifo>` would hang. Unix-only: Windows has no
+    // filesystem FIFOs (named pipes live under \\.\pipe\, and device names such as NUL resolve outside the
+    // workspace and are refused by the path check). Reported as Skipped on Windows, not as passed.
+    [UnixOnlyFact]
+    public void Negative_ExecutorLog_Fifo_IsRefusedWithoutBlocking()
+    {
+        using var ws = new TempDir();
+        Directory.CreateDirectory(Path.Combine(ws.Path, "evidence"));
+        var fifo = Path.Combine(ws.Path, "evidence", "pipe.md");
+        Assert.Equal(0, PosixNative.mkfifo(fifo, Convert.ToUInt32("600", 8)));
+
+        var read = Task.Run(() => ExecutorLogReader.Read(ws.Path, "evidence/pipe.md"));
+        try
+        {
+            Assert.True(read.Wait(TimeSpan.FromSeconds(5)), "ExecutorLogReader.Read blocked on a FIFO");
+            Assert.True(read.Result.Refused);
+            Assert.Contains("not a regular file", read.Result.RefusalReason);
+            Assert.DoesNotContain("pipe.md", read.Result.RefusalReason);
+        }
+        finally
+        {
+            if (!read.IsCompleted)
+            {
+                // Unblock the reader so the test process does not leak a thread stuck in open(2).
+                using var w = new FileStream(fifo, FileMode.Open, FileAccess.Write);
+                read.Wait(TimeSpan.FromSeconds(5));
+            }
+        }
+    }
+
+    // LIMITATION (documented, not fixed): a hard link is the same file under a second name. From inside the workspace a
+    // hard link to a file outside it is indistinguishable from an ordinary regular file with the public .NET APIs on both
+    // OSes, so it is read. This characterization test pins that behavior on both OSes so the limitation stays visible;
+    // see docs/EXECUTOR_IDENTITY.md ("Limits").
+    [Fact]
+    public void Limitation_ExecutorLog_HardLinkToOutsideFile_IsReadAsRegularFile()
+    {
+        using var ws = new TempDir();
+        using var outside = new TempDir();
+        var target = Path.Combine(outside.Path, "outside-log.md");
+        File.WriteAllText(target, V2Log("Codex", "OpenAI", "gpt-6"));
+        Directory.CreateDirectory(Path.Combine(ws.Path, "evidence"));
+        var link = Path.Combine(ws.Path, "evidence", "hard.md");
+        Assert.True(PosixNative.TryCreateHardLink(link, target), "could not create a hard link (same volume required)");
+
+        var result = ExecutorLogReader.Read(ws.Path, "evidence/hard.md");
+        Assert.False(result.Refused, result.RefusalReason);
+        Assert.NotNull(result.Evidence);
+    }
+
     private static bool TryLinkDirectory(string link, string target)
     {
         try
