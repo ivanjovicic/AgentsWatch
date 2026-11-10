@@ -23,4 +23,18 @@ Ordering note: the remote push proves when the preregistration became remote-vis
 
 ## Row 2 - baseline-pregled
 
-Pending. Added as a new row after the blind ChatGPT baseline review is frozen, before `agentswatch finish` / receipt display.
+| Polje | Upis |
+|---|---|
+| Eval run id | `AI-ONLY-EVAL-001` |
+| Vrsta pečata (`predregistracija` ili `baseline-pregled`) | `baseline-pregled` |
+| Relativna putanja zamrznutog fajla | `docs/evidence/ai-only-eval-001/baseline-review-v1.md` |
+| Verzija zapisa (npr. v1; v2 samo ako je stari v1 sačuvan) | v1 |
+| SHA-256 zamrznutih bajtova (hex) | `57465c1eb682b8727319c5238839fcd4555461ff00ed0347e1e539d1b5f1c083` |
+| Alat / komanda heša (npr. `Get-FileHash -Algorithm SHA256`) | `Get-FileHash -Algorithm SHA256` over the committed blob bytes (UTF-8, no BOM, LF). Re-hash with `git show c8df1e654424629507d302812712d3007ac1cc3d:docs/evidence/ai-only-eval-001/baseline-review-v1.md`. |
+| Git commit SHA koji sadrži zamrznuti fajl, ako postoji | `c8df1e654424629507d302812712d3007ac1cc3d` |
+| Da li je taj commit gurnut na remote? URL commit-a ili PR timeline | Yes. https://github.com/ivanjovicic/AgentsWatch/commit/c8df1e654424629507d302812712d3007ac1cc3d on branch `eval/ai-only-001-prereg` (no PR). |
+| Drugi proverljivi dokaz redosleda (potpis, remote zapis) | GitHub repository activity id `49643462044`: `push` of `c8df1e6` to `refs/heads/eval/ai-only-001-prereg` at 2026-11-10T00:18:56Z (2026-11-10 01:18:56 Europe/Belgrade). |
+| Lokalni timestamp (Europe/Belgrade) — **nije** nezavisni dokaz | 2026-11-10 01:18:57 |
+| Šta ovaj pečat zatvara | Before the operator pulls PR #50 head `a7ec70f` into the run worktree, before `agentswatch finish` and before any receipt is produced or shown. |
+
+Review contents: reviewer ChatGPT (run by the owner), reviewed head `a7ec70f1f98df9b5add8e70bc1be9dc507d75ffe`, decision `ACCEPT_AS_PARTIAL`, review window 01:04-01:10 Europe/Belgrade per the reviewer, contamination classification `NOT_CONTAMINATED` with disclosed caveats (see the sealed file).
