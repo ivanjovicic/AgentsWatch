@@ -38,3 +38,19 @@ Ordering note: the remote push proves when the preregistration became remote-vis
 | Šta ovaj pečat zatvara | Before the operator pulls PR #50 head `a7ec70f` into the run worktree, before `agentswatch finish` and before any receipt is produced or shown. |
 
 Review contents: reviewer ChatGPT (run by the owner), reviewed head `a7ec70f1f98df9b5add8e70bc1be9dc507d75ffe`, decision `ACCEPT_AS_PARTIAL`, review window 01:04-01:10 Europe/Belgrade per the reviewer, contamination classification `NOT_CONTAMINATED` with disclosed caveats (see the sealed file).
+
+## Row 3 - adjudication
+
+| Polje | Upis |
+|---|---|
+| Eval run id | `AI-ONLY-EVAL-001` |
+| Vrsta pečata | `adjudication` (AI-only, NOT independent; outside the kit's two mandatory rows) |
+| Relativna putanja zamrznutog fajla | `docs/evidence/ai-only-eval-001/adjudication-and-comparison-v1.md` |
+| Verzija zapisa | v1 |
+| SHA-256 zamrznutih bajtova (hex) | `558351b8527775ae89156f113986e05ec246816ab24b278160e7cebf1296d837` |
+| Alat / komanda heša | `Get-FileHash -Algorithm SHA256` over the committed blob bytes (UTF-8, no BOM, LF). Re-hash with `git show 362e7628ff9d81c1cde157a65b95db2e3e6ffbd3:docs/evidence/ai-only-eval-001/adjudication-and-comparison-v1.md`. |
+| Git commit SHA koji sadrži zamrznuti fajl | `362e7628ff9d81c1cde157a65b95db2e3e6ffbd3` |
+| Da li je taj commit gurnut na remote? | Yes. https://github.com/ivanjovicic/AgentsWatch/commit/362e7628ff9d81c1cde157a65b95db2e3e6ffbd3 on branch `eval/ai-only-001-prereg` (no PR). |
+| Drugi proverljivi dokaz redosleda | GitHub repository activity id `49683248780`: `push` of `362e762` at 2026-11-10T08:19:42Z (2026-11-10 09:19:42 Europe/Belgrade); after the receipt (finish 2026-11-10 01:20:42). |
+| Lokalni timestamp (Europe/Belgrade) — **nije** nezavisni dokaz | 2026-11-10 09:19:42 |
+| Šta ovaj pečat zatvara | The AI-only adjudication: `NO_DECISION_CHANGE`, `NOT_INDEPENDENT`, `NOT_CONTAMINATED` (owner declaration t54s262), finding F-META-1; signal NARROW / STOP, not GO. |
