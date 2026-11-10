@@ -127,6 +127,16 @@ Blocked until:
 
 ---
 
+## Proposed narrow Codex/Cursor + web-review path (2026-11-10; NOT ACTIVE)
+
+Full feasibility, source references, ownership design and phase gates: `ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md`.
+
+- User-preferred implementers: Codex CLI/SDK first and Cursor Cloud Agents v1 second, **only after separate owner GO**. Cursor API v1 is beta; do not presume v1 webhooks exist.
+- User-preferred reviewers: Claude **web** and ChatGPT **web**. First deliver a bounded PR review packet (exact head SHA/diff/CI) plus manual structured-result import. Claude GitHub integration syncs files, not PRs/commit history; a web chat is not an unattended provider API. ChatGPT Work may have eligible PR-event triggers but requires separate proven task setup and result callback; do not assume availability or autonomous review.
+- Claude Code Review and Anthropic API reviews are separate, optional products, not silent substitutes for Claude web.
+- External model review is advisory and does not attest authorship, replace human independent review, upgrade Unknown to Done, or authorize merge/deploy.
+- This is an experimental future plan: AW-VFY-010 ADJUST/PAUSE, AW-VFY-011/012 HOLD, canonical queue and no-cloud/no-telemetry MVP remain unchanged. No new integration is activated by this documentation.
+
 ## Integration stop rule
 
 Do not build an integration if the same user value can be proven with local markdown reports first.

@@ -273,6 +273,10 @@ Leading hypothesis is open core after validation:
 
 Packaging is not an MVP architecture requirement.
 
+## Optional companion design (2026-11-10; proposal only)
+
+See `ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md` for a gated, manual-first handoff: Codex/Cursor may implement via approved tools; Claude web/ChatGPT web review exported exact-head packets. This is **not** an active MVP architecture decision. The verifier stays vendor-neutral, deterministic and runnable offline. Any optional coordination sidecar owns execution and reviewer handoff only, not canonical RunReceipt truth or task management; no agent dispatch, GitHub automation, lease service, hosted API or new module is authorized by this pointer. Active AW-VFY-010 ADJUST/PAUSE, AW-VFY-011/012 HOLD and owner approvals remain controlling.
+
 ## Non-goals
 
 Do not make architecture depend on:

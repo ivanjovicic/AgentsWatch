@@ -384,6 +384,10 @@ Do not build a visual workflow canvas.
 Canonical queue:
 `docs/prompt_queues/verification_mvp_2026_08_25.md`
 
+## Separate future proposal: supervised implementation and web review (2026-11-10)
+
+`ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md` describes a **non-active**, manual-first companion: implementation via Codex/Cursor, review via Claude web/ChatGPT web with exact-SHA packet export, advisory result import and optional later provider adapters. It does not promote orchestration, new queues, hosted/cloud services or automated reviewer conversations into the MVP. Do not start it from this roadmap. Gate 5 is currently ADJUST / PAUSE (12/30 useful REAL as of 2026-11-07); AW-VFY-011/012 remain HOLD. Separate owner GO and measured value above Git+CI+PR are prerequisites for even a small authorized experimental implementation. No queue or acceptance/status thresholds change by this note.
+
 ## Explicitly de-prioritized
 
 - generic agent runtime;

@@ -113,6 +113,11 @@ Use only when relevant:
 - `AGENT_PERMISSION_MODEL.md`
 - `TEST_MATRIX.md`
 
+## Optional implementation/review collaboration proposal (NOT ACTIVE)
+
+- `ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md` — dated, evidence-scoped proposal for Codex/Cursor implementation and Claude/ChatGPT web review; manual-first and feature gated. It is **not** a new claimable task, queue, Gate 5 result or implementation authorization.
+- `INTEGRATION_STRATEGY.md`, `SUPERVISED_AUTOPILOT_QUEUE.md`, `ROADMAP_DRIVEN_AGENT_OS.md` contain short cross-references; current runtime/gate rules continue to win.
+
 ## Historical/secondary context
 
 Token/context economy, broad productization, legacy queues, `ULTRA_ROADMAP.md`, old audits and generic control-plane ideas remain historical/secondary context.
