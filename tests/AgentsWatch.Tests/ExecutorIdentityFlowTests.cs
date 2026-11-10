@@ -683,6 +683,64 @@ public sealed class ExecutorIdentityFlowTests
         Assert.Contains("VERIFIED", e.ToString());
     }
 
+    // Review finding (blocking): JsonStringEnumConverter accepts comma-separated enum lists, numeric strings and other casings,
+    // so a status other than the exact string "verified" could still load as Verified (or as an undefined value).
+    // Each forged receipt carries a freshly recomputed, VALID evidence digest whenever the serializer can compute one,
+    // so only the identity validation (not the checksum) can stop it.
+    [Theory]
+    [InlineData("\"unknown, verified\"", true)]
+    [InlineData("\"declared-only,verified\"", false)]
+    [InlineData("\"Verified\"", true)]
+    [InlineData("\"VERIFIED\"", true)]
+    [InlineData("\"vErIfIeD\"", true)]
+    [InlineData("\"4\"", true)]
+    [InlineData("\"declared-only, consistent-unverified\"", true)]
+    [InlineData("\"conflict,verified\"", false)]
+    [InlineData("\"7\"", false)]
+    [InlineData("4", false)]
+    [InlineData("7", false)]
+    public async Task Negative_ForgedIdentityStatusVariant_WithRecomputedDigest_IsRejected(string rawStatusJson, bool digestComputable)
+    {
+        var (repo, run) = await StartAsync(new ExecutorMetadata(Agent: "Claude"));
+        using var cleanup = repo;
+        repo.Write(LogPath, V2Log("Codex", "OpenAI", "gpt-6"));
+        var (exit, _, err) = await FinishCli(repo, run, "--executor-log", LogPath);
+        Assert.True(exit == 0, err);
+
+        var node = JsonNode.Parse(ReceiptText(repo, run))!.AsObject();
+        node["executorIdentity"]!["status"] = JsonNode.Parse(rawStatusJson);
+        node.Remove("evidenceDigest");
+
+        // An attacker can recompute the checksum with the public serializer whenever the forged value round-trips.
+        string? digest = null;
+        try
+        {
+            var raw = JsonSerializer.Deserialize<RunReceipt>(node.ToJsonString(), RunContractJson.Options)!;
+            digest = RunReceiptJson.ComputeDigest(raw);
+        }
+        catch (JsonException)
+        {
+        }
+
+        Assert.Equal(digestComputable, digest is not null);
+        node["evidenceDigest"] = digest ?? "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        var forged = node.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        if (digestComputable)
+        {
+            Assert.True(RunReceiptJson.VerifyDigest(JsonSerializer.Deserialize<RunReceipt>(forged, RunContractJson.Options)!),
+                "the forged receipt's digest must be valid so that only identity validation can reject it");
+        }
+
+        var ex = Assert.Throws<InvalidDataException>(() => RunReceiptJson.Deserialize(forged));
+        Assert.Contains("executorIdentity.status", ex.Message);
+
+        File.WriteAllText(new FileRunReceiptStore(repo.Root).PathFor(run), forged);
+        var e = new StringWriter();
+        Assert.NotEqual(0, ReceiptCommand.Show(repo.Root, ["show", run], new StringWriter(), e));
+        Assert.Contains("executorIdentity.status", e.ToString());
+        Assert.False(new EvidenceService(repo.Root, new FileRunReceiptStore(repo.Root), new FileRunContractStore(repo.Root)).Check(run).Ok);
+    }
+
     private static bool TryLinkDirectory(string link, string target)
     {
         try
