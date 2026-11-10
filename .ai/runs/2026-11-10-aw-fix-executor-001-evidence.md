@@ -159,3 +159,15 @@ Validation not run: no production or deploy steps (none apply). The file-symlink
 
 - The first Unicode test scanned 8 lines from "Executor declared:", which in the handoff projection included the
   "Run-interval files" line; corrected to end at the block's "Reason:" line before the fix commit.
+
+## Addendum 2026-11-10 (integration with main after PR #24 merge; earlier text above is left as written)
+
+- Owner GO for the integration steps only (merge of #21 remains NO-GO). PR #24 was merged into `main` as `dc7bf99`.
+- Merge commit `8b13ccd`: normal merge of `origin/main` `dc7bf99` into this branch (no rebase, no force). Conflict only in
+  `docs/DATA_MODEL.md` (both paragraphs kept). `RunReceipt.cs` auto-merged with the canonical digest from #24 and the
+  VERIFIED, duplicate-key checks from #21 both present. The #24 `.gitattributes` (`Fixtures/** -text`) now covers the #21
+  fixture; its committed blob is unchanged (SHA-256 `f6c056ae…`).
+- T10 strict on every OS (separate commit after the merge): `Environment.NewLine` guard removed; `VerifyDigest`,
+  `EnsureStoredDigest`, `MatchDigest == LegacyCrlf`, show/handoff exit 0 without mismatch or UNTRUSTED marking. No #21 test
+  relied on the old exit-0-on-mismatch behavior, so no test had to be adapted.
+- Local Release results and exact-head CI are recorded in the PR body (this file cannot contain its own commit SHA).
