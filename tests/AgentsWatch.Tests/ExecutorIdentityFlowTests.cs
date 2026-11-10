@@ -423,7 +423,9 @@ public sealed class ExecutorIdentityFlowTests
         }
     }
 
-    // 10. Historical v1 receipt (written by pre-fix fe1be51 CLI) -> reads, original digest verifies, nothing rewritten.
+    // 10. Historical v1 receipt (written by pre-fix fe1be51 CLI on Windows) -> reads; stored digest matches its producing (CRLF) form;
+    //     strict VerifyDigest only where the newline is CRLF (cross-OS: AW-FIX-DIGEST-001); re-serializes to the same text after
+    //     line-ending normalization (NOT an original-bytes comparison); show/handoff leave the file bytes unchanged.
     [Fact]
     public void T10_HistoricalV1Receipt_ReadsAndKeepsOriginalDigest()
     {
@@ -443,6 +445,7 @@ public sealed class ExecutorIdentityFlowTests
         }
 
         Assert.Equal("Claude", receipt.ExecutorMetadata!.Agent);
+        // Same text after CRLF->LF normalization and trailing-newline trim. This is semantic/layout equality, not byte identity.
         Assert.Equal(original.Replace("\r\n", "\n").TrimEnd('\n'), RunReceiptJson.Serialize(receipt).Replace("\r\n", "\n"));
         Assert.False(JsonDocument.Parse(original).RootElement.TryGetProperty("executorIdentity", out _));
 

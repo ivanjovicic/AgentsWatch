@@ -356,8 +356,9 @@ executorIdentity?           (AW-FIX-EXECUTOR-001; omitted when null)
 ```
 
 `executorMetadata` is the operator-declared executor. `observedExecutorEvidence` and
-`executorIdentity` are additive and optional, so historical receipts keep their exact JSON and
-digest; see `docs/EXECUTOR_IDENTITY.md`. No field proves authorship.
+`executorIdentity` are additive and optional, so historical receipt files are not rewritten and keep
+their stored digest (re-serialization matches only after line-ending normalization, not byte-for-byte);
+see `docs/EXECUTOR_IDENTITY.md`. No field proves authorship.
 
 Do **not** require these as canonical audit fields:
 

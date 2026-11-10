@@ -83,3 +83,18 @@ Validation not run: no production or deploy steps (none apply). The file-symlink
 - Exact matching after normalization reports `Claude` vs `Claude Code` as CONFLICT. This is deliberately conservative, not a guess.
 - Path checks run before the read. A filesystem race between check and read is outside the threat model: it is a local, operator-run CLI.
 - Older AgentsWatch binaries ignore the new fields when reading a new receipt, and their digest check then fails. Forward compatibility of older binaries is not provided.
+
+## Addendum 2026-11-10 (after independent review of head 5df365b; earlier text above is left as written)
+
+- Correction 1, reserialization wording: the text above ("re-serialized identically"), `docs/EXECUTOR_IDENTITY.md`, `docs/DATA_MODEL.md` ("keep their exact JSON") and the PR body said or implied that the historical receipt re-serializes byte-identically and that its original digest verifies. That overstated what the tests show:
+  - T10 compares the re-serialized text with the original only after CRLF→LF normalization and `TrimEnd('\n')`. That is equality after line-ending normalization, not original-bytes identity.
+  - Strict `VerifyDigest`/`EnsureStoredDigest` and the no-mismatch-warning check run only when `Environment.NewLine` is CRLF (Windows). On Linux T10 checks only that the stored digest equals SHA-256 of the same content in CRLF form.
+  - What is byte-checked is that `receipt show`/`handoff` leave the fixture file's bytes unchanged (SHA-256 before = after).
+  - The docs and the T10 comments were corrected in a follow-up commit. Test logic and product code are unchanged.
+- Correction 2, fixture SHA-256: the value given in "Files changed" above (`031c5110…b854`) is **not** the hash of the committed fixture. Facts:
+  - The committed blob (`git show <head>:tests/AgentsWatch.Tests/Fixtures/v1-receipt-pre-executor-identity.json`) has SHA-256 `f6c056ae8d4ca02835897d7c689844292c6c38b4ce4f9c5c9c2406b3e46528ed`. It has LF line endings, because Git on the Windows machine (`core.autocrlf=true`) normalized the file at commit time and the repo had no `.gitattributes` rule for it.
+  - `031c51103085827f911a0033b00e9c29fd247d043ba8e2eee6125e140737b854` is the hash of the bytes the fe1be51 CLI wrote on Windows: CRLF line breaks plus one final lone LF, from `Serialize(...)` with `Environment.NewLine` + `"\n"`. Those bytes are still present, unmodified, in the Windows worktree `C:\Users\Ivan\source\repos\_aw-vfy-010\aw-fix-executor-001` (verified 2026-11-10 with `Get-FileHash`). They are reproducible from the committed blob by converting every LF to CRLF except the final newline.
+  - Other forms of the same blob do not give `031c5110…`: all-CRLF `1f8a9b4e…`, LF without the final newline `342487f6…`, BOM + CRLF `b961a069…`.
+  - So `031c5110…` is verifiable only on that machine or through the stated transform, not from a fresh checkout. The authoritative hash of the committed fixture is `f6c056ae…`.
+  - The test logic does not depend on either file hash: it deserializes the content and compares digests.
+- Neither correction changes product code or test logic. The other review findings (VERIFIED bypass via a comma enum list, FIFO, hard links, Unicode, test gaps, accept/claims) await an owner decision and are not implemented here.
