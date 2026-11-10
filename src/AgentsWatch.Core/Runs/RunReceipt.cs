@@ -123,7 +123,7 @@ public static class RunReceiptJson
             ValidateRequiredShape(doc.RootElement);
         }
 
-        return JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null.");
+        return RejectUnassignableIdentity(JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null."));
     }
 
     /// <summary>sha256 over the canonical JSON with evidenceDigest omitted.</summary>
@@ -149,6 +149,21 @@ public static class RunReceiptJson
         }
     }
 
+    /// <summary>The only executorIdentity.status values a receipt may carry (the JSON names this version writes).</summary>
+    private static readonly string[] AssignableIdentityStatusNames = ["unknown", "declared-only", "consistent-unverified", "conflict"];
+
+    /// <summary>Defense in depth after binding: never return a receipt whose identity is VERIFIED, undefined, or claims verified authorship.</summary>
+    private static RunReceipt RejectUnassignableIdentity(RunReceipt r)
+    {
+        if (r.ExecutorIdentity is { } id
+            && (id.Status == ExecutorIdentityStatus.Verified || !Enum.IsDefined(id.Status) || id.AuthorshipVerified))
+        {
+            throw new InvalidDataException("executorIdentity.status is VERIFIED, undefined, or claims verified authorship; VERIFIED is reserved and is never recorded by this version; refusing the receipt.");
+        }
+
+        return r;
+    }
+
     internal static void ValidateRequiredShape(JsonElement root)
     {
         if (root.TryGetProperty("executorIdentity", out var identity) && identity.ValueKind == JsonValueKind.Object)
@@ -156,9 +171,19 @@ public static class RunReceiptJson
             // VERIFIED is reserved for a future provenance mechanism. A checksum is not a signature, so a receipt
             // edited to claim it (or to claim verified authorship) is rejected rather than displayed as fact.
             if (identity.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.String
-                && string.Equals(s.GetString(), "verified", StringComparison.OrdinalIgnoreCase))
+                && string.Equals(s.GetString()?.Trim(), "verified", StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidDataException("executorIdentity.status VERIFIED is reserved and is never recorded by this version; refusing a receipt that claims it.");
+            }
+
+            // Strict allowlist on the raw JSON: exactly one of the assignable names, as written by this version.
+            // JsonStringEnumConverter would otherwise accept comma-separated lists ("unknown, verified" -> Verified),
+            // numeric strings ("4" -> Verified), numbers and other casings, or produce undefined values ("conflict,verified" -> 7).
+            if (!identity.TryGetProperty("status", out s) || s.ValueKind != JsonValueKind.String
+                || Array.IndexOf(AssignableIdentityStatusNames, s.GetString()) < 0)
+            {
+                throw new InvalidDataException("executorIdentity.status must be exactly one of " + string.Join(", ", AssignableIdentityStatusNames)
+                    + " (VERIFIED is reserved; lists, numbers and other spellings are not accepted); refusing the receipt.");
             }
 
             if (identity.TryGetProperty("authorshipVerified", out var v) && v.ValueKind == JsonValueKind.True)

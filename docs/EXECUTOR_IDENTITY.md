@@ -39,9 +39,19 @@ New receipts always carry `executorIdentity`; it is covered by `evidenceDigest` 
 | `conflict` / `CONFLICT` | Declaration and log disagree on at least one compared field. |
 | `verified` / `VERIFIED` | Reserved for a future trusted provenance mechanism. Never assigned. |
 
-Receipt hashes are checksums, not signatures. Loading a receipt whose `executorIdentity.status`
-is `verified`, or whose `authorshipVerified` is `true`, fails with `InvalidDataException`
-(`receipt show` exits 1) instead of displaying the claim as fact.
+Receipt hashes are checksums, not signatures: anyone who edits a receipt can recompute a valid digest.
+Loading a receipt therefore fails with `InvalidDataException` (`receipt show` exits 1; `evidence`,
+`accept`, `claims` and `drift` refuse it) when:
+
+- `executorIdentity.status` is not a JSON string exactly equal to one of `unknown`, `declared-only`,
+  `consistent-unverified`, `conflict` (case-sensitive, no surrounding whitespace). This rejects
+  `verified` in any casing, comma-separated lists such as `unknown, verified` or `conflict,verified`,
+  numeric strings such as `"4"`, JSON numbers, and any other spelling that the default enum converter
+  would otherwise bind to `Verified` or to an undefined value;
+- after binding, the status is `Verified` or is not a defined value (defense in depth); or
+- `authorshipVerified` is `true`.
+
+The claim is refused instead of being displayed as fact.
 
 ## Comparison
 
