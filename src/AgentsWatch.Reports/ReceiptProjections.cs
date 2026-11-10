@@ -70,7 +70,7 @@ public static class ReceiptMarkdownWriter
 
     internal static string Executor(ExecutorMetadata? m) => m is null
         ? "unknown"
-        : $"agent={m.Agent ?? "unknown"}, tool={m.Tool ?? "unknown"}, model={m.Model ?? "unknown"}";
+        : $"agent={ExecutorIdentityDisplay.Visible(m.Agent ?? "unknown")}, tool={ExecutorIdentityDisplay.Visible(m.Tool ?? "unknown")}, model={ExecutorIdentityDisplay.Visible(m.Model ?? "unknown")}";
 
     internal static string Short(string? sha) => sha is null ? "(unborn)" : sha.Length > 7 ? sha[..7] : sha;
 
@@ -168,14 +168,14 @@ public static class ExecutorIdentityDisplay
         }
         else
         {
-            var parts = new[] { o.AgentTool, o.ModelProvider, o.ModelName }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v!.Trim()).ToArray();
+            var parts = new[] { o.AgentTool, o.ModelProvider, o.ModelName }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => Visible(v!.Trim())).ToArray();
             lines.Add("Additional source: " + (o.Problem is not null ? "unusable" : parts.Length == 0 ? "no identity fields" : string.Join(" / ", parts)));
             if (!string.IsNullOrWhiteSpace(o.ClientIde))
             {
-                lines.Add("Additional source client: " + o.ClientIde.Trim());
+                lines.Add("Additional source client: " + Visible(o.ClientIde.Trim()));
             }
 
-            lines.Add($"Additional source ref: {o.SourcePath} ({o.SourceSha256})");
+            lines.Add($"Additional source ref: {Visible(o.SourcePath)} ({Visible(o.SourceSha256)})");
         }
 
         var id = r.ExecutorIdentity;
@@ -183,6 +183,36 @@ public static class ExecutorIdentityDisplay
         lines.Add("Authorship verified: NO");
         lines.Add("Reason: " + (id?.Reason ?? "not assessed; this receipt predates executor identity assessment, so the declaration above is unverified."));
         return lines;
+    }
+
+    /// <summary>
+    /// Rendering only (stored values are never changed): control (Cc), format (Cf: bidi overrides/isolates,
+    /// zero-width characters) and line/paragraph separator (Zl/Zp) code points are shown as <c>&lt;U+XXXX&gt;</c>,
+    /// so a value cannot reorder, hide or break a line of the rendered identity block.
+    /// </summary>
+    public static string Visible(string value)
+    {
+        StringBuilder? b = null;
+        var i = 0;
+        foreach (var rune in value.EnumerateRunes())
+        {
+            var cat = Rune.GetUnicodeCategory(rune);
+            var unsafeRune = cat is System.Globalization.UnicodeCategory.Control or System.Globalization.UnicodeCategory.Format
+                or System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator;
+            if (unsafeRune)
+            {
+                b ??= new StringBuilder(value, 0, i, value.Length + 16);
+                b.Append("<U+").Append(rune.Value.ToString("X4")).Append('>');
+            }
+            else
+            {
+                b?.Append(rune.ToString());
+            }
+
+            i += rune.Utf16SequenceLength;
+        }
+
+        return b?.ToString() ?? value;
     }
 
     public static string StatusLabel(ExecutorIdentityStatus? status) => status switch
@@ -195,7 +225,7 @@ public static class ExecutorIdentityDisplay
 
     private static string Declared(ExecutorMetadata? m)
     {
-        var parts = new[] { m?.Agent, m?.Tool, m?.Model }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v!.Trim()).ToArray();
+        var parts = new[] { m?.Agent, m?.Tool, m?.Model }.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => Visible(v!.Trim())).ToArray();
         return parts.Length == 0 ? "unknown" : string.Join(" / ", parts);
     }
 }
