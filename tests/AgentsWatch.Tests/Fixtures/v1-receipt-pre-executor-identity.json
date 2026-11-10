@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "runId": "fixture-v1-20261110t091011z-878143",
+  "contractId": "fixture-v1",
+  "taskId": "fixture-v1",
+  "startedAtUtc": "2026-11-10T09:10:11.7257199+00:00",
+  "finishedAtUtc": "2026-11-10T09:10:12.2109696+00:00",
+  "executorMetadata": {
+    "agent": "Claude",
+    "tool": "owner-run-manual"
+  },
+  "startRepositoryState": {
+    "branch": "main",
+    "headCommitSha": "53d2681dfda8bcdca955de01cdc168e83ec45b82",
+    "worktreeState": {
+      "porcelainVersion": "v1-z",
+      "staged": [],
+      "unstaged": [
+        {
+          "path": "a.txt",
+          "status": "M",
+          "fingerprint": "sha256:cfba8bfa7e79332f4a8ab27c192863d5a01b36a6e74043094ac21da5f3abb28e"
+        }
+      ],
+      "untracked": [],
+      "stateFingerprint": "sha256:5fa757f3a3fe56c459c73cefa3def04db31d60752243514ab0c3350e3a483a1e"
+    }
+  },
+  "endRepositoryState": {
+    "branch": "main",
+    "headCommitSha": "53d2681dfda8bcdca955de01cdc168e83ec45b82",
+    "worktreeState": {
+      "porcelainVersion": "v1-z",
+      "staged": [],
+      "unstaged": [
+        {
+          "path": "a.txt",
+          "status": "M",
+          "fingerprint": "sha256:cfba8bfa7e79332f4a8ab27c192863d5a01b36a6e74043094ac21da5f3abb28e"
+        }
+      ],
+      "untracked": [],
+      "stateFingerprint": "sha256:5fa757f3a3fe56c459c73cefa3def04db31d60752243514ab0c3350e3a483a1e"
+    }
+  },
+  "headTransition": {
+    "kind": "unchanged",
+    "fromCommitSha": "53d2681dfda8bcdca955de01cdc168e83ec45b82",
+    "toCommitSha": "53d2681dfda8bcdca955de01cdc168e83ec45b82",
+    "fromBranch": "main",
+    "toBranch": "main",
+    "committedChanges": [],
+    "branchChanged": false
+  },
+  "runDelta": {
+    "runIntervalChanges": [],
+    "preExistingUnchangedChanges": [
+      {
+        "path": "a.txt",
+        "status": "M",
+        "classification": "pre-existing-unchanged",
+        "classificationReason": "dirty at start; identical staged/unstaged/untracked fingerprints at end"
+      }
+    ],
+    "preExistingChangedFurther": [],
+    "attributionAmbiguities": [],
+    "endBranch": "main",
+    "endHeadCommitSha": "53d2681dfda8bcdca955de01cdc168e83ec45b82"
+  },
+  "validations": [],
+  "claims": [],
+  "acceptanceCriteria": [
+    {
+      "criterionId": "ac1",
+      "text": "feature works",
+      "status": "unknown",
+      "evidenceRefs": [],
+      "reason": "not evaluated; mark with agentswatch accept record and link recorded validation evidence"
+    }
+  ],
+  "findings": [
+    {
+      "findingId": "e1",
+      "ruleId": "AWE002",
+      "category": "missing-validation",
+      "severity": "error",
+      "status": "unsupported",
+      "message": "mandatory validation \u0027v1\u0027 (dotnet test) has no evidence; agent prose is not evidence.",
+      "paths": [],
+      "evidenceRefs": [
+        "contract.validationContract.requirements[v1]"
+      ],
+      "runId": "fixture-v1-20261110t091011z-878143",
+      "contractId": "fixture-v1"
+    },
+    {
+      "findingId": "e2",
+      "ruleId": "AWE006",
+      "category": "missing-validation",
+      "severity": "warning",
+      "status": "unsupported",
+      "message": "expected evidence \u0027test output\u0027 is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it.",
+      "paths": [],
+      "evidenceRefs": [
+        "contract.expectedEvidence[test output]"
+      ],
+      "runId": "fixture-v1-20261110t091011z-878143",
+      "contractId": "fixture-v1"
+    },
+    {
+      "findingId": "e3",
+      "ruleId": "AWE007",
+      "category": "acceptance-criterion-unsupported",
+      "severity": "warning",
+      "status": "unknown",
+      "message": "acceptance criterion \u0027ac1\u0027 is unknown and cannot support completion.",
+      "paths": [],
+      "evidenceRefs": [
+        "acceptanceCriteria[ac1]"
+      ],
+      "runId": "fixture-v1-20261110t091011z-878143",
+      "contractId": "fixture-v1"
+    }
+  ],
+  "decision": {
+    "status": "needs-evidence",
+    "reasons": [
+      "AWE002: mandatory validation \u0027v1\u0027 (dotnet test) has no evidence; agent prose is not evidence. [contract.validationContract.requirements[v1]]",
+      "AWE006: expected evidence \u0027test output\u0027 is not backed by a passing validation whose outputSummary, evidenceDigest, sourceRef, command or id references it. [contract.expectedEvidence[test output]]",
+      "AWE007: acceptance criterion \u0027ac1\u0027 is unknown and cannot support completion. [acceptanceCriteria[ac1]]"
+    ]
+  },
+  "missedWork": [],
+  "attributionPolicy": "Changes are classified by comparing start baseline fingerprints with end state. RunIntervalChange means observed during the recorded interval, not proven authored by the selected executor: Git cannot distinguish concurrent writers (humans, other agents, tools). Unprovable cases are Ambiguous.",
+  "evidenceDigest": "sha256:159bb5a10f2981c70b18c6047d7ad6381794ab405bb5c4a7e3f7e8ebc381cd3d",
+  "contractDigest": "sha256:d36d82a1644ec61dfb49f4d47b8404744c4cedcaf7e7109b3d9a2e7792e4dfd8"
+}

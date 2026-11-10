@@ -11,20 +11,39 @@ internal static class FinishCommand
     {
         var o = output ?? Console.Out;
         var e = error ?? Console.Error;
-        if (args.Length != 1 || args[0].StartsWith("--"))
+        string? runId = null;
+        string? executorLog = null;
+        for (var i = 0; i < args.Length; i++)
         {
-            e.WriteLine("Usage: agentswatch finish <run-id>");
+            if (args[i] == "--executor-log" && i + 1 < args.Length && executorLog is null)
+            {
+                executorLog = args[++i];
+            }
+            else if (!args[i].StartsWith("--") && runId is null)
+            {
+                runId = args[i];
+            }
+            else
+            {
+                runId = null;
+                break;
+            }
+        }
+
+        if (runId is null)
+        {
+            e.WriteLine("Usage: agentswatch finish <run-id> [--executor-log <relative-path>]");
             return 2;
         }
 
         var git = new GitRepositoryStateReader(new GitCommandRunner());
         var service = new RunFinishService(new FileActiveRunStore(root), new FileRunRecordStore(root), git, git,
             receipts: new FileRunReceiptStore(root), contracts: new FileRunContractStore(root), projections: new FileReceiptProjectionWriter());
-        var result = await service.FinishAsync(root, args[0]);
+        var result = await service.FinishAsync(root, runId, executorLog);
         if (!result.Finished)
         {
             e.WriteLine("error: " + SafeText(result.Error));
-            return 1;
+            return result.InputRejected ? 2 : 1;
         }
 
         // Render from the already-redacted receipt. Do not print result.Record (raw) or recompute the digest.
@@ -53,6 +72,11 @@ internal static class FinishCommand
         {
             var from = c.OldPath is null ? "" : $" (from {SafeText(c.OldPath)})";
             o.WriteLine($"- [{c.Classification}] {c.Status} {SafeText(c.Path)}{from}: {SafeText(c.ClassificationReason)}");
+        }
+
+        foreach (var line in ExecutorIdentityDisplay.Lines(receipt))
+        {
+            o.WriteLine(SafeText(line));
         }
 
         o.WriteLine("Note: interval changes are observations, not proof of executor authorship.");

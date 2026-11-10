@@ -97,7 +97,7 @@ agentswatch status
 agentswatch contract create <task-id> --intent <text> --accept <text> --validate <command> ...
 agentswatch contract check <contract-id-or-json-file>
 agentswatch start <contract-id>
-agentswatch finish <run-id>
+agentswatch finish <run-id> [--executor-log <relative-path>]
 agentswatch receipt show <run-id>
 agentswatch handoff <run-id>
 agentswatch evidence record <run-id> --command <text> --status <status> --source <source>

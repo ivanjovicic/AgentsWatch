@@ -351,7 +351,13 @@ findings[]
 decision
 missedWork[]
 evidenceDigest?
+observedExecutorEvidence?   (AW-FIX-EXECUTOR-001; omitted when null)
+executorIdentity?           (AW-FIX-EXECUTOR-001; omitted when null)
 ```
+
+`executorMetadata` is the operator-declared executor. `observedExecutorEvidence` and
+`executorIdentity` are additive and optional, so historical receipts keep their exact JSON and
+digest; see `docs/EXECUTOR_IDENTITY.md`. No field proves authorship.
 
 Do **not** require these as canonical audit fields:
 

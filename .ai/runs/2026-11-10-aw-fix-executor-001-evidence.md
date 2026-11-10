@@ -1,0 +1,81 @@
+# AW-FIX-EXECUTOR-001 Evidence
+
+Evidence format: v2
+Prompt ID: AW-FIX-EXECUTOR-001
+Queue: owner-authorized corrective task (not a verification_mvp_2026_08_25 queue row; see Claim record)
+Agent/tool: Grok Bot executor subagent
+Model provider: unknown-not-exposed
+Model name/id: unknown-not-exposed
+Model mode/settings: unknown-not-exposed
+Client/IDE: Grok Bot box + Windows Shell on DESKTOP-V877DAD
+Run mode: implementation (test-first, fail-closed)
+Token budget: medium
+Elapsed time: unknown-not-recorded
+Phase time breakdown: unknown-not-recorded
+Commit SHA: see the draft PR head (a file cannot contain its own commit SHA); base fe1be515108437b948d34b3ac28fc5af36810db9
+
+This log is itself a declarative source. Under the rule it implements, it does not prove who authored the change.
+
+## Claim record
+
+- Authorization: explicit owner GO for this corrective task only (spec `AW-FIX-EXECUTOR-001 - Executor Identity & Provenance Trust Boundary`, sha256 `9cc5514f13a14e2d235bb4e8ef7e6d66959d9d0525c44304e2dc38ccb09baa4e`, 304 lines).
+- `AGENTS.md` working order says to "select exactly one currently claimable prompt" from `docs/prompt_queues/verification_mvp_2026_08_25.md` via the router. The canonical docs define no lease/lock mechanism and no path for an owner-authorized corrective task.
+- I did not invent a queue entry and did not change the router or the queue. The claim is recorded transparently and minimally as: (1) this evidence log; (2) the dedicated branch `fix/aw-fix-executor-001` from `origin/main` `fe1be51`; (3) one draft PR. No existing claim, branch, or worktree was taken over. Before starting, there were no open PRs or remote branches for this task.
+- Gate 5 ADJUST/PAUSE stays in force for everything else. This task does not start AW-VFY-010 B5, AW-VFY-011 or AW-VFY-012, and does not touch the AW-VFY-010 counters (12/30).
+- Worktree: `C:\Users\Ivan\source\repos\_aw-vfy-010\aw-fix-executor-001` (new, disposable).
+
+## What changed
+
+- `executorIdentity` (status, authorshipVerified=false, reason, compared/conflicting fields, source refs) and `observedExecutorEvidence` (bounded v2 header fields, workspace-relative path, SHA-256) are added as optional RunReceipt v1 fields, omitted when null.
+- `ExecutorIdentityEvaluator`: pure, deterministic; statuses UNKNOWN / DECLARED_ONLY / CONSISTENT_UNVERIFIED / CONFLICT. VERIFIED is reserved and never assigned. Loading a receipt that claims it, or claims authorshipVerified=true, is rejected.
+- `finish <run-id> --executor-log <relative-path>`: read-only and workspace-confined. Refuses absolute paths, `..`, symlinks/junctions, `.agentwatch/`, AgentsWatch projections, non-regular files and files over 64 KiB (exit 2, active run kept). Malformed content records UNKNOWN.
+- `AWI001` / `executor-identity-conflict` finding (Warning/NeedsReview). It is outside decision ordering and distinct from AWR002.
+- An identity block in `finish`, `receipt show` / `.ai/runs` projection and `handoff`; `Authorship verified: NO` is always shown.
+- Docs: `docs/EXECUTOR_IDENTITY.md` (new) plus one-line pointers in COMMAND_CONTRACTS, CLI_SPEC, DATA_MODEL, DECISION_ORDERING and README.
+
+## Files changed
+
+- src/AgentsWatch.Core/Runs/ExecutorIdentity.cs (new)
+- src/AgentsWatch.Core/Runs/RunReceipt.cs
+- src/AgentsWatch.Core/Runs/RunDelta.cs
+- src/AgentsWatch.Cli/FinishCommand.cs
+- src/AgentsWatch.Cli/Program.cs
+- src/AgentsWatch.Reports/ReceiptProjections.cs
+- tests/AgentsWatch.Tests/ExecutorIdentityFlowTests.cs (new)
+- tests/AgentsWatch.Tests/ExecutorIdentityEvaluatorTests.cs (new)
+- tests/AgentsWatch.Tests/Fixtures/v1-receipt-pre-executor-identity.json (new; produced by the unmodified fe1be51 CLI, sha256 031c51103085827f911a0033b00e9c29fd247d043ba8e2eee6125e140737b854)
+- tests/AgentsWatch.Tests/AgentsWatch.Tests.csproj (copy fixtures to output)
+- docs/EXECUTOR_IDENTITY.md (new), docs/COMMAND_CONTRACTS.md, docs/CLI_SPEC.md, docs/DATA_MODEL.md, docs/DECISION_ORDERING.md, README.md
+- .ai/runs/2026-11-10-aw-fix-executor-001-evidence.md (this log)
+
+## Validation
+
+Validation run (local, Windows, .NET SDK 10.0.201 targeting net8.0, Release):
+- RED behavioral (src identical to fe1be51; only the flow tests, fixture and csproj item added): `dotnet test tests/AgentsWatch.Tests/AgentsWatch.Tests.csproj -c Release --no-build --filter FullyQualifiedName~ExecutorIdentityFlowTests` returned exit 1: 27 total, 27 failed, 0 passed. Causes: `finish` rejected `--executor-log` (usage, exit 2); receipts had no `executorIdentity`; show/handoff had no identity block; forged VERIFIED receipts loaded. T10 failed only on the missing display: the historical fixture already deserialized, verified its digest and re-serialized identically.
+- RED compile (evaluator/parser unit tests added, src still identical to fe1be51): `dotnet build tests/AgentsWatch.Tests/AgentsWatch.Tests.csproj -c Release` returned exit 1, error CS0246 `ObservedExecutorEvidence` not found.
+- GREEN targeted: `--filter FullyQualifiedName~ExecutorIdentity` returned exit 0: 42 total, 42 passed.
+- GREEN full gate: `dotnet restore AgentsWatch.sln` exit 0; `dotnet build AgentsWatch.sln --configuration Release` exit 0 (0 warnings, 0 errors); `dotnet test AgentsWatch.sln --configuration Release` exit 0: 239 passed, 0 failed, 0 skipped.
+- `git diff --check` clean.
+- `python scripts/validate_agent_evidence.py`: pre-existing baseline on fe1be51 is FAIL (30 FAIL / 236 WARN, all in older queue rows and logs). This log adds no new finding.
+- GitHub CI (ubuntu-latest + windows-latest) on the exact PR head: recorded in the PR body, not here, so this file does not need a follow-up commit.
+
+Validation not run: no production or deploy steps (none apply). The file-symlink sub-case of T09 runs only where the OS allows unprivileged file symlinks (Linux CI). On Windows without symlink privilege, the directory-junction case is exercised instead.
+
+## Mistakes observed
+
+- none
+
+## Missed work
+
+- none in scope. Follow-ups are listed under Residual risk and need owner approval.
+
+## Follow-up
+
+- Owner decision: whether `AWI001` CONFLICT should become a NeedsReview decision input. This PR keeps the decision rules unchanged, as the spec requires.
+
+## Residual risk
+
+- The log is a declarative source even when its SHA-256 matches. CONSISTENT_UNVERIFIED and CONFLICT are statements about agreement between claims, not about authorship.
+- Exact matching after normalization reports `Claude` vs `Claude Code` as CONFLICT. This is deliberately conservative, not a guess.
+- Path checks run before the read. A filesystem race between check and read is outside the threat model: it is a local, operator-run CLI.
+- Older AgentsWatch binaries ignore the new fields when reading a new receipt, and their digest check then fails. Forward compatibility of older binaries is not provided.

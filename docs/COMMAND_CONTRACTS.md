@@ -196,7 +196,11 @@ Rules:
 - raw final `git status` is not the run delta;
 - ambiguous attribution is a first-class finding;
 - do not delete active-run state until final receipt persistence succeeds;
-- no matching baseline => clear non-zero failure.
+- no matching baseline => clear non-zero failure;
+- optional `--executor-log <relative-path>` (AW-FIX-EXECUTOR-001): a workspace-relative
+  `Evidence format: v2` implementation log, read before anything is written; unsafe input exits 2
+  and keeps the active run; the receipt records a deterministic executor identity status that never
+  proves authorship and never changes the decision (see `docs/EXECUTOR_IDENTITY.md`).
 
 ## `agentswatch receipt show <run-id>`
 
