@@ -203,6 +203,20 @@ Later, replace generic routing with project-local empirical evidence from compar
 
 If evidence is insufficient, return `unknown` and a safe fallback.
 
+**Pre-execution advisory routing (proposed, not implemented):** see
+[MODEL_ROUTING_ADVISORY_RFC_2026_11_10.md](MODEL_ROUTING_ADVISORY_RFC_2026_11_10.md).
+Keep *difficulty*, *operational risk*, and *confidence* separate; a simple but
+high-risk migration still requires owner approval. Recommend a model capability
+class and only then a concrete user-authorized, currently available model;
+return `UNKNOWN` when the evidence or model catalog is insufficient. Never
+infer authorship from Git, assign a vendor model based on brand alone, claim
+cost savings from token price, or silently execute a recommendation. Compare
+outcomes on preregistered real tasks before promoting empirical routing;
+automatic assignment needs an independent future owner GO and safeguards.
+The current routing table above is a starting heuristic, **not a validated
+per-model ranking**. AW-VFY-010, AW-VFY-011/012 and canonical queue gates remain
+unchanged.
+
 ## Counterfactual learning
 
 After failed, expensive, or drifting runs, answer:
