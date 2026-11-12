@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using AgentsWatch.Core.Contracts;
 
@@ -21,7 +19,8 @@ public enum FindingCategory
     AvoidPathTouched,
     UnsupportedClaim,
     AcceptanceCriterionUnsupported,
-    RiskApprovalRequired
+    RiskApprovalRequired,
+    ExecutorIdentityConflict
 }
 
 public enum FindingStatus { Supported, Unsupported, Unknown, NeedsReview }
@@ -70,6 +69,10 @@ public sealed record RunDecision(DecisionStatus Status, IReadOnlyList<string> Re
 /// <summary>
 /// RunReceipt v1: canonical compact verification evidence at .agentwatch/runs/&lt;run-id&gt;.json.
 /// No learning/nextPrompt/routing/narrative fields; Markdown is a projection.
+/// ExecutorMetadata is the operator-declared executor (declaredExecutor). ObservedExecutorEvidence and
+/// ExecutorIdentity are additive, optional (omitted when null) fields from AW-FIX-EXECUTOR-001, so a historical
+/// v1 receipt still verifies against its stored digest and re-serializes to the same JSON text after line-ending
+/// normalization (not a byte-for-byte guarantee for the file; see docs/EXECUTOR_IDENTITY.md). Neither field proves authorship.
 /// </summary>
 public sealed record RunReceipt(
     int SchemaVersion,
@@ -91,7 +94,9 @@ public sealed record RunReceipt(
     IReadOnlyList<string> MissedWork,
     string AttributionPolicy,
     string? EvidenceDigest = null,
-    string? ContractDigest = null)
+    string? ContractDigest = null,
+    ObservedExecutorEvidence? ObservedExecutorEvidence = null,
+    ExecutorIdentityAssessment? ExecutorIdentity = null)
 {
     public const int CurrentSchemaVersion = 1;
 }
@@ -117,16 +122,22 @@ public static class RunReceiptJson
             ValidateRequiredShape(doc.RootElement);
         }
 
-        return JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null.");
+        return RejectUnassignableIdentity(JsonSerializer.Deserialize<RunReceipt>(json, RunContractJson.Options) ?? throw new InvalidDataException("receipt JSON is null."));
     }
 
-    /// <summary>sha256 over the canonical JSON with evidenceDigest omitted.</summary>
-    public static string ComputeDigest(RunReceipt r) =>
-        "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Serialize(r with { EvidenceDigest = null })))).ToLowerInvariant();
+    /// <summary>
+    /// sha256 over the canonical (LF, UTF-8 without BOM) JSON with evidenceDigest omitted; see
+    /// <see cref="CanonicalJsonDigest"/> and docs/DIGEST_CANONICALIZATION.md. Independent of the OS that computes it.
+    /// </summary>
+    public static string ComputeDigest(RunReceipt r) => CanonicalJsonDigest.Compute(Serialize(r with { EvidenceDigest = null }));
 
     public static RunReceipt WithDigest(RunReceipt r) => r with { EvidenceDigest = ComputeDigest(r) };
 
-    public static bool VerifyDigest(RunReceipt r) => r.EvidenceDigest is not null && r.EvidenceDigest == ComputeDigest(r);
+    /// <summary>Which accepted form the stored digest matches: canonical LF, legacy CRLF (pre-fix Windows), or none.</summary>
+    public static DigestForm MatchDigest(RunReceipt r) => CanonicalJsonDigest.Match(r.EvidenceDigest, Serialize(r with { EvidenceDigest = null }));
+
+    /// <summary>True when the stored digest matches the receipt's current content in the canonical or the legacy CRLF form.</summary>
+    public static bool VerifyDigest(RunReceipt r) => MatchDigest(r) != DigestForm.None;
 
     public static void EnsureStoredDigest(RunReceipt r)
     {
@@ -143,8 +154,67 @@ public static class RunReceiptJson
         }
     }
 
+    /// <summary>The only executorIdentity.status values a receipt may carry (the JSON names this version writes).</summary>
+    private static readonly string[] AssignableIdentityStatusNames = ["unknown", "declared-only", "consistent-unverified", "conflict"];
+
+    /// <summary>Defense in depth after binding: never return a receipt whose identity is VERIFIED, undefined, or claims verified authorship.</summary>
+    private static RunReceipt RejectUnassignableIdentity(RunReceipt r)
+    {
+        if (r.ExecutorIdentity is { } id
+            && (id.Status == ExecutorIdentityStatus.Verified || !Enum.IsDefined(id.Status) || id.AuthorshipVerified))
+        {
+            throw new InvalidDataException("executorIdentity.status is VERIFIED, undefined, or claims verified authorship; VERIFIED is reserved and is never recorded by this version; refusing the receipt.");
+        }
+
+        return r;
+    }
+
     internal static void ValidateRequiredShape(JsonElement root)
     {
+        // Duplicate keys: System.Text.Json and TryGetProperty both use the LAST occurrence, so an earlier duplicate
+        // (for example a shadowed "status": "verified") would be invisible to the checks below and to the digest,
+        // while a first-wins reader would see it. Refuse any duplicate executorIdentity key, and a repeated object.
+        if (root.ValueKind == JsonValueKind.Object
+            && root.EnumerateObject().Count(p => string.Equals(p.Name, "executorIdentity", StringComparison.Ordinal)) > 1)
+        {
+            throw new InvalidDataException("receipt contains a duplicate executorIdentity property; refusing the receipt.");
+        }
+
+        if (root.TryGetProperty("executorIdentity", out var identity) && identity.ValueKind == JsonValueKind.Object)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var property in identity.EnumerateObject())
+            {
+                if (!seen.Add(property.Name))
+                {
+                    throw new InvalidDataException("executorIdentity contains a duplicate key '" + property.Name + "'; refusing the receipt.");
+                }
+            }
+
+            // VERIFIED is reserved for a future provenance mechanism. A checksum is not a signature, so a receipt
+            // edited to claim it (or to claim verified authorship) is rejected rather than displayed as fact.
+            if (identity.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.String
+                && string.Equals(s.GetString()?.Trim(), "verified", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException("executorIdentity.status VERIFIED is reserved and is never recorded by this version; refusing a receipt that claims it.");
+            }
+
+            // Strict allowlist on the raw JSON: exactly one of the assignable names, as written by this version.
+            // JsonStringEnumConverter would otherwise accept comma-separated lists ("unknown, verified" -> Verified),
+            // numeric strings ("4" -> Verified), numbers and other casings, or produce undefined values ("conflict,verified" -> 7).
+            if (!identity.TryGetProperty("status", out s) || s.ValueKind != JsonValueKind.String
+                || Array.IndexOf(AssignableIdentityStatusNames, s.GetString()) < 0)
+            {
+                throw new InvalidDataException("executorIdentity.status must be exactly one of " + string.Join(", ", AssignableIdentityStatusNames)
+                    + " (VERIFIED is reserved; lists, numbers and other spellings are not accepted); refusing the receipt.");
+            }
+
+            if (identity.TryGetProperty("authorshipVerified", out var v) && v.ValueKind == JsonValueKind.True)
+            {
+                throw new InvalidDataException("executorIdentity.authorshipVerified=true is not supported: no mechanism verifies authorship (VERIFIED is reserved); refusing the receipt.");
+            }
+        }
+
         if (root.TryGetProperty("acceptanceCriteria", out var criteria) && criteria.ValueKind == JsonValueKind.Array)
         {
             var i = 0;
@@ -181,8 +251,9 @@ public static class RunReceiptJson
 
 public static class RunReceiptBuilder
 {
-    /// <summary>Builds a receipt from the finish record, then applies the Evidence Gate. Never invents validation results.</summary>
-    public static RunReceipt Build(RunFinishRecord record, RunContract? contract)
+    /// <summary>Builds a receipt from the finish record, then applies the Evidence Gate. Never invents validation results.
+    /// The executor identity is always assessed (declaration vs optional additional source); it never affects the decision.</summary>
+    public static RunReceipt Build(RunFinishRecord record, RunContract? contract, ObservedExecutorEvidence? observedExecutor = null)
     {
         var findings = new List<Finding>();
         var n = 0;
@@ -198,6 +269,14 @@ public static class RunReceiptBuilder
         {
             findings.Add(new Finding(NextId(), "AWR002", FindingCategory.AttributionAmbiguous, FindingSeverity.Warning, FindingStatus.NeedsReview,
                 a.ClassificationReason, a.OldPath is null ? [a.Path] : [a.Path, a.OldPath], ["runDelta.attributionAmbiguities"], record.RunId, record.ContractId));
+        }
+
+        var identity = ExecutorIdentityEvaluator.Evaluate(record.StartBaseline.ExecutorMetadata, observedExecutor);
+        if (identity.Status == ExecutorIdentityStatus.Conflict)
+        {
+            findings.Add(new Finding(NextId(), ExecutorIdentityRules.Conflict, FindingCategory.ExecutorIdentityConflict, FindingSeverity.Warning, FindingStatus.NeedsReview,
+                $"operator-declared executor conflicts with implementation log metadata on: {string.Join(", ", identity.ConflictingFields)}; neither source proves authorship, and this finding alone does not invalidate the run or its evidence.",
+                observedExecutor is null ? [] : [observedExecutor.SourcePath], ["executorMetadata", "observedExecutorEvidence"], record.RunId, record.ContractId));
         }
 
         var criteria = (contract?.AcceptanceCriteria ?? [])
@@ -226,7 +305,9 @@ public static class RunReceiptBuilder
             [],
             record.AttributionPolicy,
             // Preserve the start-time contract identity: a contract edited during the run must not be re-baselined at finish.
-            ContractDigest: baseline.ContractDigest);
+            ContractDigest: baseline.ContractDigest,
+            ObservedExecutorEvidence: observedExecutor,
+            ExecutorIdentity: identity);
         return EvidenceGate.Apply(receipt, contract);
     }
 }

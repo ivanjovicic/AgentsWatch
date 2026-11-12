@@ -16,6 +16,8 @@ The classifier inspects the finished finding set. The same findings always produ
 
 `Fail`, `TimedOut`, `Blocked`, `NeedsApproval`, and invalid receipts (failed digest/shape checks that refuse rewrite) stay non-Done. Historical receipts whose acceptance criteria are still Unknown do not become `Done` merely because this ordering changed; they remain `NeedsEvidence` unless a stronger class applies.
 
+`AWI001` (executor identity conflict, AW-FIX-EXECUTOR-001) is deliberately outside this ordering. It is reported as a finding and in the executor identity block, but neither `CONFLICT` nor `CONSISTENT_UNVERIFIED` changes the decision, and no identity status can produce `Done`. See `docs/EXECUTOR_IDENTITY.md`.
+
 ## Marking acceptance
 
 Use `agentswatch accept record <run-id> --id <acN> --status supported|not-supported|unknown --evidence <validation-id> --reason <text>`.

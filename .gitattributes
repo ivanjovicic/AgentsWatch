@@ -1,0 +1,3 @@
+# Test fixtures are byte-exact evidence produced by a specific OS/CLI build
+# (e.g. Windows CRLF vs Linux LF receipts). Never convert their line endings.
+tests/AgentsWatch.Tests/Fixtures/** -text

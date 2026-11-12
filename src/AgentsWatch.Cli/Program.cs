@@ -70,7 +70,7 @@ Usage:
   agentswatch contract create <task-id> --intent <text> --accept <text> --validate <cmd> ...
   agentswatch contract check <contract-id-or-json-file>
   agentswatch start <contract-id> [--agent <name>] [--tool <name>] [--model <name>]
-  agentswatch finish <run-id>
+  agentswatch finish <run-id> [--executor-log <relative-path>]
   agentswatch drift check <run-id>
   agentswatch accept record <run-id> --id <criterion-id> --status <supported|not-supported|unknown> --evidence <validation-id>
   agentswatch claims record <run-id> --type <type> --value <text> --source <text>

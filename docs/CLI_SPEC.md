@@ -27,7 +27,7 @@ agentswatch contract create <task-or-file>
 agentswatch contract check <contract-file-or-id>
 
 agentswatch start <contract-id>
-agentswatch finish <run-id>
+agentswatch finish <run-id> [--executor-log <relative-path>]
 
 agentswatch receipt show <run-id>
 agentswatch evidence check <run-id>
@@ -150,7 +150,9 @@ Required behavior:
 - separate pre-existing unchanged dirty state;
 - surface pre-existing files changed further during the run;
 - preserve ambiguous attribution explicitly;
-- generate/update `RunReceipt v1`.
+- generate/update `RunReceipt v1`;
+- optionally compare the declared executor with an `--executor-log` implementation log
+  (`docs/EXECUTOR_IDENTITY.md`); authorship is never reported as verified.
 
 Writes:
 

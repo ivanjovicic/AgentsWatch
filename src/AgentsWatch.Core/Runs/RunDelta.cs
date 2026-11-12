@@ -276,7 +276,8 @@ public sealed record RunFinishResult(
     RunReceipt? Receipt = null,
     string? ReceiptPath = null,
     IReadOnlyList<string>? ProjectionPaths = null,
-    string? ProjectionError = null);
+    string? ProjectionError = null,
+    bool InputRejected = false);
 
 /// <summary>Application use case for `agentswatch finish`.</summary>
 public sealed class RunFinishService(
@@ -291,7 +292,12 @@ public sealed class RunFinishService(
 {
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
-    public async Task<RunFinishResult> FinishAsync(string workspaceRoot, string runId, CancellationToken cancellationToken = default)
+    public Task<RunFinishResult> FinishAsync(string workspaceRoot, string runId, CancellationToken cancellationToken = default) =>
+        FinishAsync(workspaceRoot, runId, executorLogPath: null, cancellationToken);
+
+    /// <param name="executorLogPath">Optional workspace-relative implementation run log (Evidence format: v2). It is read
+    /// before anything is written; an unsafe path refuses the finish and keeps the active run.</param>
+    public async Task<RunFinishResult> FinishAsync(string workspaceRoot, string runId, string? executorLogPath, CancellationToken cancellationToken = default)
     {
         if (!ContractIds.IsValid(runId))
         {
@@ -306,6 +312,18 @@ public sealed class RunFinishService(
         if (receipts?.Exists(runId) == true)
         {
             return new RunFinishResult(false, null, receipts.PathFor(runId), $"receipt for '{runId}' already exists; refusing to overwrite.");
+        }
+
+        ObservedExecutorEvidence? observedExecutor = null;
+        if (executorLogPath is not null)
+        {
+            var read = ExecutorLogReader.Read(workspaceRoot, executorLogPath);
+            if (read.Refused)
+            {
+                return new RunFinishResult(false, null, null, "--executor-log refused: " + read.RefusalReason + "; active run kept.", InputRejected: true);
+            }
+
+            observedExecutor = read.Evidence;
         }
 
         if (records.Exists(runId))
@@ -361,7 +379,7 @@ public sealed class RunFinishService(
                 contract = null;
             }
 
-            receipt = RunReceiptBuilder.Build(record, contract);
+            receipt = RunReceiptBuilder.Build(record, contract, observedExecutor);
             try
             {
                 receipts.WriteNew(receipt);
