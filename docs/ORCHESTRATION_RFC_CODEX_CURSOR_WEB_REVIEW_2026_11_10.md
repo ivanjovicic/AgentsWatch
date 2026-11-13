@@ -1,7 +1,8 @@
 # AW-ORCH-RFC-001 — Codex/Cursor implementation with Claude/ChatGPT web reviews
 
-Date: 2026-11-10 (Europe/Belgrade)
+Date: 2026-11-10 (Europe/Belgrade); refreshed 2026-11-13 onto main f3315267ce67c3c258453d597242b946c9359bcb (reference corrections only; proposal content unchanged)
 Status: PROPOSAL / docs-only / NOT APPROVED FOR IMPLEMENTATION
+Independent human review: PENDING. The reviewer and the exact head SHA are recorded on the pull request, not in this file. Any AI-assisted check of this text is not a human approval, is not authenticated provenance and is not proof of semantic acceptance.
 Scope: optional companion workflow; no changes to AgentsWatch runtime, gate decisions or active queue
 Sponsor intent: implement with Codex or Cursor; review with Claude web and/or ChatGPT web where supported.
 
@@ -9,7 +10,7 @@ Sponsor intent: implement with Codex or Cursor; review with Claude web and/or Ch
 
 Recommended path: **review-first companion**, not a replacement for AgentsWatch's verification MVP, a proprietary agent runtime, or a new authoritative task queue.
 
-Existing verified foundation on main at fe1be515108437b948d34b3ac28fc5af36810db9:
+Foundation on main at f3315267ce67c3c258453d597242b946c9359bcb (implemented capabilities as stated in AGENTS.md; the absence claims below were re-checked on 2026-11-13 by a source search for dispatcher, lease, execution-attempt, review-packet and orchestration artefacts, which found none; main will drift after this date):
 - .NET 8 modular CLI: AgentsWatch.Cli/Core/Git/LanguageAdapters/Reports and Tests.
 - Contract/start baseline/finish delta/receipt/evidence/scope/claims/acceptance checks are implemented.
 - No production agent-dispatcher, lease service, provider execution adapters, GitHub webhook ingestion service, hosted backend, web reviewer control API, or review automation exists in the inspected runtime.
@@ -21,9 +22,9 @@ Active governance:
 - AW-VFY-011/012 and hosted/product expansion remain HOLD. This RFC does not lift them.
 - No merge, deploy, production mutation, branch takeover, workflow activation, outreach or external API billing authorized by approval to WRITE THIS PLAN.
 - An explicitly separate owner GO is required for implementation and each later activation. Preserve canonical router/verification queue.
-- PR #21 AW-FIX-EXECUTOR-001 (executor identity) is a separate draft corrective PR. On 2026-11-10 its later head 5df365bbbd561355402df0e76e76e6014fd303a3 had a successful PR CI run 42792011016; the previous head 61d1ee6 failed Ubuntu test T10. Do not claim PR #21 merged or independently reviewed. Its identity states remain declarative/consistent-unverified; even a green PR does not prove authorship.
+- PR #24 (AW-FIX-DIGEST-001, platform-independent receipt and contract digests), PR #21 (AW-FIX-EXECUTOR-001, executor identity) and PR #25 (docs sync) are merged into main (merge commits dc7bf99, e0770dc and f331526). Merged is not independently reviewed: as of 2026-11-13 the GitHub reviews API shows no review submission on #21 or #24, so this RFC claims no independent human review for either. Executor identity stays declarative: `CONSISTENT_UNVERIFIED` is the strongest status, `VERIFIED` is never assigned (see `EXECUTOR_IDENTITY.md`), and neither a green CI run nor a merged PR proves authorship.
 
-## 2. Verified provider capabilities and limitations (official docs, checked 2026-11-10)
+## 2. Provider capabilities and limitations (read from official docs on 2026-11-10; not re-checked in the 2026-11-13 refresh)
 
 | Surface | Supported direction | MVP contract and hard limitation |
 | --- | --- | --- |
@@ -52,7 +53,7 @@ Phase A (usable with no new hosted service):
 2. AgentsWatch exports a verification RunContract and a bounded implementation Context Pack. Owner manually launches Codex or Cursor using a dedicated clean workspace/branch.
 3. Run start is captured BEFORE edits; source/ref and worktree state are recorded. After implementation, agent prepares a draft PR and evidence. Do not declare tests passed merely from prose.
 4. AgentsWatch exports a reviewer packet for the current exact PR head: issue intent, base/head SHAs, changed-file list, patch or safe repository links, relevant code context, actual CI run URLs/results, required acceptance, safety restrictions, receipt with caveats. Prevent secrets in the packet.
-5. Owner opens Claude web or ChatGPT web, provides the packet, optionally uses their authorized GitHub connections, explicitly asks for read-only independent review, and saves the response into a structured ReviewResult via manual import. Do not pretend this is unattended.
+5. Owner opens Claude web or ChatGPT web, provides the packet, optionally uses their authorized GitHub connections, explicitly asks for a read-only advisory AI review (not a human review), and saves the response into a structured ReviewResult via manual import. Do not pretend this is unattended.
 6. An agent review is advisory: Findings with file/line and evidence; uncertain claims stay Unknown. Only after triage are substantiated findings sent back to Codex/Cursor for a new implementation attempt.
 7. A new head SHA invalidates every prior head-bound review/check for readiness; repeat CI, export and review. Final output is ReadyForOwnerReview or a conservative blocked state, never an automatic merge.
 
@@ -73,7 +74,7 @@ GitHub Issue/PR (source of truth for task and code)
   -> draft PR and exact-head GitHub CI
   -> AgentsWatch finish + RunReceipt with evidence trust level
   -> ReviewPacket exporter
-  -> [Claude web manual | ChatGPT web manual | optional verified ChatGPT Work event task]
+  -> [Claude web manual | ChatGPT web manual | optional ChatGPT Work event task, only after its round-trip is proven]
   -> ReviewResult importer (head-bound, advisory, provenance-labeled)
   -> policy/owner triage -> bounded correction loop -> owner final GO.
 
@@ -102,7 +103,7 @@ Keep ReviewResult and workflow state OUTSIDE canonical RunReceipt v1 unless a se
 
 ## 5. Ownership, review independence, security
 
-- A single exclusive writer per repository task/scope. A reviewer works read-only with an independent context, never edits the implementer's branch. Parallel reviewers are allowed on the same frozen head.
+- A single exclusive writer per repository task/scope. A reviewer works read-only with a separate context, never edits the implementer's branch. Parallel reviewers are allowed on the same frozen head.
 - On lease timeout: UNKNOWN_PENDING_RECONCILIATION, not immediate task takeover. Check process/provider run, remote branch, PR and open claim. New fencing token only after atomic reconciliation; no force push.
 - Local sidecar initially uses GitHub read-only reconciliation and an atomic file/SQLite single-host lease *only if the pilot needs a second concurrent executor*. For multi-host distributed execution, do not pretend a local lease is sufficient: require central transactional authority as a separately approved design.
 - Review result from Claude web is a declarative assistant response imported by the owner; ChatGPT web likewise. Different model/vendor is AI cross-provider review, NOT a second human approval, GitHub APPROVED, certified independent provenance or a verified semantic acceptance check.
@@ -131,7 +132,7 @@ P2 / AW-ORCH-002 — Manual Claude/ChatGPT web review import:
 P3 / AW-ORCH-003 — Codex supervised implementation adapter:
 - Separate sandbox/worktree, start-before-write, bounded processes, actual exit codes, explicit permissions, cancellation/timeout reconciliation, draft PR only by owner's task authorization.
 - Tests: concurrent writer refusal, crashed process, offline state, no validation => not Done, wrong branch/dirty start, duplicate event, no production permission.
-- Gate: proof P1/P2 are decision-changing at acceptable overhead, independent review of implementation; no automatic task intake/loop initially.
+- Gate: proof P1/P2 are decision-changing at acceptable overhead, independent human review of the implementation; no automatic task intake/loop initially.
 
 P4 / AW-ORCH-004 — Cursor Cloud API supervised adapter:
 - Validate API v1/version, auth and permitted actions, exact branch/PR correlation, managed cost and token exposure, polling and backoff where webhooks unsupported.
@@ -160,4 +161,4 @@ Lowest-risk usable pilot: a manual Codex/Cursor coding run + generated exact-hea
 
 Do NOT build all adapters simultaneously. If the manual handoff saves no work or creates misleading confidence, stop rather than adding workflow machinery.
 
-Any implementation must pass current repository governance: explicit separate owner GO, scoped new branch/PR, no edit to active queue/hold ledger, independent review and exact-head CI before any merge. Start by approving only P1 after the current trust-boundary corrective work is resolved.
+Any implementation must pass current repository governance: explicit separate owner GO, scoped new branch/PR, no edit to active queue/hold ledger, independent human review and exact-head CI before any merge. The trust-boundary corrective work named in section 1 (#21, #24) has merged, but that approves nothing here: P1 would still need its own explicit owner GO while AW-VFY-010 is ADJUST / PAUSE.
