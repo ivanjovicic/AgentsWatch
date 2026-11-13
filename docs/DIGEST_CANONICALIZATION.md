@@ -115,6 +115,11 @@ the file bytes of a successful `check` are not guaranteed to stay identical.
 - **Duplicate properties** bind the last occurrence (System.Text.Json default). Only that bound value is
   covered; an earlier duplicate is invisible to the digest. Changing the last one is detected.
   (Characterized by `D10_DigestCoversBoundContent_NotFileBytes_DocumentedLimits`.)
+  **Exception (AW-FIX-EXECUTOR-001):** a duplicate key inside `executorIdentity`, and a second
+  `executorIdentity` property in the receipt, are refused on load (`InvalidDataException`; covered by
+  `Negative_DuplicateExecutorIdentityKeys_AreRejected`: `receipt show` exits 1 and the evidence check
+  refuses), see `docs/EXECUTOR_IDENTITY.md`. All other duplicates are still last-wins; that remains a
+  residual.
 - The full M1 regression (a digest computed over raw `Environment.NewLine` output instead of the canonical
   form) can only surface where `Environment.NewLine` is CRLF, i.e. in the `windows-latest` CI job; on Linux
   the raw output is already LF. The canonicalization itself is covered on every OS by
