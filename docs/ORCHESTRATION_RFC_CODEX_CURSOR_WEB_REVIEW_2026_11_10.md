@@ -2,7 +2,7 @@
 
 Date: 2026-11-10 (Europe/Belgrade); refreshed 2026-11-13 onto main f3315267ce67c3c258453d597242b946c9359bcb (reference corrections only; proposal content unchanged)
 Status: PROPOSAL / docs-only / NOT APPROVED FOR IMPLEMENTATION
-Independent human review: PENDING. The reviewer and the exact head SHA are recorded on the pull request, not in this file. Any AI-assisted check of this text is not a human approval, is not authenticated provenance and is not proof of semantic acceptance.
+Review status: a separate-agent AI text review was completed for this document version. No human review is requested for this documentation PR. The second-agent review is advisory only; it is not a GitHub human review/approval, authenticated provenance or proof of semantic acceptance.
 Scope: optional companion workflow; no changes to AgentsWatch runtime, gate decisions or active queue
 Sponsor intent: implement with Codex or Cursor; review with Claude web and/or ChatGPT web where supported.
 
