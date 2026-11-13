@@ -23,8 +23,10 @@ who authored the changes, and it never assigns `VERIFIED`.
 Both new fields are omitted when null. A historical receipt therefore re-serializes to the same JSON
 text after line-ending normalization (CRLF/LF and the trailing newline are ignored, so this is not an
 original-bytes comparison). It keeps its stored `evidenceDigest`, and it is never rewritten or re-digested:
-`receipt show` and `handoff` leave the file's bytes unchanged. On a different OS from the one that
-produced it, strict verification of that stored digest needs AW-FIX-DIGEST-001. A receipt without
+`receipt show` and `handoff` leave the file's bytes unchanged. AW-FIX-DIGEST-001 is merged (PR #24), so
+the stored digest of a historical receipt passes strict verification on both Windows and Linux
+(`VerifyDigest`, `EnsureStoredDigest`, `MatchDigest == LegacyCrlf` for the Windows-produced fixture; test
+`T10_HistoricalV1Receipt_ReadsAndKeepsOriginalDigest` runs without an OS condition). A receipt without
 `executorIdentity` is displayed as `Identity status: UNKNOWN` with reason "not assessed".
 New receipts always carry `executorIdentity`; it is covered by `evidenceDigest` and preserved by
 `evidence`/`accept`/`claims` re-evaluation.
