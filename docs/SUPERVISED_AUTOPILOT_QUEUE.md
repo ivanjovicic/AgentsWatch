@@ -154,6 +154,10 @@ May be considered only after:
 - external integrations are official and opt-in;
 - human approval gates are proven.
 
+## Reviewer handoff proposal (2026-11-10; inactive)
+
+See `ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md`. The requested split is Codex/Cursor for code implementation and Claude web/ChatGPT web for read-only review. In current assisted mode the owner launches the executor, exports a review packet pinned to exact PR head SHA (diff + CI + acceptance), requests web review, and imports an explicitly advisory result; there is **no automatic chat-to-chat bridge**. Official vendor APIs and permitted ChatGPT Work event-triggered tasks are conditional future options, not capabilities of all web chats. A new commit invalidates previous review/check evidence. An AI review from any vendor or surface is advisory and is never an independent human APPROVED review; a same-vendor or same-account AI review is weaker still. Connector/continuous levels remain gated and must not auto-claim HOLD work, merge, deploy, or loosen existing rules.
+
 ## Codex/Cursor handling
 
 AgentsWatch should treat Codex, Cursor, Claude Code, Copilot, and similar tools as execution targets, not as trusted controllers.

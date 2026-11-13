@@ -260,6 +260,10 @@ Level 3 — continuous autopilot
 
 Level 3 remains blocked until contracts, receipts, evidence gates, risk rules, rollback and stop behavior are proven.
 
+## Requested Codex/Cursor execution + web review (proposal only)
+
+See `ORCHESTRATION_RFC_CODEX_CURSOR_WEB_REVIEW_2026_11_10.md` and `SUPERVISED_AUTOPILOT_QUEUE.md`. In a future owner-approved experiment, compile an existing source task into a bounded verification contract, let Codex/Cursor implement in isolation, then export an exact-head packet for Claude web/ChatGPT web advisory review. This is a manual-first companion to the evidence spine, not a new agent OS implementation or current claimable queue. Do not interpret provider/AI review as human independent approval or semantic acceptance proof. Existing AW-VFY-010 ADJUST/PAUSE and AW-VFY-011/012 HOLD remain controlling.
+
 ## Integration principle
 
 ```text
